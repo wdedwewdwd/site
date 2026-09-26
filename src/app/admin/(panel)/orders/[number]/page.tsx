@@ -6,6 +6,7 @@ import { ORDER_STATUS, SHIPPING } from "@/lib/shop";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SummaryRow } from "@/components/cart/SummaryRow";
 import { PageHeader } from "@/components/admin/PageHeader";
+import { HelpBox } from "@/components/admin/HelpBox";
 import { OrderUpdateForm } from "@/components/admin/OrderUpdateForm";
 import type { OrderStatus } from "@/generated/prisma/client";
 
@@ -41,6 +42,14 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/order
       <PageHeader title={`سفارش #${faDigits(order.number)}`}>
         <StatusBadge status={order.status} />
       </PageHeader>
+      <HelpBox
+        items={[
+          "بعد از بسته‌بندی، وضعیت را «در حال آماده‌سازی» کنید. هنگام تحویل به پست یا پیک، «در حال ارسال» را انتخاب و کد رهگیری مرسوله را وارد کنید.",
+          "با هر تغییر وضعیت، یک اعلان برای مشتری در حساب کاربری‌اش ثبت می‌شود.",
+          "لغو یا مرجوع کردن سفارش، موجودی کالاها را خودکار به انبار برمی‌گرداند. بازگرداندن پول پرداخت آنلاین باید از پنل درگاه پرداخت انجام شود.",
+          "فقط تغییرهای مجاز نمایش داده می‌شوند (مثلاً سفارش تحویل‌شده را نمی‌توان به «در حال ارسال» برگرداند).",
+        ]}
+      />
       <div className="grid gap-6 xl:grid-cols-[1fr_340px]">
         <div className="flex flex-col gap-6">
           <section className="card overflow-x-auto">

@@ -3,6 +3,7 @@ import { requireStaff } from "@/lib/auth/session";
 import { createDiscount } from "@/app/actions/admin/misc";
 import { faDate, faDigits, toman } from "@/lib/format";
 import { PageHeader } from "@/components/admin/PageHeader";
+import { HelpBox } from "@/components/admin/HelpBox";
 import { ActionForm } from "@/components/admin/ActionForm";
 import { DiscountToggle } from "@/components/admin/DiscountToggle";
 
@@ -14,6 +15,15 @@ export default async function DiscountsPage() {
   return (
     <>
       <PageHeader title="کدهای تخفیف" />
+      <HelpBox
+        items={[
+          "کد تخفیف را مشتری در سبد خرید وارد می‌کند. کد فقط حروف انگلیسی و عدد است (مثلاً AUTUMN15).",
+          "نوع «درصدی»: مقدار را به درصد بنویسید (مثلاً ۱۵). «سقف تخفیف» جلوی تخفیف‌های خیلی بزرگ را در سفارش‌های گران می‌گیرد.",
+          "نوع «مبلغ ثابت»: مقدار را به تومان بنویسید (مثلاً ۵۰۰۰۰).",
+          "«حداقل مبلغ سفارش»، «حداکثر دفعات استفاده» و «اعتبار (روز)» اختیاری‌اند؛ خالی یعنی بدون محدودیت.",
+          "برای توقف یک کد، دکمه «فعال» آن را بزنید تا غیرفعال شود.",
+        ]}
+      />
       <section className="card mb-6 p-5">
         <h2 className="mb-4 text-base font-black">تعریف کوپن تخفیف جدید</h2>
         <ActionForm action={createDiscount} submitLabel="ساخت کد" className="flex flex-col gap-4" resetOnSuccess>

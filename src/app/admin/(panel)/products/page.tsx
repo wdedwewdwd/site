@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { requireStaff } from "@/lib/auth/session";
 import { faDigits, toman } from "@/lib/format";
 import { PageHeader } from "@/components/admin/PageHeader";
+import { HelpBox } from "@/components/admin/HelpBox";
 import { ToggleActiveButton } from "@/components/admin/ToggleActiveButton";
 
 export const metadata = { title: "محصولات" };
@@ -29,6 +30,14 @@ export default async function AdminProductsPage({ searchParams }: PageProps<"/ad
         </form>
         <Link href="/admin/products/new" className="btn-primary py-2.5"><Plus className="size-4" /> افزودن محصول</Link>
       </PageHeader>
+      <HelpBox
+        items={[
+          "برای افزودن قطعه جدید، دکمه «افزودن محصول» را بزنید. برای ویرایش، روی نام محصول در جدول کلیک کنید.",
+          "با کادر جستجو می‌توانید بر اساس نام، کد کالا یا کد فنی (OEM) محصول را پیدا کنید.",
+          "رنگ عدد موجودی: قرمز یعنی تمام شده، نارنجی یعنی ۵ عدد یا کمتر مانده.",
+          "دکمه «فعال / غیرفعال» محصول را بدون حذف، از فروشگاه پنهان یا دوباره نمایان می‌کند.",
+        ]}
+      />
       <div className="card overflow-x-auto">
         <table className="w-full min-w-[820px] text-[13px]">
           <thead className="bg-canvas text-muted">

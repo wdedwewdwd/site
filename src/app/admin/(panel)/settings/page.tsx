@@ -4,6 +4,7 @@ import { getSettings } from "@/lib/settings";
 import { saveSettings } from "@/app/actions/admin/misc";
 import { faDateTime } from "@/lib/format";
 import { PageHeader } from "@/components/admin/PageHeader";
+import { HelpBox } from "@/components/admin/HelpBox";
 import { ActionForm } from "@/components/admin/ActionForm";
 import { ChangePasswordForm } from "@/components/admin/ChangePasswordForm";
 
@@ -18,6 +19,13 @@ export default async function SettingsPage() {
   return (
     <>
       <PageHeader title="تنظیمات" />
+      <HelpBox
+        items={[
+          "نماد اینماد: پس از تأیید سایت، از پنل اینماد کد نمایش نماد را بگیرید و عدد id و مقدار Code را در فیلدهای زیر وارد کنید. نماد خودکار در پایین همه صفحات نمایش داده می‌شود.",
+          "کد ورود ثابت: کدی است که به‌جای کد پیامکی در صفحه ورود وارد می‌کنید. کد ۶ رقمی امنیت بسیار بیشتری دارد.",
+          "گزارش فعالیت‌ها همه ورودها و تغییرات مدیران را با زمان و IP نشان می‌دهد تا هر کار مشکوکی قابل پیگیری باشد.",
+        ]}
+      />
       <section className="card mb-6 p-5">
         <h2 className="mb-1 text-base font-black">نماد اعتماد الکترونیکی (اینماد)</h2>
         <p className="mb-4 text-xs leading-6 text-muted">

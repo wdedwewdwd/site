@@ -5,6 +5,7 @@ import { faDateTime, faDigits, toman } from "@/lib/format";
 import { ORDER_STATUS } from "@/lib/shop";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { PageHeader } from "@/components/admin/PageHeader";
+import { HelpBox } from "@/components/admin/HelpBox";
 import type { OrderStatus } from "@/generated/prisma/client";
 
 export const metadata = { title: "سفارش‌ها" };
@@ -36,6 +37,14 @@ export default async function AdminOrdersPage({ searchParams }: PageProps<"/admi
           <input name="q" defaultValue={q} placeholder="شماره سفارش، موبایل یا نام" className="input w-60 bg-white py-2.5" />
         </form>
       </PageHeader>
+      <HelpBox
+        items={[
+          "مسیر معمول هر سفارش: پرداخت شده ← در حال آماده‌سازی ← در حال ارسال ← تحویل شده.",
+          "با دکمه‌های بالای جدول سفارش‌ها را بر اساس وضعیت فیلتر کنید؛ با کادر جستجو شماره سفارش، موبایل یا نام گیرنده را پیدا کنید.",
+          "روی شماره سفارش بزنید تا جزئیات، آدرس ارسال و فرم تغییر وضعیت را ببینید.",
+          "«در انتظار پرداخت» یعنی مشتری هنوز پرداخت آنلاین را تمام نکرده؛ این سفارش‌ها را ارسال نکنید.",
+        ]}
+      />
       <nav className="mb-4 flex flex-wrap gap-2" aria-label="فیلتر وضعیت">
         {tabs.map((t) => (
           <Link

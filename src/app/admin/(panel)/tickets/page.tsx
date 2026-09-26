@@ -4,6 +4,7 @@ import { requireStaff } from "@/lib/auth/session";
 import { faDateTime, faDigits } from "@/lib/format";
 import { TICKET_STATUS } from "@/lib/shop";
 import { PageHeader } from "@/components/admin/PageHeader";
+import { HelpBox } from "@/components/admin/HelpBox";
 
 export const metadata = { title: "تیکت‌های پشتیبانی" };
 
@@ -17,6 +18,13 @@ export default async function AdminTicketsPage() {
   return (
     <>
       <PageHeader title="تیکت‌های پشتیبانی" />
+      <HelpBox
+        items={[
+          "درخواست‌های پشتیبانی و شکایات مشتری‌ها اینجا ثبت می‌شود. تیکت‌های «در انتظار پاسخ» بالاتر نمایش داده می‌شوند.",
+          "روی هر تیکت بزنید، پاسخ را بنویسید و ارسال کنید؛ مشتری اعلان دریافت می‌کند.",
+          "اگر مشکل حل شد، هنگام ارسال پاسخ تیک «بستن تیکت» را بزنید.",
+        ]}
+      />
       <div className="card divide-y divide-line">
         {tickets.length === 0 && <p className="p-8 text-center text-sm text-muted">تیکتی وجود ندارد.</p>}
         {tickets.map((t) => (

@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { requireStaff } from "@/lib/auth/session";
 import { audit } from "@/lib/audit";
 import { saveProductImage } from "@/lib/uploads";
+import { uniqueSlug } from "@/lib/slug";
 import { idSchema, text, toEnDigits } from "@/lib/validation";
 
 export type ProductFormState = { ok: boolean; error?: string; errors?: Record<string, string> } | null;
@@ -28,8 +29,11 @@ const optionalMoney = (label: string) =>
 const productSchema = z
   .object({
     name: text(160, 3),
-    slug: z.string().trim().toLowerCase().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "فقط حروف انگلیسی کوچک، عدد و خط تیره").max(120),
-    sku: z.string().trim().toUpperCase().regex(/^[A-Z0-9-]{2,40}$/, "کد کالا فقط حروف انگلیسی، عدد و خط تیره"),
+    // Optional: generated automatically when left empty.
+    sku: z
+      .string()
+      .transform((v) => toEnDigits(v).trim().toUpperCase())
+      .pipe(z.union([z.literal(""), z.string().regex(/^[A-Z0-9-]{2,40}$/, "کد کالا فقط می‌تواند حروف انگلیسی، عدد و خط تیره باشد")])),
     oemCode: z.union([z.literal(""), text(60)]),
     categoryId: idSchema,
     brandId: z.union([z.literal(""), idSchema]),
@@ -84,10 +88,20 @@ export async function saveProduct(_: ProductFormState, formData: FormData): Prom
     uploaded.push(res.url);
   }
 
+  const existing = id ? await db.product.findUnique({ where: { id }, select: { slug: true, sku: true } }) : null;
+  if (id && !existing) return { ok: false, error: "محصول یافت نشد." };
+
+  // Slug (URL) is created once from the name and kept stable; SKU is generated if not provided.
+  const slug = existing?.slug ?? (await uniqueSlug(d.name, async (s) => !!(await db.product.findUnique({ where: { slug: s } }))));
+  const sku = d.sku || existing?.sku || `AY-${Date.now().toString(36).toUpperCase()}`;
+  if (await db.product.findFirst({ where: { sku, NOT: id ? { id } : undefined }, select: { id: true } })) {
+    return { ok: false, errors: { sku: "این کد کالا برای محصول دیگری ثبت شده است" } };
+  }
+
   const data = {
     name: d.name,
-    slug: d.slug,
-    sku: d.sku,
+    slug,
+    sku,
     oemCode: d.oemCode || null,
     categoryId: d.categoryId,
     brandId: d.brandId || null,
@@ -103,8 +117,6 @@ export async function saveProduct(_: ProductFormState, formData: FormData): Prom
     isFeatured: d.isFeatured === "on",
   };
 
-  const clash = await db.product.findFirst({ where: { OR: [{ slug: d.slug }, { sku: d.sku }], NOT: id ? { id } : undefined }, select: { slug: true } });
-  if (clash) return { ok: false, errors: clash.slug === d.slug ? { slug: "این نامک قبلاً استفاده شده است" } : { sku: "این کد کالا تکراری است" } };
 
   const product = await db.$transaction(async (tx) => {
     const p = id ? await tx.product.update({ where: { id }, data }) : await tx.product.create({ data });

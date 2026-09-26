@@ -48,3 +48,17 @@ export const TICKET_STATUS = {
 
 /** Icon names an admin may assign to a category (see components/ui/CategoryIcon). */
 export const CATEGORY_ICON_NAMES = ["wind", "droplet", "battery", "disc", "circle-dot", "settings", "cog", "lightbulb", "wrench", "car"] as const;
+
+/** Persian labels shown to admins when picking a category icon. */
+export const CATEGORY_ICON_LABELS: Record<(typeof CATEGORY_ICON_NAMES)[number], string> = {
+  wind: "فیلتر / هوا",
+  droplet: "روغن / مایعات",
+  battery: "برق / باتری",
+  disc: "ترمز / دیسک",
+  "circle-dot": "جلوبندی / تعلیق",
+  settings: "گیربکس / کلاچ",
+  cog: "موتور",
+  lightbulb: "چراغ / لامپ",
+  wrench: "عمومی / ابزار",
+  car: "بدنه / خودرو",
+};

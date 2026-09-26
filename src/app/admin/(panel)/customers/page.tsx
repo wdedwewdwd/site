@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { requireStaff } from "@/lib/auth/session";
 import { faDate, faDigits } from "@/lib/format";
 import { PageHeader } from "@/components/admin/PageHeader";
+import { HelpBox } from "@/components/admin/HelpBox";
 import { UserControls } from "@/components/admin/UserControls";
 
 export const metadata = { title: "مشتریان" };
@@ -21,6 +22,13 @@ export default async function CustomersPage({ searchParams }: PageProps<"/admin/
       <PageHeader title="مشتریان">
         <form role="search"><input name="q" defaultValue={q} placeholder="نام یا شماره موبایل" className="input w-60 bg-white py-2.5" /></form>
       </PageHeader>
+      <HelpBox
+        items={[
+          "فهرست همه کاربرانی که در سایت ثبت‌نام کرده‌اند، همراه با تعداد سفارش‌هایشان.",
+          "دکمه «فعال / مسدود»: کاربر مسدود نمی‌تواند وارد سایت شود و از همه دستگاه‌ها خارج می‌شود.",
+          "تغییر نقش به «پشتیبان» یا «مدیر» فقط وقتی کار می‌کند که برای آن شماره کد ورود ثابت تعریف شده باشد (با دستور admin:set روی سرور).",
+        ]}
+      />
       <div className="card overflow-x-auto">
         <table className="w-full min-w-[720px] text-[13px]">
           <thead className="bg-canvas text-muted">

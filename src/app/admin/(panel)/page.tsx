@@ -6,6 +6,7 @@ import { expireStaleOrders, housekeeping } from "@/lib/orders";
 import { faDate, faDigits, toman } from "@/lib/format";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { PageHeader } from "@/components/admin/PageHeader";
+import { HelpBox } from "@/components/admin/HelpBox";
 
 const DAY = 24 * 60 * 60 * 1000;
 const WEEKDAYS = ["یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنجشنبه", "جمعه", "شنبه"];
@@ -50,6 +51,15 @@ export default async function AdminDashboard() {
   return (
     <>
       <PageHeader title="داشبورد مدیریتی" />
+      <HelpBox open
+        items={[
+          "به پنل مدیریت خوش آمدید. از منوی سمت راست به همه بخش‌ها دسترسی دارید.",
+          "شروع کار: ۱) در «دسته‌بندی‌ها» گروه قطعات را بسازید ← ۲) در «محصولات» قطعه‌ها را با قیمت، موجودی و عکس اضافه کنید ← ۳) سفارش‌های جدید را در «سفارش‌ها» پیگیری کنید.",
+          "عدد قرمز کنار «سفارش‌ها» تعداد سفارش‌هایی است که پرداخت شده‌اند و منتظر آماده‌سازی شما هستند.",
+          "«هشدار موجودی کم» محصولاتی را نشان می‌دهد که ۵ عدد یا کمتر در انبار دارند؛ روی هر کدام بزنید تا موجودی را به‌روز کنید.",
+          "سفارش‌هایی که پرداخت آنلاینشان ظرف ۳۰ دقیقه انجام نشود، خودکار لغو و موجودی‌شان برگردانده می‌شود.",
+        ]}
+      />
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {stats.map(({ label, value, Icon, cls }) => (
           <div key={label} className="card flex flex-col gap-4 p-5">

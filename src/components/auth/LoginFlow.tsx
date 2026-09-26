@@ -186,7 +186,13 @@ function CodeStep(props: {
         )}
       </p>
 
-      <button type="submit" disabled={props.pending || code.length < MIN_CODE_LENGTH} className="btn-primary w-full">
+      {/* Lights up once the full SMS code is typed. Staff codes (4–5 digits) can still be submitted
+          from the dimmed button, so the form looks the same for every number. */}
+      <button
+        type="submit"
+        disabled={props.pending || code.length < MIN_CODE_LENGTH}
+        className={`btn-primary w-full ${code.length < OTP_LENGTH ? "bg-subtle hover:bg-subtle disabled:opacity-100" : ""}`}
+      >
         {props.pending && <LoaderCircle className="size-4 animate-spin" />}
         تأیید
       </button>

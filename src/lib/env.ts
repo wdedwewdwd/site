@@ -42,6 +42,23 @@ const schema = z
 
 function load() {
   const parsed = schema.safeParse(process.env);
+  if (!parsed.success && process.env.NEXT_PHASE === "phase-production-build") {
+    // `next build` imports modules to collect page data, but hosts like Liara may not expose
+    // runtime secrets to the build. Nothing is served during the build; the real values are
+    // validated (strictly) when the server starts.
+    const placeholder = "build-time-placeholder-not-a-secret-000000";
+    return schema.parse({
+      ...process.env,
+      DATABASE_URL: process.env.DATABASE_URL || "postgres://build:build@127.0.0.1:5432/build",
+      APP_URL: "https://build.invalid",
+      SESSION_SECRET: placeholder,
+      OTP_PEPPER: placeholder,
+      SMS_PROVIDER: "kavenegar",
+      KAVENEGAR_API_KEY: "build",
+      KAVENEGAR_OTP_TEMPLATE: "build",
+      PAYMENT_PROVIDER: "none",
+    });
+  }
   if (!parsed.success) {
     // Never print values — only which keys are wrong.
     const issues = parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("\n  ");

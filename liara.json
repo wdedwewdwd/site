@@ -1,0 +1,12 @@
+{
+  "platform": "next",
+  "app": "arizon-yadak",
+  "port": 3000,
+  "node": {
+    "version": "24"
+  },
+  "build": {
+    "location": "germany"
+  },
+  "disks": []
+}

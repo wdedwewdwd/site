@@ -32,7 +32,7 @@ export default async function SettingsPage() {
       </section>
 
       <section className="card mb-6 p-5">
-        <h2 className="mb-4 text-base font-black">تغییر رمز عبور من</h2>
+        <h2 className="mb-4 text-base font-black">کد ورود ثابت من</h2>
         <ChangePasswordForm />
       </section>
 

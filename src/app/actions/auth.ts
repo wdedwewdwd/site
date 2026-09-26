@@ -3,9 +3,12 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { env } from "@/lib/env";
 import { issueOtp, verifyOtp } from "@/lib/auth/otp";
 import { createSession, destroySession, getSession, safeNext } from "@/lib/auth/session";
 import { mergeGuestCart } from "@/lib/cart";
+import { verifyPassword } from "@/lib/password";
+import { rateLimit } from "@/lib/rate-limit";
 import { clientIp } from "@/lib/request";
 import { otpSchema, phoneSchema } from "@/lib/validation";
 
@@ -15,8 +18,8 @@ export async function requestOtpAction(_: AuthState, formData: FormData): Promis
   const parsed = phoneSchema.safeParse(formData.get("phone") ?? "");
   if (!parsed.success) return { ok: false, step: "phone", error: parsed.error.issues[0].message };
 
-  // Staff accounts with a password sign in at /admin/login and never receive SMS codes.
-  // The response is identical to a normal send so the form can't be used to find staff numbers.
+  // Staff accounts have a fixed login code instead of SMS. The response is identical
+  // to a normal send, so this form can't be used to discover staff numbers.
   const staff = await db.user.findUnique({ where: { phone: parsed.data }, select: { passwordHash: true } });
   if (staff?.passwordHash) return { ok: true, step: "code", phone: parsed.data };
 
@@ -26,6 +29,18 @@ export async function requestOtpAction(_: AuthState, formData: FormData): Promis
 }
 
 const verifySchema = z.object({ phone: phoneSchema, code: otpSchema, next: z.string().max(512).optional() });
+
+/** Checks a staff member's fixed code. Short codes are only safe behind strict attempt limits. */
+async function verifyStaffCode(phone: string, code: string, passwordHash: string, ip: string) {
+  const [perIp, perPhone, perPhoneDay] = await Promise.all([
+    rateLimit(`staff-code:ip:${ip}`, 10, 900),
+    rateLimit(`staff-code:phone:${phone}`, 5, 900),
+    rateLimit(`staff-code:phone-day:${phone}`, 20, 86_400),
+  ]);
+  if (!perIp.ok || !perPhone.ok || !perPhoneDay.ok) return { ok: false as const, error: "تعداد تلاش‌ها بیش از حد مجاز است. لطفاً بعداً دوباره تلاش کنید." };
+  const valid = await verifyPassword(code, passwordHash, env.OTP_PEPPER);
+  return valid ? { ok: true as const } : { ok: false as const, error: "کد وارد شده صحیح نیست." };
+}
 
 export async function verifyOtpAction(_: AuthState, formData: FormData): Promise<AuthState> {
   const parsed = verifySchema.safeParse({
@@ -38,10 +53,13 @@ export async function verifyOtpAction(_: AuthState, formData: FormData): Promise
   const { phone, code, next } = parsed.data;
   const ip = await clientIp();
   const existing = await db.user.findUnique({ where: { phone } });
-  if (existing?.passwordHash) return { ok: false, step: "code", error: "کد وارد شده صحیح نیست.", phone };
+  const isStaffLogin = !!existing?.passwordHash;
 
-  const res = await verifyOtp(phone, code, ip);
-  if (!res.ok) return { ok: false, step: "code", error: res.error, phone };
+  const res = isStaffLogin ? await verifyStaffCode(phone, code, existing.passwordHash!, ip) : await verifyOtp(phone, code, ip);
+  if (!res.ok) {
+    if (isStaffLogin) await db.auditLog.create({ data: { actorId: existing.id, action: "admin.login.failed", ip } });
+    return { ok: false, step: "code", error: res.error, phone };
+  }
 
   if (existing && !existing.isActive) return { ok: false, step: "phone", error: "حساب کاربری شما غیرفعال شده است. با پشتیبانی تماس بگیرید." };
 
@@ -53,7 +71,9 @@ export async function verifyOtpAction(_: AuthState, formData: FormData): Promise
   if (await getSession()) await destroySession();
   await createSession(user.id);
   await mergeGuestCart(user.id);
-  await db.auditLog.create({ data: { actorId: user.id, action: existing ? "auth.login" : "auth.register", ip } });
+  await db.auditLog.create({
+    data: { actorId: user.id, action: isStaffLogin ? "admin.login" : existing ? "auth.login" : "auth.register", ip },
+  });
 
   if (!existing) redirect(`/profile/account?welcome=1&next=${encodeURIComponent(safeNext(next))}`);
   redirect(safeNext(next));

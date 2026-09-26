@@ -68,14 +68,14 @@ export async function requireUser(next = "/") {
 /** For admin pages/actions. Role is re-checked from the database on every request. */
 export async function requireStaff(roles: Role[] = ["ADMIN"]) {
   const session = await getSession();
-  if (!session) redirect("/admin/login");
-  if (!roles.includes(session.user.role)) redirect("/admin/login");
-  // Staff must have signed in with a password; an SMS-only account never gets panel access.
+  if (!session) redirect("/login?next=/admin");
+  if (!roles.includes(session.user.role)) redirect("/");
+  // Staff must have a fixed login code set (via scripts/set-admin.ts); SMS-only accounts never get panel access.
   const hasPassword = await db.user.count({ where: { id: session.user.id, passwordHash: { not: null } } });
-  if (!hasPassword) redirect("/admin/login");
+  if (!hasPassword) redirect("/");
   if (Date.now() - session.createdAt.getTime() > STAFF_MAX_SESSION_AGE_MS) {
     await destroySession();
-    redirect("/admin/login?reauth=1");
+    redirect("/login?next=/admin&reauth=1");
   }
   return session.user;
 }

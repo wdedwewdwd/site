@@ -1,9 +1,10 @@
 /**
- * Creates or updates a staff account and sets its password.
+ * Creates or updates a staff account and sets its fixed login code (4–6 digits).
+ * The staff member types this code on the normal login form instead of an SMS code.
  * This is the only way to create an admin: it needs shell access to the server.
  *
- *   npm run admin:set -- 09121234567            (asks for the password)
- *   echo "password" | npm run admin:set -- 09121234567
+ *   npm run admin:set -- 09121234567            (asks for the code)
+ *   echo "123456" | npm run admin:set -- 09121234567
  *
  * Optional: --role=SUPPORT (default ADMIN).
  */
@@ -12,7 +13,7 @@ import { createInterface } from "node:readline/promises";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { hashPassword } from "../src/lib/password";
-import { normalizePhone } from "../src/lib/validation";
+import { normalizePhone, staffCodeSchema, toEnDigits } from "../src/lib/validation";
 
 async function readPassword() {
   if (!process.stdin.isTTY) {
@@ -21,7 +22,7 @@ async function readPassword() {
     return Buffer.concat(chunks).toString("utf8").trim();
   }
   const rl = createInterface({ input: process.stdin, output: process.stdout });
-  const pw = await rl.question("Password: ");
+  const pw = await rl.question("Login code (4-6 digits): ");
   rl.close();
   return pw.trim();
 }
@@ -34,11 +35,9 @@ async function main() {
   const pepper = process.env.OTP_PEPPER;
   if (!pepper || pepper.length < 32) throw new Error("OTP_PEPPER must be set (same value as the running site).");
 
-  const password = await readPassword();
-  if (password.length < 4) throw new Error("Password must be at least 4 characters.");
-  if (password.length < 10 || /^\d+$/.test(password)) {
-    console.warn("WARNING: this password is weak. Use at least 10 characters mixing letters, digits and symbols.");
-  }
+  const password = toEnDigits(await readPassword());
+  if (!staffCodeSchema.safeParse(password).success) throw new Error("The login code must be 4 to 6 digits.");
+  if (password.length < 6) console.warn("WARNING: a 6-digit code is much harder to guess than a shorter one.");
 
   const db = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }) });
   try {
@@ -51,7 +50,7 @@ async function main() {
     // A password change signs the account out everywhere.
     await db.session.deleteMany({ where: { userId: user.id } });
     await db.auditLog.create({ data: { actorId: user.id, action: "admin.password.set", meta: { via: "cli", role } } });
-    console.log(`OK: ${phone} is ${role}. Sign in at /admin/login`);
+    console.log(`OK: ${phone} is ${role}. Sign in on the normal login page with this code.`);
   } finally {
     await db.$disconnect();
   }

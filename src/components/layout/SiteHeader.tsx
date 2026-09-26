@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Bell, ShoppingCart, User } from "lucide-react";
+import { Bell, LayoutDashboard, ShoppingCart, User } from "lucide-react";
 import { getUser } from "@/lib/auth/session";
 import { getCartCount } from "@/lib/cart";
 import { faDigits } from "@/lib/format";
@@ -12,6 +12,7 @@ import { MobileMenu } from "./MobileMenu";
 export async function SiteHeader() {
   const [user, cartCount] = await Promise.all([getUser(), getCartCount()]);
   const displayName = user ? [user.firstName, user.lastName].filter(Boolean).join(" ") || "حساب کاربری" : null;
+  const isStaff = user?.role === "ADMIN" || user?.role === "SUPPORT";
 
   return (
     <header>
@@ -52,6 +53,12 @@ export async function SiteHeader() {
               {displayName ?? "ورود / ثبت‌نام"}
               <User className="size-[18px]" aria-hidden />
             </Link>
+            {isStaff && (
+              <Link href="/admin" className="flex items-center gap-2 rounded-[10px] bg-ink px-4 py-2 text-[13px] font-bold text-white hover:bg-night">
+                پنل مدیریت
+                <LayoutDashboard className="size-[18px]" aria-hidden />
+              </Link>
+            )}
           </div>
         </div>
       </div>
@@ -60,7 +67,7 @@ export async function SiteHeader() {
       {/* Mobile header */}
       <div className="sticky top-0 z-30 bg-white md:hidden">
         <div className="flex items-center justify-between px-5 py-2">
-          <MobileMenu />
+          <MobileMenu isStaff={isStaff} />
           <Link href="/" className="flex items-center gap-2" aria-label={`${SITE.name} — صفحه اصلی`}>
             <LogoMark className="h-8 w-[54px]" />
             <span className="text-lg font-black">{SITE.name}</span>

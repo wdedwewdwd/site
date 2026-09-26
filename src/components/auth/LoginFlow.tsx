@@ -6,7 +6,7 @@ import { LoaderCircle, Phone } from "lucide-react";
 import { requestOtpAction, verifyOtpAction, type AuthState } from "@/app/actions/auth";
 import { LogoMark } from "@/components/brand/Logo";
 import { faDigits } from "@/lib/format";
-import { OTP_LENGTH } from "@/lib/validation";
+import { MIN_CODE_LENGTH, OTP_LENGTH } from "@/lib/validation";
 
 const RESEND_SEC = 90;
 
@@ -186,7 +186,7 @@ function CodeStep(props: {
         )}
       </p>
 
-      <button type="submit" disabled={props.pending || code.length !== OTP_LENGTH} className="btn-primary w-full">
+      <button type="submit" disabled={props.pending || code.length < MIN_CODE_LENGTH} className="btn-primary w-full">
         {props.pending && <LoaderCircle className="size-4 animate-spin" />}
         تأیید
       </button>

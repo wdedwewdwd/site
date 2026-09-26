@@ -16,7 +16,7 @@ const LINKS = [
   { href: "/terms", label: "قوانین و مقررات" },
 ];
 
-export function MobileMenu() {
+export function MobileMenu({ isStaff = false }: { isStaff?: boolean }) {
   const [open, setOpen] = useState(false);
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -47,6 +47,13 @@ export function MobileMenu() {
               </button>
             </div>
             <ul className="flex flex-col">
+              {isStaff && (
+                <li>
+                  <Link href="/admin" onClick={() => setOpen(false)} className="mb-2 block rounded-lg bg-ink px-3 py-3 text-sm font-bold text-white">
+                    پنل مدیریت
+                  </Link>
+                </li>
+              )}
               {LINKS.map((l) => (
                 <li key={l.href}>
                   <Link href={l.href} onClick={() => setOpen(false)} className="block rounded-lg px-3 py-3 text-sm font-bold text-ink hover:bg-canvas">

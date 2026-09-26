@@ -34,11 +34,16 @@ export const phoneSchema = z
   });
 
 export const OTP_LENGTH = 6;
+/** Staff sign in with a fixed numeric code (4–6 digits) typed into the same code form. */
+export const MIN_CODE_LENGTH = 4;
 
 export const otpSchema = z
   .string()
   .transform((v) => toEnDigits(v).replace(/\s/g, ""))
-  .pipe(z.string().regex(new RegExp(`^\\d{${OTP_LENGTH}}$`), "کد تأیید معتبر نیست"));
+  .pipe(z.string().regex(new RegExp(`^\\d{${MIN_CODE_LENGTH},${OTP_LENGTH}}$`), "کد تأیید معتبر نیست"));
+
+/** A staff member's fixed login code. */
+export const staffCodeSchema = z.string().regex(new RegExp(`^\\d{${MIN_CODE_LENGTH},${OTP_LENGTH}}$`), "کد باید ۴ تا ۶ رقم باشد");
 
 /** Iranian postal codes are 10 digits. */
 export const postalCodeSchema = z

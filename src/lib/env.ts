@@ -21,8 +21,6 @@ const schema = z
     ZARINPAL_MERCHANT_ID: z.string().optional(),
     ZARINPAL_SANDBOX: z.enum(["true", "false"]).default("false"),
 
-    // Comma-separated phone numbers that are granted ADMIN on first login.
-    ADMIN_PHONES: z.string().default(""),
     // Set to "true" only behind a trusted reverse proxy (Railway, Liara, ...).
     TRUST_PROXY: z.enum(["true", "false"]).default("true"),
   })

@@ -5,6 +5,7 @@ import { saveSettings } from "@/app/actions/admin/misc";
 import { faDateTime } from "@/lib/format";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { ActionForm } from "@/components/admin/ActionForm";
+import { ChangePasswordForm } from "@/components/admin/ChangePasswordForm";
 
 export const metadata = { title: "تنظیمات" };
 
@@ -28,6 +29,11 @@ export default async function SettingsPage() {
             <label className="flex flex-col gap-1 text-xs font-bold">کد اینماد (Code)<input name="enamad_code" defaultValue={settings.enamad_code ?? ""} dir="ltr" className="input py-2" /></label>
           </div>
         </ActionForm>
+      </section>
+
+      <section className="card mb-6 p-5">
+        <h2 className="mb-4 text-base font-black">تغییر رمز عبور من</h2>
+        <ChangePasswordForm />
       </section>
 
       <section className="card overflow-x-auto">

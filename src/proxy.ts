@@ -28,10 +28,11 @@ export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
   // Optimistic gate only — every protected page and action re-checks the session in the database.
-  const needsAuth = pathname.startsWith("/admin") || pathname.startsWith("/profile") || pathname.startsWith("/checkout");
+  const isAdmin = pathname.startsWith("/admin") && pathname !== "/admin/login";
+  const needsAuth = isAdmin || pathname.startsWith("/profile") || pathname.startsWith("/checkout");
   if (needsAuth && !request.cookies.has(SESSION_COOKIE)) {
     const url = request.nextUrl.clone();
-    url.pathname = "/login";
+    url.pathname = isAdmin ? "/admin/login" : "/login";
     url.search = `?next=${encodeURIComponent(pathname + search)}`;
     return NextResponse.redirect(url);
   }

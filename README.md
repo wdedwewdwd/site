@@ -41,7 +41,7 @@ npm run db:seed               # داده نمونه (اختیاری)
 npm run dev
 ```
 
-در حالت توسعه کد ورود در ترمینال چاپ می‌شود و پرداخت با درگاه آزمایشی انجام می‌شود. برای دسترسی مدیر، شماره خود را در `ADMIN_PHONES` بگذارید.
+در حالت توسعه کد ورود در ترمینال چاپ می‌شود و پرداخت با درگاه آزمایشی انجام می‌شود. برای ساخت مدیر: `npm run admin:set -- 09xxxxxxxxx` (رمز را می‌پرسد). مدیران از آدرس `/admin/login` با رمز وارد می‌شوند و کد پیامکی برایشان ارسال نمی‌شود.
 
 ## استقرار روی Railway
 
@@ -55,12 +55,13 @@ npm run dev
    | `DATABASE_URL` | `${{Postgres.DATABASE_URL}}` |
    | `APP_URL` | آدرس نهایی سایت با https (مثلاً `https://arizonyadak.ir`) |
    | `SESSION_SECRET` / `OTP_PEPPER` | دو رشته تصادفی جدا (دستور تولید در `.env.example`) |
-   | `ADMIN_PHONES` | شماره موبایل مدیر |
    | `UPLOAD_DIR` | `/data/uploads` |
    | `SMS_PROVIDER` + `KAVENEGAR_API_KEY` + `KAVENEGAR_OTP_TEMPLATE` | اطلاعات پنل کاوه‌نگار |
    | `PAYMENT_PROVIDER` + `ZARINPAL_MERCHANT_ID` | پس از دریافت درگاه؛ تا آن زمان `none` |
 
 5. در **Settings → Networking** دامنه خود را متصل کنید.
+
+پس از اولین استقرار، مدیر را با اجرای `npm run admin:set -- 09xxxxxxxxx` در shell سرور بسازید.
 
 در هر استقرار، migrationها به‌طور خودکار اجرا می‌شوند (`npm run start:prod`). برای وارد کردن داده نمونه یک‌بار `railway run npm run db:seed` را اجرا کنید.
 

@@ -26,6 +26,8 @@ model User {
   email        String?
   nationalCode String?
   role         Role      @default(CUSTOMER)
+  // Staff only. When set, the account signs in with a password at /admin/login instead of SMS codes.
+  passwordHash String?
   isActive     Boolean   @default(true)
   lastLoginAt  DateTime?
   createdAt    DateTime  @default(now())

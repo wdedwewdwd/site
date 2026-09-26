@@ -1,0 +1,23 @@
+import { SiteHeader } from "@/components/layout/SiteHeader";
+import { SiteFooter } from "@/components/layout/SiteFooter";
+import { BottomNav } from "@/components/layout/BottomNav";
+import { Toaster } from "@/components/ui/Toaster";
+import { getCartCount } from "@/lib/cart";
+
+export default async function ShopLayout({ children }: { children: React.ReactNode }) {
+  const cartCount = await getCartCount();
+  return (
+    <>
+      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:right-2 focus:z-50 focus:rounded-lg focus:bg-white focus:px-4 focus:py-2">
+        رفتن به محتوای اصلی
+      </a>
+      <SiteHeader />
+      <main id="main" className="min-h-[60vh]">
+        {children}
+      </main>
+      <SiteFooter />
+      <BottomNav cartCount={cartCount} />
+      <Toaster />
+    </>
+  );
+}

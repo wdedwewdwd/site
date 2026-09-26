@@ -1,0 +1,432 @@
+// Arizon Yadak — database schema
+// All prices are stored as integer Toman values.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Users & auth ───────────────────────────────────────────
+
+enum Role {
+  CUSTOMER
+  SUPPORT
+  ADMIN
+}
+
+model User {
+  id           String    @id @default(cuid())
+  phone        String    @unique // normalized: 09xxxxxxxxx
+  firstName    String?
+  lastName     String?
+  email        String?
+  nationalCode String?
+  role         Role      @default(CUSTOMER)
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  sessions      Session[]
+  addresses     Address[]
+  orders        Order[]
+  wishlist      WishlistItem[]
+  reviews       Review[]
+  notifications Notification[]
+  tickets       Ticket[]
+  cart          Cart?
+  auditLogs     AuditLog[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique // sha256 of the random cookie token; raw token never stored
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  ip        String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model OtpCode {
+  id         String    @id @default(cuid())
+  phone      String
+  codeHash   String // HMAC-SHA256(pepper, phone:code)
+  attempts   Int       @default(0)
+  expiresAt  DateTime
+  consumedAt DateTime?
+  ip         String?
+  createdAt  DateTime  @default(now())
+
+  @@index([phone, createdAt])
+}
+
+// Fixed-window rate limiter shared across all app instances.
+model RateLimit {
+  key         String   @id
+  count       Int
+  windowStart DateTime
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String?
+  actor     User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  action    String
+  entity    String?
+  entityId  String?
+  meta      Json?
+  ip        String?
+  createdAt DateTime @default(now())
+
+  @@index([actorId])
+  @@index([createdAt])
+}
+
+// ─── Catalog ────────────────────────────────────────────────
+
+model Category {
+  id        String     @id @default(cuid())
+  name      String
+  slug      String     @unique
+  icon      String? // lucide icon name
+  sortOrder Int        @default(0)
+  isActive  Boolean    @default(true)
+  parentId  String?
+  parent    Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children  Category[] @relation("CategoryTree")
+  products  Product[]
+  createdAt DateTime   @default(now())
+}
+
+model Brand {
+  id       String    @id @default(cuid())
+  name     String // e.g. "بوش"
+  latin    String? // e.g. "BOSCH"
+  slug     String    @unique
+  country  String?
+  products Product[]
+}
+
+model CarModel {
+  id        String           @id @default(cuid())
+  make      String // e.g. "پژو"
+  name      String // e.g. "۲۰۶ تیپ ۵"
+  slug      String           @unique
+  sortOrder Int              @default(0)
+  fitments  ProductFitment[]
+}
+
+model Product {
+  id             String   @id @default(cuid())
+  slug           String   @unique
+  name           String
+  sku            String   @unique
+  oemCode        String?
+  description    String?
+  specs          Json? // [{label, value}]
+  price          Int
+  compareAtPrice Int?
+  stock          Int      @default(0)
+  weightGrams    Int?
+  warranty       String?
+  madeIn         String?
+  isActive       Boolean  @default(true)
+  isFeatured     Boolean  @default(false)
+  ratingAvg      Float    @default(0)
+  ratingCount    Int      @default(0)
+  soldCount      Int      @default(0)
+  categoryId     String
+  category       Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  brandId        String?
+  brand          Brand?   @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  images     ProductImage[]
+  fitments   ProductFitment[]
+  reviews    Review[]
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+  wishlistBy WishlistItem[]
+
+  @@index([categoryId])
+  @@index([brandId])
+  @@index([isActive, soldCount])
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  alt       String?
+  sortOrder Int     @default(0)
+
+  @@index([productId])
+}
+
+model ProductFitment {
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  carModelId String
+  carModel   CarModel @relation(fields: [carModelId], references: [id], onDelete: Cascade)
+
+  @@id([productId, carModelId])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rating    Int
+  body      String
+  approved  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@unique([productId, userId])
+}
+
+model WishlistItem {
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([userId, productId])
+}
+
+// ─── Cart & orders ──────────────────────────────────────────
+
+model Cart {
+  id           String     @id @default(cuid())
+  userId       String?    @unique
+  user         User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  discountCode String?
+  items        CartItem[]
+  updatedAt    DateTime   @updatedAt
+  createdAt    DateTime   @default(now())
+}
+
+model CartItem {
+  cartId    String
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity  Int
+
+  @@id([cartId, productId])
+}
+
+model Address {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title         String?
+  receiverName  String
+  receiverPhone String
+  province      String
+  city          String
+  postalCode    String
+  fullAddress   String
+  isDefault     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  @@index([userId])
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAID
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  ONLINE
+  COD
+}
+
+enum ShippingMethod {
+  EXPRESS
+  POST
+}
+
+model Order {
+  id             String         @id @default(cuid())
+  number         Int            @unique @default(autoincrement())
+  userId         String
+  user           User           @relation(fields: [userId], references: [id], onDelete: Restrict)
+  status         OrderStatus    @default(PENDING_PAYMENT)
+  paymentMethod  PaymentMethod
+  shippingMethod ShippingMethod
+  subtotal       Int
+  discount       Int            @default(0)
+  shippingCost   Int
+  total          Int
+  discountCode   String?
+  // Address snapshot — orders must not change if the user edits an address later.
+  receiverName   String
+  receiverPhone  String
+  province       String
+  city           String
+  postalCode     String
+  fullAddress    String
+  trackingCode   String?
+  note           String?
+  paidAt         DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  items    OrderItem[]
+  payments Payment[]
+  events   OrderEvent[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  name      String
+  sku       String
+  unitPrice Int
+  quantity  Int
+
+  @@index([orderId])
+}
+
+model OrderEvent {
+  id        String      @id @default(cuid())
+  orderId   String
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status    OrderStatus
+  note      String?
+  createdAt DateTime    @default(now())
+
+  @@index([orderId])
+}
+
+enum PaymentStatus {
+  INITIATED
+  SUCCEEDED
+  FAILED
+}
+
+model Payment {
+  id         String        @id @default(cuid())
+  orderId    String
+  order      Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  gateway    String
+  amount     Int // Toman
+  authority  String?       @unique
+  refId      String?
+  cardPan    String? // masked, as returned by the gateway
+  status     PaymentStatus @default(INITIATED)
+  createdAt  DateTime      @default(now())
+  verifiedAt DateTime?
+
+  @@index([orderId])
+}
+
+enum DiscountType {
+  PERCENT
+  FIXED
+}
+
+model DiscountCode {
+  id          String       @id @default(cuid())
+  code        String       @unique
+  type        DiscountType
+  value       Int
+  maxDiscount Int?
+  minOrder    Int          @default(0)
+  maxUses     Int?
+  usedCount   Int          @default(0)
+  validFrom   DateTime?
+  validTo     DateTime?
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+}
+
+// ─── Engagement & support ───────────────────────────────────
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  body      String
+  href      String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, readAt])
+}
+
+enum TicketStatus {
+  OPEN
+  ANSWERED
+  CLOSED
+}
+
+model Ticket {
+  id        String          @id @default(cuid())
+  number    Int             @unique @default(autoincrement())
+  userId    String
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject   String
+  category  String?
+  orderRef  String?
+  status    TicketStatus    @default(OPEN)
+  messages  TicketMessage[]
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
+
+model TicketMessage {
+  id        String   @id @default(cuid())
+  ticketId  String
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  authorId  String?
+  fromStaff Boolean  @default(false)
+  body      String
+  createdAt DateTime @default(now())
+
+  @@index([ticketId])
+}
+
+model Faq {
+  id        String  @id @default(cuid())
+  question  String
+  answer    String
+  group     String?
+  sortOrder Int     @default(0)
+}
+
+// Key/value store for editable site settings (contact info, eNamad code, shipping prices...).
+model Setting {
+  key   String @id
+  value String
+}

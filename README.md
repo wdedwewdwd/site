@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# آریزون یدک — فروشگاه اینترنتی قطعات یدکی خودرو
 
-## Getting Started
+فروشگاه کامل با Next.js 16، PostgreSQL (Prisma 7) و Tailwind CSS 4، راست‌چین و منطبق بر طراحی فیگما.
 
-First, run the development server:
+## امکانات
+
+- **فروشگاه:** صفحه اصلی، دسته‌بندی‌ها، لیست محصولات با فیلتر (برند، خودروی سازگار، موجودی) و مرتب‌سازی، جستجو (نام، برند، کد فنی OEM، خودرو)، صفحه محصول با مشخصات فنی و خودروهای سازگار، تخفیف‌ها
+- **خرید:** سبد خرید (مهمان و عضو)، کد تخفیف، انتخاب آدرس و روش ارسال، پرداخت آنلاین (زرین‌پال) یا در محل، صفحه نتیجه پرداخت
+- **حساب کاربری:** ورود/ثبت‌نام با کد پیامکی، داشبورد، سفارش‌ها و پیگیری مرحله‌ای، آدرس‌ها، علاقه‌مندی‌ها، اعلان‌ها، تیکت پشتیبانی
+- **پنل مدیریت (`/admin`):** داشبورد و نمودار درآمد، محصولات (با آپلود امن تصویر)، سفارش‌ها و تغییر وضعیت، مشتریان و نقش‌ها، دسته‌بندی‌ها، کدهای تخفیف، تیکت‌ها، تنظیمات اینماد، گزارش فعالیت مدیران
+- **صفحات لازم برای اینماد:** درباره ما، تماس با ما (نشانی، کد پستی، تلفن ثابت، ایمیل)، قوانین و مقررات، حریم خصوصی، رویه بازگرداندن کالا (۷ روز حق انصراف)، رویه ارسال، شیوه‌های پرداخت، سوالات متداول، محل نماد اینماد در فوتر
+
+## امنیت
+
+| لایه | پیاده‌سازی |
+|---|---|
+| احراز هویت | کد یکبارمصرف ۶ رقمی (تولید با `crypto.randomInt`)، ذخیره به‌صورت HMAC، انقضای ۲ دقیقه، حداکثر ۵ تلاش، محدودیت ارسال به ازای شماره و IP |
+| نشست | توکن تصادفی ۲۵۶ بیتی در کوکی `__Host-` با `HttpOnly`، `Secure` و `SameSite=Lax`؛ فقط هش آن در دیتابیس؛ قابل ابطال؛ نشست مدیران حداکثر ۱۲ ساعت |
+| دسترسی | بررسی نقش در دیتابیس برای هر صفحه و هر Server Action؛ همه کوئری‌های کاربر با `userId` محدود می‌شوند (جلوگیری از IDOR) |
+| ورودی‌ها | اعتبارسنجی تمام ورودی‌ها با Zod؛ Prisma (بدون SQL خام از ورودی کاربر) |
+| XSS / Clickjacking | CSP مبتنی بر nonce، `frame-ancestors 'none'`، بدون HTML خام از ورودی کاربر |
+| هدرها | HSTS (با preload)، X-Content-Type-Options، Referrer-Policy، Permissions-Policy، COOP/CORP |
+| CSRF | بررسی Origin داخلی Server Actions + کوکی SameSite |
+| پرداخت | مبلغ فقط از دیتابیس؛ تأیید سرور-به-سرور با درگاه؛ جلوگیری از پردازش تکراری callback؛ رزرو اتمی موجودی |
+| آپلود | تشخیص نوع فایل از روی محتوا، محدودیت حجم و ابعاد، بازسازی تصویر (حذف EXIF و محتوای مخفی)، نام تصادفی |
+| سوءاستفاده | Rate limit مشترک در دیتابیس برای ورود، کد تخفیف، سبد، تیکت و پرداخت |
+| ردیابی | ثبت همه عملیات مدیریتی با IP در گزارش فعالیت |
+
+## اجرای محلی
 
 ```bash
+npm install
+cp .env.example .env          # سپس SESSION_SECRET و OTP_PEPPER را پر کنید
+npx prisma dev --detach       # یا هر PostgreSQL دیگر؛ آدرس را در DATABASE_URL بگذارید
+npx prisma migrate dev
+npm run db:seed               # داده نمونه (اختیاری)
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+در حالت توسعه کد ورود در ترمینال چاپ می‌شود و پرداخت با درگاه آزمایشی انجام می‌شود. برای دسترسی مدیر، شماره خود را در `ADMIN_PHONES` بگذارید.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## استقرار روی Railway
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. در Railway یک پروژه جدید بسازید، **Deploy from GitHub repo** را بزنید و این مخزن را انتخاب کنید.
+2. در همان پروژه **+ New → Database → PostgreSQL** اضافه کنید.
+3. روی سرویس سایت یک **Volume** با مسیر `/data` بسازید (برای تصاویر آپلودی).
+4. در تب **Variables** سرویس سایت این مقادیر را وارد کنید:
 
-## Learn More
+   | متغیر | مقدار |
+   |---|---|
+   | `DATABASE_URL` | `${{Postgres.DATABASE_URL}}` |
+   | `APP_URL` | آدرس نهایی سایت با https (مثلاً `https://arizonyadak.ir`) |
+   | `SESSION_SECRET` / `OTP_PEPPER` | دو رشته تصادفی جدا (دستور تولید در `.env.example`) |
+   | `ADMIN_PHONES` | شماره موبایل مدیر |
+   | `UPLOAD_DIR` | `/data/uploads` |
+   | `SMS_PROVIDER` + `KAVENEGAR_API_KEY` + `KAVENEGAR_OTP_TEMPLATE` | اطلاعات پنل کاوه‌نگار |
+   | `PAYMENT_PROVIDER` + `ZARINPAL_MERCHANT_ID` | پس از دریافت درگاه؛ تا آن زمان `none` |
 
-To learn more about Next.js, take a look at the following resources:
+5. در **Settings → Networking** دامنه خود را متصل کنید.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+در هر استقرار، migrationها به‌طور خودکار اجرا می‌شوند (`npm run start:prod`). برای وارد کردن داده نمونه یک‌بار `railway run npm run db:seed` را اجرا کنید.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+> **نکته مهم درباره درگاه پرداخت:** شاپرک و درگاه‌های پرداخت معمولاً میزبانی سرور در ایران را الزامی می‌دانند و ممکن است درخواست‌ها از IP خارج از ایران را رد کنند. Railway سرور خارج از ایران دارد؛ برای راه‌اندازی درگاه، انتقال به یک میزبان ایرانی مشابه (مثل لیارا یا ابر آروان) لازم خواهد شد. کد بدون تغییر روی آن‌ها هم اجرا می‌شود.
 
-## Deploy on Vercel
+## قبل از درخواست اینماد
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- اطلاعات تماس واقعی را در `src/lib/shop.ts` (ثابت `SITE`) وارد کنید. این اطلاعات باید دقیقاً با اطلاعات ثبت‌شده در اینماد یکی باشد.
+- متن صفحات قوانین، حریم خصوصی و بازگرداندن کالا را با شرایط واقعی کسب‌وکار خود بازبینی کنید.
+- پس از دریافت نماد، شناسه و کد آن را در **پنل مدیریت ← تنظیمات** وارد کنید.

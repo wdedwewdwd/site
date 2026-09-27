@@ -21,10 +21,7 @@ export async function SiteHeader() {
       {/* Top bar (desktop) */}
       <div className="hidden border-b border-white/[0.06] bg-coal md:block">
         <div className="container-page flex items-center justify-between py-2 text-[13px] text-white/60">
-          <p className="flex items-center gap-5">
-            <Link href="/profile/orders" className="hover:text-white">پیگیری سفارش</Link>
-            <Link href="/contact" className="hover:text-white">فروشنده شوید</Link>
-          </p>
+          <Link href="/profile/orders" className="hover:text-white">پیگیری سفارش</Link>
           <p className="flex items-center gap-3">
             <span>
               پشتیبانی: <a href={`tel:${contact.phone}`} dir="ltr" className="hover:text-white">{contact.phoneDisplay}</a>

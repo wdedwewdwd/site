@@ -241,7 +241,7 @@ model Address {
   receiverPhone String
   province      String
   city          String
-  postalCode    String
+  postalCode    String? // optional: staff can phone the customer for it
   fullAddress   String
   isDefault     Boolean  @default(false)
   createdAt     DateTime @default(now())
@@ -287,7 +287,7 @@ model Order {
   receiverPhone  String
   province       String
   city           String
-  postalCode     String
+  postalCode     String?
   fullAddress    String
   trackingCode   String?
   note           String?

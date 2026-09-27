@@ -75,6 +75,9 @@ export default async function AdminOrdersPage({ searchParams }: PageProps<"/admi
                 <td className="px-4 py-3">
                   {[o.user.firstName, o.user.lastName].filter(Boolean).join(" ") || "—"}
                   <span className="block text-[11px] text-muted" dir="ltr">{faDigits(o.user.phone)}</span>
+                  {!o.postalCode && (
+                    <span className="mt-1 inline-block rounded bg-warning-soft px-1.5 py-0.5 text-[10px] font-bold text-warning">بدون کد پستی</span>
+                  )}
                 </td>
                 <td className="px-4 py-3 font-bold">{toman(o.total)}</td>
                 <td className="px-4 py-3 text-muted">{o.paymentMethod === "ONLINE" ? "آنلاین" : "در محل"}</td>

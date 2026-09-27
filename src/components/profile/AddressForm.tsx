@@ -13,7 +13,7 @@ type Address = {
   receiverPhone: string;
   province: string;
   city: string;
-  postalCode: string;
+  postalCode: string | null;
   fullAddress: string;
   isDefault: boolean;
 };
@@ -53,7 +53,7 @@ export function AddressForm({ address, next, defaultName, defaultPhone }: { addr
         />
         {e.fullAddress && <p className="field-error">{e.fullAddress}</p>}
       </div>
-      <Field label="کد پستی" name="postalCode" dir="ltr" inputMode="numeric" defaultValue={address?.postalCode ?? ""} error={e.postalCode} required maxLength={11} autoComplete="postal-code" hint="۱۰ رقم، بدون خط تیره" />
+      <Field label="کد پستی (اختیاری)" name="postalCode" dir="ltr" inputMode="numeric" defaultValue={address?.postalCode ?? ""} error={e.postalCode} maxLength={11} autoComplete="postal-code" hint="۱۰ رقم. اگر نمی‌دانید خالی بگذارید؛ برای دریافت آن با شما تماس می‌گیریم." />
       <Field label="عنوان آدرس (اختیاری)" name="title" placeholder="مثلاً خانه یا محل کار" defaultValue={address?.title ?? ""} error={e.title} maxLength={30} />
       <label className="flex items-center gap-2 text-sm md:col-span-2">
         <input type="checkbox" name="isDefault" defaultChecked={address?.isDefault} className="size-4 accent-brand" />

@@ -33,7 +33,7 @@ export default async function AddressesPage() {
               <p className="text-[13px] leading-7">{a.province}، {a.city}، {a.fullAddress}</p>
               <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-muted">
                 <span>گیرنده: <b className="text-ink">{a.receiverName} (<span dir="ltr">{faDigits(a.receiverPhone)}</span>)</b></span>
-                <span>کد پستی: <b className="text-ink">{faDigits(a.postalCode)}</b></span>
+                <span>کد پستی: <b className="text-ink">{a.postalCode ? faDigits(a.postalCode) : "وارد نشده"}</b></span>
               </div>
               <AddressActions id={a.id} isDefault={a.isDefault} />
             </li>

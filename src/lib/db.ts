@@ -14,8 +14,19 @@ function create() {
   return new PrismaClient({ adapter, log: isProd ? ["error"] : ["error", "warn"] });
 }
 
-// Reuse one client across hot reloads in development.
-const globalForPrisma = globalThis as unknown as { prisma?: ReturnType<typeof create> };
+// Reuse one client across hot reloads in development, but replace it when the generated
+// client was regenerated (e.g. after a schema change), so a stale client is never used.
+const globalForPrisma = globalThis as unknown as { prisma?: ReturnType<typeof create>; prismaClass?: typeof PrismaClient };
 
-export const db = globalForPrisma.prisma ?? create();
-if (!isProd) globalForPrisma.prisma = db;
+function reuseOrCreate() {
+  const cached = globalForPrisma.prisma;
+  if (cached && globalForPrisma.prismaClass === PrismaClient) return cached;
+  void cached?.$disconnect();
+  return create();
+}
+
+export const db = isProd ? create() : reuseOrCreate();
+if (!isProd) {
+  globalForPrisma.prisma = db;
+  globalForPrisma.prismaClass = PrismaClient;
+}

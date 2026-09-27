@@ -6,7 +6,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireUser, safeNext } from "@/lib/auth/session";
 import { PROVINCES, isValidNationalCode } from "@/lib/iran";
-import { idSchema, phoneSchema, postalCodeSchema, text, toEnDigits } from "@/lib/validation";
+import { idSchema, optionalPostalCodeSchema, phoneSchema, text, toEnDigits } from "@/lib/validation";
 
 export type FormState = { ok: boolean; message?: string; errors?: Record<string, string> } | null;
 
@@ -55,7 +55,7 @@ const addressSchema = z.object({
   receiverPhone: phoneSchema,
   province: z.enum(PROVINCES, "استان را انتخاب کنید"),
   city: text(50, 2),
-  postalCode: postalCodeSchema,
+  postalCode: optionalPostalCodeSchema,
   fullAddress: text(300, 10),
   isDefault: z.string().optional(),
 });

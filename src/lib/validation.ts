@@ -45,11 +45,12 @@ export const otpSchema = z
 /** A staff member's fixed login code. */
 export const staffCodeSchema = z.string().regex(new RegExp(`^\\d{${MIN_CODE_LENGTH},${OTP_LENGTH}}$`), "کد باید ۴ تا ۶ رقم باشد");
 
-/** Iranian postal codes are 10 digits. */
-export const postalCodeSchema = z
+/** Iranian postal codes are 10 digits. Optional: an empty value becomes null. */
+export const optionalPostalCodeSchema = z
   .string()
-  .transform((v) => toEnDigits(v).replace(/[\s-]/g, ""))
-  .pipe(z.string().regex(/^\d{10}$/, "کد پستی باید ۱۰ رقم باشد"));
+  .optional()
+  .transform((v) => toEnDigits(v ?? "").replace(/[\s-]/g, ""))
+  .pipe(z.union([z.literal("").transform(() => null), z.string().regex(/^\d{10}$/, "کد پستی باید ۱۰ رقم باشد (یا خالی بگذارید)")]));
 
 /** Trimmed text with a max length and no control characters. */
 export const text = (max: number, min = 1) =>

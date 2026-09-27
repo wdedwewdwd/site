@@ -94,7 +94,11 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/order
               <h2 className="text-base font-black">ارسال به</h2>
               <p>{order.receiverName} — <span dir="ltr">{faDigits(order.receiverPhone)}</span></p>
               <p className="leading-7">{order.province}، {order.city}، {order.fullAddress}</p>
-              <p>کد پستی: {faDigits(order.postalCode)}</p>
+              {order.postalCode ? (
+                <p>کد پستی: {faDigits(order.postalCode)}</p>
+              ) : (
+                <p className="rounded-lg bg-warning-soft px-3 py-2 text-xs font-bold text-warning">کد پستی وارد نشده؛ قبل از ارسال با گیرنده تماس بگیرید.</p>
+              )}
             </div>
           </section>
 

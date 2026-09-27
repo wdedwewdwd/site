@@ -106,7 +106,7 @@ export default async function OrderDetailPage({ params }: PageProps<"/profile/or
           <section className="card flex flex-col gap-3 p-5 text-[13px]" aria-labelledby="delivery">
             <h2 id="delivery" className="text-base font-black">اطلاعات تحویل و مرسوله</h2>
             <p><span className="text-muted">تحویل‌گیرنده: </span>{order.receiverName} (<span dir="ltr">{faDigits(order.receiverPhone)}</span>)</p>
-            <p className="leading-7"><span className="text-muted">نشانی ارسال: </span>{order.province}، {order.city}، {order.fullAddress} — کد پستی {faDigits(order.postalCode)}</p>
+            <p className="leading-7"><span className="text-muted">نشانی ارسال: </span>{order.province}، {order.city}، {order.fullAddress}{order.postalCode && <> — کد پستی {faDigits(order.postalCode)}</>}</p>
             <p><span className="text-muted">روش ارسال: </span>{SHIPPING[order.shippingMethod].title}</p>
             <p><span className="text-muted">روش پرداخت: </span>{order.paymentMethod === "ONLINE" ? "درگاه آنلاین بانکی" : "پرداخت در محل"}</p>
             {order.payments[0]?.refId && (

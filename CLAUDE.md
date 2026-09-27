@@ -19,6 +19,8 @@ npx prisma migrate deploy && npm run db:seed
 npm run admin:set -- 09xxxxxxxxx   # creates an admin + fixed 4–6 digit login code (reads code from stdin)
 npm run dev
 ```
+The owner runs the site with `start-local.cmd` and updates with `update-site.cmd` (fast-forwards local `main`
+from GitHub, then starts the site), so finished work must end up on `main`.
 Dev login codes are printed as `[dev-sms]` (SMS_PROVIDER=console). Payments use the mock gateway in dev.
 Checks before committing: `npx tsc --noEmit`, `npx eslint src scripts`, and for big changes a production
 build (`APP_URL=https://example.com PAYMENT_PROVIDER=none ALLOW_CONSOLE_SMS=true npx next build`).

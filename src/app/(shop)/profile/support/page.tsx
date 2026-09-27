@@ -3,13 +3,17 @@ import { Headset, Plus } from "lucide-react";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/auth/session";
 import { faDate, faDigits } from "@/lib/format";
-import { SITE, TICKET_STATUS } from "@/lib/shop";
+import { TICKET_STATUS } from "@/lib/shop";
+import { getContact } from "@/lib/settings";
 import { PageBar } from "@/components/layout/PageBar";
 
 
 export default async function SupportPage() {
   const user = await requireUser("/profile/support");
-  const tickets = await db.ticket.findMany({ where: { userId: user.id }, orderBy: { updatedAt: "desc" }, take: 50 });
+  const [tickets, contact] = await Promise.all([
+    db.ticket.findMany({ where: { userId: user.id }, orderBy: { updatedAt: "desc" }, take: 50 }),
+    getContact(),
+  ]);
 
   return (
     <>
@@ -21,8 +25,13 @@ export default async function SupportPage() {
           <div className="flex flex-col gap-1">
             <h1 className="sr-only text-lg font-black md:not-sr-only">پشتیبانی</h1>
             <p className="text-xs text-muted">
-              تلفن: <a href={`tel:${SITE.supportPhoneTel}`} dir="ltr">{SITE.supportPhone}</a> — موبایل:{" "}
-              <a href={`tel:${SITE.supportMobileTel}`} dir="ltr">{SITE.supportMobile}</a> — {SITE.supportHours}
+              تلفن: <a href={`tel:${contact.phone}`} dir="ltr">{contact.phoneDisplay}</a>
+              {contact.mobile && (
+                <>
+                  {" "}— موبایل: <a href={`tel:${contact.mobile}`} dir="ltr">{contact.mobileDisplay}</a>
+                </>
+              )}{" "}
+              — {contact.hours}
             </p>
           </div>
         </div>

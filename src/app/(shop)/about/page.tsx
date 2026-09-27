@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import { ContentPage } from "@/components/ui/ContentPage";
-import { SITE, SITE_ADDRESS } from "@/lib/shop";
+import { SITE } from "@/lib/shop";
+import { getContact } from "@/lib/settings";
 
 export const metadata: Metadata = { title: "درباره ما" };
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const contact = await getContact();
   return (
     <ContentPage title="درباره ما">
       <p>
@@ -21,10 +23,11 @@ export default function AboutPage() {
       </ul>
       <h2>اطلاعات تماس</h2>
       <p>
-        نشانی: {SITE_ADDRESS}
+        نشانی: {contact.addressLine}
         <br />
-        تلفن ثابت: <span dir="ltr">{SITE.supportPhone}</span> — موبایل: <span dir="ltr">{SITE.supportMobile}</span> ({SITE.supportHours})
-        {SITE.email && <><br />ایمیل: <span dir="ltr">{SITE.email}</span></>}
+        تلفن: <span dir="ltr">{contact.phoneDisplay}</span>
+        {contact.mobile && <> — موبایل: <span dir="ltr">{contact.mobileDisplay}</span></>} ({contact.hours})
+        {contact.email && <><br />ایمیل: <span dir="ltr">{contact.email}</span></>}
       </p>
     </ContentPage>
   );

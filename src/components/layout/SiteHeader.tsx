@@ -4,6 +4,7 @@ import { getUser } from "@/lib/auth/session";
 import { getCartCount } from "@/lib/cart";
 import { faDigits } from "@/lib/format";
 import { SITE } from "@/lib/shop";
+import { getContact } from "@/lib/settings";
 import { Logo, LogoMark } from "@/components/brand/Logo";
 import { SearchBox } from "./SearchBox";
 import { NavLinks } from "./NavLinks";
@@ -11,7 +12,7 @@ import { MobileMenu } from "./MobileMenu";
 import { OnlyOnPaths } from "./navigation";
 
 export async function SiteHeader() {
-  const [user, cartCount] = await Promise.all([getUser(), getCartCount()]);
+  const [user, cartCount, contact] = await Promise.all([getUser(), getCartCount(), getContact()]);
   const displayName = user ? [user.firstName, user.lastName].filter(Boolean).join(" ") || "حساب کاربری" : null;
   const isStaff = user?.role === "ADMIN" || user?.role === "SUPPORT";
 
@@ -25,9 +26,12 @@ export async function SiteHeader() {
             <Link href="/contact" className="hover:text-white">فروشنده شوید</Link>
           </p>
           <p className="flex items-center gap-3">
-            <span>پشتیبانی: <a href={`tel:${SITE.supportPhoneTel}`} dir="ltr" className="hover:text-white">{SITE.supportPhone}</a> · <a href={`tel:${SITE.supportMobileTel}`} dir="ltr" className="hover:text-white">{SITE.supportMobile}</a></span>
+            <span>
+              پشتیبانی: <a href={`tel:${contact.phone}`} dir="ltr" className="hover:text-white">{contact.phoneDisplay}</a>
+              {contact.mobile && <> · <a href={`tel:${contact.mobile}`} dir="ltr" className="hover:text-white">{contact.mobileDisplay}</a></>}
+            </span>
             <span aria-hidden>·</span>
-            <span>{SITE.supportHours}</span>
+            <span>{contact.hours}</span>
           </p>
         </div>
       </div>

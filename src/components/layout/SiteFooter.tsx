@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { Instagram, MessageCircle, Send } from "@/components/icons/Social";
+import { Instagram, Telegram, WhatsApp } from "@/components/icons/Social";
 import { LogoMark } from "@/components/brand/Logo";
-import { SITE, SITE_ADDRESS } from "@/lib/shop";
-import { getSettings } from "@/lib/settings";
+import { SITE } from "@/lib/shop";
+import { getContact, getSettings } from "@/lib/settings";
 
 const COLUMNS = [
   {
@@ -28,7 +28,12 @@ const COLUMNS = [
 ];
 
 export async function SiteFooter() {
-  const settings = await getSettings();
+  const [settings, contact] = await Promise.all([getSettings(), getContact()]);
+  const socials = [
+    { url: contact.instagramUrl, label: "اینستاگرام", Icon: Instagram },
+    { url: contact.telegramUrl, label: "تلگرام", Icon: Telegram },
+    { url: contact.whatsappUrl, label: "واتساپ", Icon: WhatsApp },
+  ].filter((s): s is typeof s & { url: string } => !!s.url);
   const enamadId = settings.enamad_id;
   const enamadCode = settings.enamad_code;
 
@@ -43,11 +48,15 @@ export async function SiteFooter() {
             </div>
             <p className="text-[13px] leading-[1.9]">{SITE.description}</p>
             <address className="text-[13px] not-italic leading-[1.9] text-subtle">
-              نشانی: {SITE_ADDRESS}
+              نشانی: {contact.addressLine}
               <br />
-              تلفن: <a href={`tel:${SITE.supportPhoneTel}`} dir="ltr" className="hover:text-white">{SITE.supportPhone}</a> — موبایل:{" "}
-              <a href={`tel:${SITE.supportMobileTel}`} dir="ltr" className="hover:text-white">{SITE.supportMobile}</a>
-              {SITE.email && <> — ایمیل: <span dir="ltr">{SITE.email}</span></>}
+              تلفن: <a href={`tel:${contact.phone}`} dir="ltr" className="hover:text-white">{contact.phoneDisplay}</a>
+              {contact.mobile && (
+                <>
+                  {" "}— موبایل: <a href={`tel:${contact.mobile}`} dir="ltr" className="hover:text-white">{contact.mobileDisplay}</a>
+                </>
+              )}
+              {contact.email && <> — ایمیل: <span dir="ltr">{contact.email}</span></>}
             </address>
           </div>
 
@@ -101,17 +110,15 @@ export async function SiteFooter() {
 
         <div className="flex flex-col-reverse items-center justify-between gap-4 md:flex-row">
           <p className="text-xs text-subtle">کلیه حقوق مادی و معنوی این وب‌سایت متعلق به {SITE.name} می‌باشد.</p>
-          <div className="flex gap-4 text-line">
-            <a href="https://instagram.com/" target="_blank" rel="noopener noreferrer" aria-label="اینستاگرام" className="hover:text-white">
-              <Instagram className="size-5" />
-            </a>
-            <a href="https://t.me/" target="_blank" rel="noopener noreferrer" aria-label="تلگرام" className="hover:text-white">
-              <Send className="size-5" />
-            </a>
-            <Link href="/support" aria-label="پشتیبانی" className="hover:text-white">
-              <MessageCircle className="size-5" />
-            </Link>
-          </div>
+          {socials.length > 0 && (
+            <div className="flex gap-3 text-line">
+              {socials.map(({ url, label, Icon }) => (
+                <a key={label} href={url} target="_blank" rel="noopener noreferrer" aria-label={label} title={label} className="grid size-9 place-items-center rounded-full bg-white/5 transition-colors hover:bg-white/15 hover:text-white">
+                  <Icon className="size-5" />
+                </a>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </footer>

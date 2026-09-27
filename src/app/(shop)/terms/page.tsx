@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ContentPage } from "@/components/ui/ContentPage";
 import { SITE } from "@/lib/shop";
+import { getContact } from "@/lib/settings";
 
 export const metadata: Metadata = { title: "قوانین و مقررات" };
 
-export default function TermsPage() {
+export default async function TermsPage() {
+  const contact = await getContact();
   return (
     <ContentPage title="قوانین و مقررات" updated="۱۴۰۵/۰۷/۰۵">
       <p>
@@ -37,8 +39,9 @@ export default function TermsPage() {
       <p>نحوه جمع‌آوری و نگهداری اطلاعات کاربران در صفحه <Link href="/privacy">حریم خصوصی</Link> شرح داده شده است.</p>
       <h2>۷. رسیدگی به شکایات</h2>
       <p>
-        شکایات از طریق <Link href="/support">سامانه پشتیبانی</Link>، تلفن <span dir="ltr">{SITE.supportPhone}</span> و <span dir="ltr">{SITE.supportMobile}</span>
-        {SITE.email && <> یا ایمیل <span dir="ltr">{SITE.email}</span></>} دریافت
+        شکایات از طریق <Link href="/support">سامانه پشتیبانی</Link>، تلفن <span dir="ltr">{contact.phoneDisplay}</span>
+        {contact.mobile && <> و <span dir="ltr">{contact.mobileDisplay}</span></>}
+        {contact.email && <> یا ایمیل <span dir="ltr">{contact.email}</span></>} دریافت
         و حداکثر ظرف ۴۸ ساعت کاری پاسخ داده می‌شود. در صورت عدم رضایت، کاربر می‌تواند به مراجع قانونی ذی‌صلاح مراجعه کند.
       </p>
     </ContentPage>

@@ -37,8 +37,10 @@ const productSchema = z
     oemCode: z.union([z.literal(""), text(60)]),
     categoryId: idSchema,
     brandId: z.union([z.literal(""), idSchema]),
-    price: money("قیمت").pipe(z.number().min(1000, "قیمت باید حداقل ۱۰۰۰ تومان باشد")),
-    compareAtPrice: optionalMoney("قیمت قبل از تخفیف"),
+    // What the owner types: the normal price, and optionally a discounted price.
+    basePrice: money("قیمت اصلی").pipe(z.number().min(1000, "قیمت باید حداقل ۱۰۰۰ تومان باشد")),
+    hasDiscount: z.string().optional(),
+    salePrice: optionalMoney("قیمت بعد از تخفیف"),
     stock: z.string().transform((v) => toEnDigits(v)).pipe(z.string().regex(/^\d{1,6}$/, "موجودی معتبر نیست")).transform(Number),
     warranty: z.union([z.literal(""), text(80)]),
     madeIn: z.union([z.literal(""), text(40)]),
@@ -48,9 +50,11 @@ const productSchema = z
     isActive: z.string().optional(),
     isFeatured: z.string().optional(),
   })
-  .refine((d) => d.compareAtPrice === null || d.compareAtPrice > d.price, {
-    path: ["compareAtPrice"],
-    message: "قیمت قبل از تخفیف باید بیشتر از قیمت فعلی باشد",
+  .superRefine((d, ctx) => {
+    if (d.hasDiscount !== "on") return;
+    if (d.salePrice === null) ctx.addIssue({ code: "custom", path: ["salePrice"], message: "قیمت بعد از تخفیف یا درصد تخفیف را وارد کنید" });
+    else if (d.salePrice < 1000) ctx.addIssue({ code: "custom", path: ["salePrice"], message: "قیمت بعد از تخفیف باید حداقل ۱۰۰۰ تومان باشد" });
+    else if (d.salePrice >= d.basePrice) ctx.addIssue({ code: "custom", path: ["salePrice"], message: "قیمت بعد از تخفیف باید کمتر از قیمت اصلی باشد" });
   });
 
 function parseSpecs(raw: string) {
@@ -75,6 +79,10 @@ export async function saveProduct(_: ProductFormState, formData: FormData): Prom
     return { ok: false, errors };
   }
   const d = parsed.data;
+  // Stored as the price the customer pays plus the struck-through price.
+  const discounted = d.hasDiscount === "on" && d.salePrice !== null;
+  const price = discounted ? d.salePrice! : d.basePrice;
+  const compareAtPrice = discounted ? d.basePrice : null;
 
   const fitmentIds = formData.getAll("fitments").map(String).filter((v) => idSchema.safeParse(v).success).slice(0, 100);
   const removeImages = formData.getAll("removeImage").map(String).filter((v) => idSchema.safeParse(v).success);
@@ -105,8 +113,8 @@ export async function saveProduct(_: ProductFormState, formData: FormData): Prom
     oemCode: d.oemCode || null,
     categoryId: d.categoryId,
     brandId: d.brandId || null,
-    price: d.price,
-    compareAtPrice: d.compareAtPrice,
+    price,
+    compareAtPrice,
     stock: d.stock,
     warranty: d.warranty || null,
     madeIn: d.madeIn || null,

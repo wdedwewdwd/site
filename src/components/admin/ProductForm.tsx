@@ -1,10 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import { useActionState } from "react";
+import { useActionState, useTransition } from "react";
 import { LoaderCircle } from "lucide-react";
 import { saveProduct, type ProductFormState } from "@/app/actions/admin/products";
 import { Field } from "@/components/ui/Field";
+import { CarModelManager, type CarRow } from "./CarModelManager";
+import { ProductPriceFields } from "./ProductPriceFields";
 
 type Opt = { id: string; name: string };
 type Product = {
@@ -14,14 +16,21 @@ type Product = {
   images: { id: string; url: string }[]; fitments: { carModelId: string }[];
 };
 
-export function ProductForm({ product, categories, brands, cars }: { product?: Product; categories: Opt[]; brands: Opt[]; cars: Opt[] }) {
+export function ProductForm({ product, categories, brands, cars }: { product?: Product; categories: Opt[]; brands: Opt[]; cars: CarRow[] }) {
   const [state, action, pending] = useActionState<ProductFormState, FormData>(saveProduct, null);
+  const [, start] = useTransition();
+  // Submitting through onSubmit (not the form action) keeps everything typed when the server reports an error.
+  const onSubmit = (ev: React.FormEvent<HTMLFormElement>) => {
+    ev.preventDefault();
+    const formData = new FormData(ev.currentTarget);
+    start(() => action(formData));
+  };
   const e = state?.errors ?? {};
   const specs = Array.isArray(product?.specs) ? (product.specs as { label: string; value: string }[]).map((s) => `${s.label}: ${s.value}`).join("\n") : "";
   const fits = new Set(product?.fitments.map((f) => f.carModelId));
 
   return (
-    <form action={action} className="grid gap-6 xl:grid-cols-[1fr_340px]" noValidate>
+    <form onSubmit={onSubmit} className="grid gap-6 xl:grid-cols-[1fr_340px]" noValidate>
       <input type="hidden" name="id" value={product?.id ?? ""} />
       <div className="flex flex-col gap-6">
         <section className="card grid gap-5 p-5 md:grid-cols-2">
@@ -110,26 +119,32 @@ export function ProductForm({ product, categories, brands, cars }: { product?: P
         </section>
 
         <section className="card flex flex-col gap-4 p-5">
-          <div>
-            <h2 className="text-base font-black">۳. خودروهای سازگار</h2>
-            <p className="mt-1 text-xs text-muted">خودروهایی را که این قطعه رویشان نصب می‌شود تیک بزنید. در صفحه محصول و فیلتر «سازگاری خودرو» استفاده می‌شود.</p>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-base font-black">۳. خودروهای سازگار</h2>
+              <p className="mt-1 text-xs text-muted">خودروهایی را که این قطعه رویشان نصب می‌شود تیک بزنید. در صفحه محصول و فیلتر «سازگاری خودرو» استفاده می‌شود.</p>
+            </div>
+            <CarModelManager cars={cars} />
           </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            {cars.map((c) => (
-              <label key={c.id} className="flex items-center gap-2 text-sm">
-                <input type="checkbox" name="fitments" value={c.id} defaultChecked={fits.has(c.id)} className="size-4 accent-brand" />
-                {c.name}
-              </label>
-            ))}
-          </div>
+          {cars.length === 0 ? (
+            <p className="rounded-xl bg-canvas p-4 text-center text-xs text-muted">هنوز خودرویی تعریف نشده؛ با دکمه «مدیریت خودروها» اضافه کنید.</p>
+          ) : (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+              {cars.map((c) => (
+                <label key={c.id} className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" name="fitments" value={c.id} defaultChecked={fits.has(c.id)} className="size-4 accent-brand" />
+                  {c.name}
+                </label>
+              ))}
+            </div>
+          )}
         </section>
       </div>
 
       <aside className="flex flex-col gap-6">
         <section className="card flex flex-col gap-4 p-5">
           <h2 className="text-base font-black">۴. قیمت و موجودی</h2>
-          <Field label="قیمت فروش (تومان) *" name="price" inputMode="numeric" dir="ltr" defaultValue={product?.price} error={e.price} placeholder="320000" hint="قیمتی که مشتری پرداخت می‌کند؛ با یا بدون ویرگول." required />
-          <Field label="قیمت قبل از تخفیف" name="compareAtPrice" inputMode="numeric" dir="ltr" defaultValue={product?.compareAtPrice ?? ""} error={e.compareAtPrice} placeholder="380000" hint="اگر پر شود، خط می‌خورد و درصد تخفیف خودکار نمایش داده می‌شود. باید از قیمت فروش بیشتر باشد." />
+          <ProductPriceFields price={product?.price} compareAtPrice={product?.compareAtPrice} errors={e} />
           <Field label="موجودی انبار *" name="stock" inputMode="numeric" dir="ltr" defaultValue={product?.stock ?? 0} error={e.stock} hint="با هر فروش خودکار کم می‌شود. صفر یعنی «ناموجود»." required />
           <Field label="وزن بسته (گرم)" name="weightGrams" inputMode="numeric" dir="ltr" defaultValue={product?.weightGrams ?? ""} error={e.weightGrams} placeholder="1200" />
           <Field label="ضمانت" name="warranty" defaultValue={product?.warranty ?? ""} error={e.warranty} placeholder="مثلاً: ۱۲ ماهه آریزون یدک" />

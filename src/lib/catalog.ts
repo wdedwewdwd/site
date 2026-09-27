@@ -114,3 +114,12 @@ export async function categoryOptions() {
       ...all.filter((c) => c.parentId === main.id).map((c) => ({ id: c.id, name: `   ↳ ${c.name}` })),
     ]);
 }
+
+/** Shared car list for the product form, with how many products each car is ticked on. */
+export async function carRows() {
+  const cars = await db.carModel.findMany({
+    orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+    select: { id: true, make: true, name: true, _count: { select: { fitments: true } } },
+  });
+  return cars.map(({ _count, ...c }) => ({ ...c, products: _count.fitments }));
+}

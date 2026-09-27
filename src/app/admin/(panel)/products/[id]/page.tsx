@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireStaff } from "@/lib/auth/session";
-import { categoryOptions } from "@/lib/catalog";
+import { carRows, categoryOptions } from "@/lib/catalog";
 import { idSchema } from "@/lib/validation";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { ProductForm } from "@/components/admin/ProductForm";
@@ -20,7 +20,7 @@ export default async function EditProductPage({ params }: PageProps<"/admin/prod
     }),
     categoryOptions(),
     db.brand.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
-    db.carModel.findMany({ orderBy: { sortOrder: "asc" }, select: { id: true, name: true } }),
+    carRows(),
   ]);
   if (!product) notFound();
   return (

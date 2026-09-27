@@ -1,6 +1,6 @@
 /**
  * Full-site backup and restore: every database table (except throwaway security state)
- * plus uploaded product and chat images, in one ZIP file.
+ * plus uploaded product, chat and banner images, in one ZIP file.
  *
  * Used by the admin panel routes and by scripts/backup.ts, so it must not import "server-only".
  */
@@ -16,15 +16,19 @@ export const BACKUP_FORMAT = 1;
 const TABLES = [
   "User", "Category", "Brand", "CarModel", "Product", "ProductImage", "ProductFitment", "Review", "WishlistItem",
   "Cart", "CartItem", "Address", "DiscountCode", "Order", "OrderItem", "OrderEvent", "Payment",
-  "Notification", "Ticket", "TicketMessage", "ChatConversation", "ChatMessage", "Faq", "Setting", "AuditLog",
+  "Notification", "Ticket", "TicketMessage", "ChatConversation", "ChatMessage", "Faq", "Setting", "AuditLog", "Banner",
 ] as const;
 type Table = (typeof TABLES)[number];
 
-/** Tables added after the first release: older backups don't have them and restore them as empty. */
-const OPTIONAL_TABLES = new Set<Table>(["ChatConversation", "ChatMessage"]);
+/**
+ * Tables added after the first release. Older backups don't have them: such a table keeps its current rows
+ * on restore (unless it depends on users, whose replacement empties it), and so do its images.
+ */
+const OPTIONAL_TABLES = new Set<Table>(["ChatConversation", "ChatMessage", "Banner"]);
 
-/** Upload folders included in backups. */
-const UPLOAD_FOLDERS = ["products", "chat"] as const;
+/** Upload folders included in backups, and the table whose rows point at their files. */
+const UPLOAD_FOLDERS = ["products", "chat", "banners"] as const;
+const FOLDER_TABLE: Record<(typeof UPLOAD_FOLDERS)[number], Table> = { products: "ProductImage", chat: "ChatMessage", banners: "Banner" };
 
 /** Short-lived security state: never backed up, always cleared on restore (everyone signs in again). */
 const TRANSIENT = ["Session", "OtpCode", "RateLimit"] as const;
@@ -35,7 +39,7 @@ const JSON_COLUMNS: Partial<Record<Table, string[]>> = { Product: ["specs"], Aud
 const MAX_ZIP_BYTES = 500 * 1024 * 1024;
 const MAX_UNZIPPED_BYTES = 1024 * 1024 * 1024;
 const MAX_ENTRIES = 20_000;
-const UPLOAD_ENTRY = /^uploads\/(products|chat)\/[A-Za-z0-9_-]{16,64}\.webp$/;
+const UPLOAD_ENTRY = /^uploads\/(products|chat|banners)\/[A-Za-z0-9_-]{16,64}\.webp$/;
 
 type Manifest = {
   app: string;
@@ -128,10 +132,12 @@ export function readBackup(zipBytes: Uint8Array) {
   if (manifest.app !== BACKUP_APP || manifest.format !== BACKUP_FORMAT) throw new BackupError("این فایل، بکاپ آریزون یدک نیست یا نسخه آن پشتیبانی نمی‌شود.");
 
   const tables = {} as Record<Table, Record<string, unknown>[]>;
+  const missing = new Set<Table>();
   for (const table of TABLES) {
     const raw = unzipped[`data/${table}.json`];
     if (!raw && OPTIONAL_TABLES.has(table)) {
       tables[table] = [];
+      missing.add(table);
       continue;
     }
     if (!raw) throw new BackupError(`جدول ${table} در فایل بکاپ وجود ندارد.`);
@@ -142,7 +148,7 @@ export function readBackup(zipBytes: Uint8Array) {
     tables[table] = rows;
   }
   const uploads = Object.entries(unzipped).filter(([name]) => UPLOAD_ENTRY.test(name));
-  return { manifest, tables, uploads };
+  return { manifest, tables, uploads, missing };
 }
 
 /**
@@ -150,7 +156,10 @@ export function readBackup(zipBytes: Uint8Array) {
  * nothing changes. Uploaded images are swapped in only after the database commit.
  */
 export async function restoreBackup(db: PrismaClient, uploadDir: string, zipBytes: Uint8Array) {
-  const { manifest, tables, uploads } = readBackup(zipBytes);
+  const { manifest, tables, uploads, missing } = readBackup(zipBytes);
+  const restored = TABLES.filter((t) => !missing.has(t));
+  // Keep the live images of a table the backup doesn't contain.
+  const folders = UPLOAD_FOLDERS.filter((f) => !missing.has(FOLDER_TABLE[f]));
 
   const current = new Set(await appliedMigrations(db));
   const unknown = manifest.migrations.filter((m) => !current.has(m));
@@ -158,10 +167,11 @@ export async function restoreBackup(db: PrismaClient, uploadDir: string, zipByte
 
   // Stage images next to the live folders first, so a write failure can't leave the DB restored without them.
   const stagingDir = path.join(uploadDir, `.restore-${Date.now()}`);
-  for (const folder of UPLOAD_FOLDERS) await mkdir(path.join(stagingDir, folder), { recursive: true });
+  for (const folder of folders) await mkdir(path.join(stagingDir, folder), { recursive: true });
   try {
     for (const [name, data] of uploads) {
-      const [, folder, file] = name.split("/");
+      const [, folder, file] = name.split("/") as [string, (typeof UPLOAD_FOLDERS)[number], string];
+      if (!folders.includes(folder)) continue;
       await writeFile(path.join(stagingDir, folder, path.basename(file)), data);
     }
 
@@ -170,9 +180,9 @@ export async function restoreBackup(db: PrismaClient, uploadDir: string, zipByte
 
     await db.$transaction(
       async (tx) => {
-        const all = [...TABLES, ...TRANSIENT].map((t) => `"${t}"`).join(", ");
+        const all = [...restored, ...TRANSIENT].map((t) => `"${t}"`).join(", ");
         await tx.$executeRawUnsafe(`TRUNCATE TABLE ${all} RESTART IDENTITY CASCADE`);
-        for (const table of TABLES) {
+        for (const table of restored) {
           const jsonCols = JSON_COLUMNS[table] ?? [];
           const rows = tables[table].map((row) => {
             const copy = { ...row };
@@ -194,7 +204,7 @@ export async function restoreBackup(db: PrismaClient, uploadDir: string, zipByte
     );
 
     // Database committed: swap the image folders.
-    for (const folder of UPLOAD_FOLDERS) {
+    for (const folder of folders) {
       const liveDir = path.join(uploadDir, folder);
       const oldDir = path.join(uploadDir, `.old-${folder}-${Date.now()}`);
       await rename(liveDir, oldDir).catch(() => undefined);
@@ -210,5 +220,5 @@ export async function restoreBackup(db: PrismaClient, uploadDir: string, zipByte
     throw e;
   }
 
-  return { manifest, counts: Object.fromEntries(TABLES.map((t) => [t, tables[t].length])), files: uploads.length };
+  return { manifest, counts: Object.fromEntries(restored.map((t) => [t, tables[t].length])), files: uploads.length };
 }

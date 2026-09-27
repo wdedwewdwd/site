@@ -483,6 +483,26 @@ model Faq {
   sortOrder Int     @default(0)
 }
 
+// Homepage hero banners. Which ones are shown, and where, depends on the layout chosen in the admin
+// (Setting "hero_layout"): active banners fill the layout's places in sortOrder.
+model Banner {
+  id          String   @id @default(cuid())
+  image       String // "/media/banners/<file>.webp" (uploaded) or a built-in "/banners/..." image
+  mobileImage String? // optional separate crop for phones
+  title       String?
+  subtitle    String?
+  badge       String?
+  buttonLabel String?
+  href        String? // "/path" on this site or an https:// link
+  showText    Boolean  @default(true) // false: the text is part of the image; title is only the alt text
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
 // Key/value store for editable site settings (contact info, eNamad code, shipping prices...).
 model Setting {
   key   String @id

@@ -3,7 +3,7 @@ import path from "node:path";
 import { UPLOAD_DIR } from "@/lib/uploads";
 
 // Only our own generated file names are served: <folder>/<random>.webp
-const SAFE = /^(products)\/[A-Za-z0-9_-]{16,64}\.webp$/;
+const SAFE = /^(products|banners)\/[A-Za-z0-9_-]{16,64}\.webp$/;
 
 export async function GET(_req: Request, ctx: RouteContext<"/media/[...path]">) {
   const rel = (await ctx.params).path.join("/");

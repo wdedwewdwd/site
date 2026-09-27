@@ -43,6 +43,9 @@ build (`APP_URL=https://example.com PAYMENT_PROVIDER=none ALLOW_CONSOLE_SMS=true
   with one shared stream per admin tab (`StaffChatProvider`, also drives the menu badge and "support online").
   Guests chat with name + mobile via a random httpOnly cookie (only its HMAC is stored); chat photos are private
   (`/api/chat/media/*`, access-checked). Not designed in Figma (Figma MCP quota ran out); built in the site's style.
+- Homepage banners: `/admin/banners` (`src/lib/banners*.ts`, `components/home/HeroBanners.tsx`). Layouts: single,
+  split (big + small), grid4, slider; active banners fill the layout's places in list order. Built with container
+  queries (`@container/hero`) so the admin preview renders the phone and desktop versions exactly.
 - Shop location: Settings → map picker (Leaflet + OpenStreetMap tiles, keys `shop_lat`/`shop_lng`); the contact page
   shows it and links to Neshan routing (`src/lib/location.ts`).
 - Inner pages use `PageBar` (mobile app bar with back button, desktop breadcrumbs + back).

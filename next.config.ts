@@ -22,7 +22,8 @@ const nextConfig: NextConfig = {
     remotePatterns: [],
   },
   experimental: {
-    serverActions: { bodySizeLimit: "5mb" },
+    // Room for two 4 MB images in one form (e.g. a banner with its phone version).
+    serverActions: { bodySizeLimit: "9mb" },
   },
   async headers() {
     return [

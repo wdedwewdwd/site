@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Instagram, MessageCircle, Send } from "@/components/icons/Social";
 import { LogoMark } from "@/components/brand/Logo";
-import { SITE } from "@/lib/shop";
+import { SITE, SITE_ADDRESS } from "@/lib/shop";
 import { getSettings } from "@/lib/settings";
 
 const COLUMNS = [
@@ -43,9 +43,11 @@ export async function SiteFooter() {
             </div>
             <p className="text-[13px] leading-[1.9]">{SITE.description}</p>
             <address className="text-[13px] not-italic leading-[1.9] text-subtle">
-              نشانی: {SITE.address} — کد پستی: {SITE.postalCode}
+              نشانی: {SITE_ADDRESS}
               <br />
-              تلفن: {SITE.supportPhone} — ایمیل: <span dir="ltr">{SITE.email}</span>
+              تلفن: <a href={`tel:${SITE.supportPhoneTel}`} dir="ltr" className="hover:text-white">{SITE.supportPhone}</a> — موبایل:{" "}
+              <a href={`tel:${SITE.supportMobileTel}`} dir="ltr" className="hover:text-white">{SITE.supportMobile}</a>
+              {SITE.email && <> — ایمیل: <span dir="ltr">{SITE.email}</span></>}
             </address>
           </div>
 

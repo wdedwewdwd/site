@@ -52,7 +52,8 @@ export default async function InvoicePage({ params }: PageProps<"/admin/invoice/
             <p className="mb-1 font-black">فروشنده</p>
             <p>{SITE.name}</p>
             <p>نشانی: {SITE.address}</p>
-            <p>کد پستی: {SITE.postalCode} — تلفن: {SITE.supportPhone}</p>
+            {SITE.postalCode && <p>کد پستی: {SITE.postalCode}</p>}
+            <p>تلفن: <span dir="ltr">{SITE.supportPhone}</span> — <span dir="ltr">{SITE.supportMobile}</span></p>
           </div>
           <div className="rounded-lg border border-line p-3">
             <p className="mb-1 font-black">خریدار</p>
@@ -106,8 +107,8 @@ export default async function InvoicePage({ params }: PageProps<"/admin/invoice/
               <p className="font-black">فرستنده</p>
               <p>{SITE.name}</p>
               <p>{SITE.address}</p>
-              <p>کد پستی: {SITE.postalCode}</p>
-              <p>تلفن: {SITE.supportPhone}</p>
+              {SITE.postalCode && <p>کد پستی: {SITE.postalCode}</p>}
+              <p>تلفن: <span dir="ltr">{SITE.supportPhone}</span> — <span dir="ltr">{SITE.supportMobile}</span></p>
             </div>
             <div className="flex flex-col gap-1">
               <p className="font-black">گیرنده</p>

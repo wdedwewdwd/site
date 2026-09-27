@@ -3,24 +3,29 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Boxes, FolderTree, Headset, LayoutDashboard, LogOut, Menu, Percent, Settings, ShoppingBag, Store, Users, X } from "lucide-react";
+import { Boxes, FolderTree, Headset, LayoutDashboard, LogOut, Menu, MessagesSquare, Percent, Settings, ShoppingBag, Store, Users, X } from "lucide-react";
 import { logoutAction } from "@/app/actions/auth";
 import { LogoMark } from "@/components/brand/Logo";
 import { faDigits } from "@/lib/format";
+import { useStaffChat } from "./chat/StaffChatProvider";
 
 const ITEMS = [
   { href: "/admin", label: "داشبورد", Icon: LayoutDashboard, exact: true },
   { href: "/admin/products", label: "محصولات", Icon: Boxes },
   { href: "/admin/orders", label: "سفارش‌ها", Icon: ShoppingBag, badgeKey: "orders" as const },
   { href: "/admin/customers", label: "مشتریان", Icon: Users },
-  { href: "/admin/tickets", label: "پشتیبانی", Icon: Headset, badgeKey: "tickets" as const },
+  { href: "/admin/chat", label: "گفتگوی آنلاین", Icon: MessagesSquare, badgeKey: "chat" as const },
+  { href: "/admin/tickets", label: "تیکت‌های پشتیبانی", Icon: Headset, badgeKey: "tickets" as const },
   { href: "/admin/categories", label: "دسته‌بندی‌ها", Icon: FolderTree },
   { href: "/admin/discounts", label: "تخفیف‌ها", Icon: Percent },
   { href: "/admin/settings", label: "تنظیمات", Icon: Settings },
 ];
 
-export function AdminNav({ name, role, badges }: { name: string; role: string; badges: { orders: number; tickets: number } }) {
+export function AdminNav({ name, role, badges: serverBadges }: { name: string; role: string; badges: { orders: number; tickets: number; chat: number } }) {
   const pathname = usePathname();
+  const live = useStaffChat();
+  // The chat badge updates live; the others refresh on navigation.
+  const badges = { ...serverBadges, chat: live?.unread ?? serverBadges.chat };
   const [open, setOpen] = useState(false);
 
   const nav = (

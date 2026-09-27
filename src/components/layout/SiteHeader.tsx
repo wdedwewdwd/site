@@ -25,7 +25,7 @@ export async function SiteHeader() {
             <Link href="/contact" className="hover:text-white">فروشنده شوید</Link>
           </p>
           <p className="flex items-center gap-3">
-            <span>پشتیبانی: <a href="tel:02112345678" className="hover:text-white">{SITE.supportPhone}</a></span>
+            <span>پشتیبانی: <a href={`tel:${SITE.supportPhoneTel}`} dir="ltr" className="hover:text-white">{SITE.supportPhone}</a> · <a href={`tel:${SITE.supportMobileTel}`} dir="ltr" className="hover:text-white">{SITE.supportMobile}</a></span>
             <span aria-hidden>·</span>
             <span>{SITE.supportHours}</span>
           </p>

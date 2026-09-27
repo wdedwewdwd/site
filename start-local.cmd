@@ -8,6 +8,12 @@ set "PATH=%ProgramFiles%\nodejs;%PATH%"
 if not exist node_modules (
   echo Installing packages, first run only...
   call npm install || goto :error
+) else (
+  rem After a git pull that changed package-lock.json, install the new packages.
+  node -e "const f=require('fs');process.exit(f.statSync('package-lock.json').mtimeMs>f.statSync('node_modules/.package-lock.json').mtimeMs?1:0)" || (
+    echo Updating packages...
+    call npm install || goto :error
+  )
 )
 
 echo Starting the local database...
@@ -15,6 +21,7 @@ rem The database runs in its own minimized window; it exits immediately if alrea
 start "Arizon DB" /min cmd /c "node scripts\local-db.mjs"
 node -e "const n=require('net');let t=0;(function f(){const s=n.connect(5433,'127.0.0.1',()=>{s.destroy();process.exit(0)});s.on('error',()=>{if(++t>60)process.exit(1);setTimeout(f,1000)})})()" || goto :error
 call npx prisma migrate deploy >nul || goto :error
+call npx prisma generate >nul || goto :error
 
 echo.
 echo  Site: http://localhost:3000

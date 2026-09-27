@@ -89,7 +89,15 @@ export async function SiteHeader() {
             <Bell className="size-5" />
           </Link>
         </div>
-        <SearchBox className="px-4 pt-2" />
+        <div className="flex items-stretch gap-2 px-4 pt-2">
+          <SearchBox className="min-w-0 flex-1" />
+          {isStaff && (
+            <Link href="/admin" className="flex shrink-0 items-center gap-1.5 rounded-xl bg-white px-3.5 text-xs font-extrabold text-ink transition-colors hover:bg-white/85">
+              پنل مدیریت
+              <LayoutDashboard className="size-4" aria-hidden />
+            </Link>
+          )}
+        </div>
       </div>
       </OnlyOnPaths>
     </header>

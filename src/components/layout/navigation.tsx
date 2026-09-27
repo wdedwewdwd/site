@@ -24,3 +24,17 @@ export function OnlyOnPaths({ paths, children }: { paths: string[]; children: Re
   const pathname = usePathname();
   return paths.includes(pathname) ? <>{children}</> : null;
 }
+
+/**
+ * On phones the footer is shown on the home page only; other pages get a spacer instead so their
+ * content stays clear of the fixed bottom navigation. Desktop always shows the footer.
+ */
+export function MobileFooterGate({ children }: { children: React.ReactNode }) {
+  if (usePathname() === "/") return <>{children}</>;
+  return (
+    <>
+      <div className="h-[calc(6rem+env(safe-area-inset-bottom))] md:hidden" aria-hidden />
+      <div className="hidden md:block">{children}</div>
+    </>
+  );
+}

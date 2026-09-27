@@ -160,7 +160,7 @@ export function ProductForm({ product, categories, brands, cars }: { product?: P
           <p className="-mt-1 text-xs text-muted">برای علامت‌گذاری محصولات منتخب.</p>
         </section>
         {(state?.error || Object.keys(e).length > 0) && (
-          <p className="rounded-lg bg-brand-soft p-3 text-xs font-bold text-brand" role="alert">{state?.error ?? "لطفاً خطاهای فرم را برطرف کنید."}</p>
+          <p className="rounded-lg bg-brand-soft p-3 text-xs font-bold text-brand" role="alert">{state?.error ?? `لطفاً خطای فرم را برطرف کنید: ${Object.values(e)[0]}`}</p>
         )}
         <button type="submit" disabled={pending} className="btn-primary w-full">
           {pending && <LoaderCircle className="size-4 animate-spin" />}

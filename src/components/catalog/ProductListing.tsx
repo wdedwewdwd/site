@@ -13,6 +13,8 @@ type Props = {
   filters: ProductFilters;
   searchParams: Record<string, string | string[] | undefined>;
   crumbs?: { href?: string; label: string }[];
+  /** Optional block shown above the results (e.g. category description and subcategories). */
+  intro?: React.ReactNode;
 };
 
 function hrefWith(basePath: string, sp: Props["searchParams"], patch: Record<string, string | null>) {
@@ -26,7 +28,7 @@ function hrefWith(basePath: string, sp: Props["searchParams"], patch: Record<str
   return qs ? `${basePath}?${qs}` : basePath;
 }
 
-export async function ProductListing({ title, basePath, filters, searchParams, crumbs = [] }: Props) {
+export async function ProductListing({ title, basePath, filters, searchParams, crumbs = [], intro }: Props) {
   const [{ items, total, page, pages }, brands, cars] = await Promise.all([
     listProducts(filters),
     db.brand.findMany({ orderBy: { name: "asc" }, select: { slug: true, name: true, latin: true } }),
@@ -39,7 +41,7 @@ export async function ProductListing({ title, basePath, filters, searchParams, c
   return (
     <div className="container-page flex flex-col gap-6 py-6 md:py-8">
       <Breadcrumbs items={[...crumbs, { label: title }]} />
-      <h1 className="sr-only">{title}</h1>
+      {intro ?? <h1 className="sr-only">{title}</h1>}
 
       <div className="grid gap-6 md:grid-cols-[1fr_210px] lg:grid-cols-[1fr_260px]">
         <div className="order-2 flex flex-col gap-5 md:order-1">

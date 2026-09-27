@@ -96,17 +96,18 @@ model AuditLog {
 // ─── Catalog ────────────────────────────────────────────────
 
 model Category {
-  id        String     @id @default(cuid())
-  name      String
-  slug      String     @unique
-  icon      String? // lucide icon name
-  sortOrder Int        @default(0)
-  isActive  Boolean    @default(true)
-  parentId  String?
-  parent    Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: SetNull)
-  children  Category[] @relation("CategoryTree")
-  products  Product[]
-  createdAt DateTime   @default(now())
+  id          String     @id @default(cuid())
+  name        String
+  slug        String     @unique
+  description String? // optional intro shown at the top of the category page
+  icon        String? // lucide icon name
+  sortOrder   Int        @default(0)
+  isActive    Boolean    @default(true)
+  parentId    String?
+  parent      Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children    Category[] @relation("CategoryTree")
+  products    Product[]
+  createdAt   DateTime   @default(now())
 }
 
 model Brand {

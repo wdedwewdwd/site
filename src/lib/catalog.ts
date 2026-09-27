@@ -100,3 +100,17 @@ export function parseFilters(sp: Record<string, string | string[] | undefined>):
     page: Number.isInteger(page) && page > 0 ? page : 1,
   };
 }
+
+/** Categories as select options: each main category followed by its subcategories (indented). */
+export async function categoryOptions() {
+  const all = await db.category.findMany({
+    orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+    select: { id: true, name: true, parentId: true },
+  });
+  return all
+    .filter((c) => !c.parentId)
+    .flatMap((main) => [
+      { id: main.id, name: main.name },
+      ...all.filter((c) => c.parentId === main.id).map((c) => ({ id: c.id, name: `   ↳ ${c.name}` })),
+    ]);
+}

@@ -5,8 +5,6 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireStaff } from "@/lib/auth/session";
 import { audit } from "@/lib/audit";
-import { CATEGORY_ICON_NAMES } from "@/lib/shop";
-import { uniqueSlug } from "@/lib/slug";
 import { idSchema, text, toEnDigits } from "@/lib/validation";
 
 export type AdminFormState = { ok: boolean; error?: string; message?: string } | null;
@@ -39,40 +37,6 @@ export async function setUserRole(userId: string, role: "CUSTOMER" | "SUPPORT" |
   ]);
   await audit(admin.id, "user.role", "User", userId, { role });
   revalidatePath("/admin/customers");
-}
-
-// ─── Categories ────────────────────────────────────────────
-
-const categorySchema = z.object({
-  id: z.union([z.literal(""), idSchema]),
-  name: text(60, 2),
-  icon: z.enum(CATEGORY_ICON_NAMES, "یک آیکون انتخاب کنید"),
-  sortOrder: z.union([z.literal(""), int(9999)]).transform((v) => (v === "" ? 0 : v)),
-  isActive: z.string().optional(),
-});
-
-export async function saveCategory(_: AdminFormState, formData: FormData): Promise<AdminFormState> {
-  const admin = await requireStaff(["ADMIN"]);
-  const parsed = categorySchema.safeParse(Object.fromEntries(formData));
-  if (!parsed.success) return { ok: false, error: firstError(parsed.error) };
-  const { id, isActive, ...data } = parsed.data;
-
-  const duplicate = await db.category.findFirst({ where: { name: data.name, NOT: id ? { id } : undefined } });
-  if (duplicate) return { ok: false, error: "دسته‌بندی دیگری با همین نام وجود دارد." };
-
-  // The URL slug is generated once from the name and never changes, so existing links keep working.
-  const row = id
-    ? await db.category.update({ where: { id }, data: { ...data, isActive: isActive === "on" } })
-    : await db.category.create({
-        data: {
-          ...data,
-          isActive: true,
-          slug: await uniqueSlug(data.name, async (s) => !!(await db.category.findUnique({ where: { slug: s } }))),
-        },
-      });
-  await audit(admin.id, id ? "category.update" : "category.create", "Category", row.id);
-  revalidatePath("/", "layout");
-  return { ok: true, message: id ? "تغییرات ذخیره شد." : "دسته‌بندی اضافه شد." };
 }
 
 // ─── Discount codes ────────────────────────────────────────

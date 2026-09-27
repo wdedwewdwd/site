@@ -1,9 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, X } from "lucide-react";
 import { db } from "@/lib/db";
 import { requireStaff } from "@/lib/auth/session";
 import { faDigits, toman } from "@/lib/format";
+import { categoryOptions } from "@/lib/catalog";
+import { idSchema } from "@/lib/validation";
+import type { Prisma } from "@/generated/prisma/client";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { HelpBox } from "@/components/admin/HelpBox";
 import { ToggleActiveButton } from "@/components/admin/ToggleActiveButton";
@@ -14,19 +17,40 @@ export default async function AdminProductsPage({ searchParams }: PageProps<"/ad
   await requireStaff(["ADMIN"]);
   const sp = await searchParams;
   const q = typeof sp.q === "string" ? sp.q.trim().slice(0, 100) : "";
-  const products = await db.product.findMany({
-    where: q ? { OR: [{ name: { contains: q, mode: "insensitive" } }, { sku: { contains: q, mode: "insensitive" } }, { oemCode: { contains: q, mode: "insensitive" } }] } : {},
+  const categoryId = typeof sp.category === "string" && idSchema.safeParse(sp.category).success ? sp.category : "";
+  const where: Prisma.ProductWhereInput = {
+    AND: [
+      ...(q ? [{ OR: [{ name: { contains: q, mode: "insensitive" as const } }, { sku: { contains: q, mode: "insensitive" as const } }, { oemCode: { contains: q, mode: "insensitive" as const } }] }] : []),
+      // A main category also includes the products of its subcategories.
+      ...(categoryId ? [{ OR: [{ categoryId }, { category: { parentId: categoryId } }] }] : []),
+    ],
+  };
+  const [products, categories] = await Promise.all([
+    db.product.findMany({
+    where,
     orderBy: { updatedAt: "desc" },
     take: 100,
     include: { category: { select: { name: true } }, brand: { select: { name: true } }, images: { take: 1, orderBy: { sortOrder: "asc" } } },
-  });
+    }),
+    categoryOptions(),
+  ]);
 
   return (
     <>
       <PageHeader title="محصولات">
-        <form className="flex items-center gap-2 rounded-xl border border-line bg-white px-3" role="search">
-          <Search className="size-4 text-muted" />
-          <input name="q" defaultValue={q} placeholder="نام، کد کالا یا کد فنی" className="w-56 py-2.5 text-sm focus:outline-none" />
+        <form className="flex flex-wrap items-center gap-2" role="search">
+          <select name="category" defaultValue={categoryId} aria-label="فیلتر دسته‌بندی" className="rounded-xl border border-line bg-white px-3 py-2.5 text-sm">
+            <option value="">همه دسته‌ها</option>
+            {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+          <span className="flex items-center gap-2 rounded-xl border border-line bg-white px-3">
+            <Search className="size-4 text-muted" />
+            <input name="q" defaultValue={q} placeholder="نام، کد کالا یا کد فنی" className="w-48 py-2.5 text-sm focus:outline-none" />
+          </span>
+          <button type="submit" className="btn-ghost py-2.5">فیلتر</button>
+          {(q || categoryId) && (
+            <Link href="/admin/products" className="flex items-center gap-1 text-xs font-bold text-brand"><X className="size-3.5" /> حذف فیلتر</Link>
+          )}
         </form>
         <Link href="/admin/products/new" className="btn-primary py-2.5"><Plus className="size-4" /> افزودن محصول</Link>
       </PageHeader>

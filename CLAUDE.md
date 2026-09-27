@@ -1,1 +1,50 @@
 @AGENTS.md
+
+# Arizon Yadak (آریزون یدک) — project notes
+
+Iranian auto-parts e-commerce store. UI is Persian (RTL); talk to the owner in Persian. The owner is a
+non-developer who wants decisions made for them and end-to-end delivery, verified before reporting.
+
+## Stack
+Next.js 16 (App Router, `src/proxy.ts` = middleware) · React 19 · Prisma 7 (PostgreSQL, `prisma-client`
+generator → `src/generated/prisma`, driver adapter `@prisma/adapter-pg`) · Tailwind 4 (tokens in
+`src/app/globals.css`) · Zod 4 · lucide-react. Design source: Figma file `BtALGM1STocoQz2tW07xcA`
+(mobile, desktop and admin frames; Figma frames are LTR, so child order is reversed for RTL).
+
+## Run locally
+```bash
+cp .env.example .env    # fill SESSION_SECRET, OTP_PEPPER; DATABASE_URL like postgres://arizon:<pw>@127.0.0.1:5433/arizon
+npm run db:local        # embedded PostgreSQL (UTF-8 cluster in .localdb); keep running
+npx prisma migrate deploy && npm run db:seed
+npm run admin:set -- 09xxxxxxxxx   # creates an admin + fixed 4–6 digit login code (reads code from stdin)
+npm run dev
+```
+Dev login codes are printed as `[dev-sms]` (SMS_PROVIDER=console). Payments use the mock gateway in dev.
+Checks before committing: `npx tsc --noEmit`, `npx eslint src scripts`, and for big changes a production
+build (`APP_URL=https://example.com PAYMENT_PROVIDER=none ALLOW_CONSOLE_SMS=true npx next build`).
+
+## Conventions and decisions
+- Security first: every server action/route validates with Zod, re-checks auth (`requireUser` /
+  `requireStaff` in `src/lib/auth/session.ts`), scopes queries by `userId`, rate-limits (`src/lib/rate-limit.ts`)
+  and writes admin changes to the audit log. Prices always come from the DB. CSP with nonces in proxy.
+- Auth: everyone signs in with an SMS code at `/login`. Staff accounts have a fixed 4–6 digit code
+  (`User.passwordHash`, scrypt + OTP_PEPPER) typed in the same form instead of an SMS code; no SMS is sent to
+  them and the form looks identical. Admins are created only with `npm run admin:set`.
+- Dates/times: Jalali calendar and Asia/Tehran everywhere (`src/lib/jalali.ts`, `src/lib/format.ts`).
+- Postal code is optional (staff call the customer); admin order pages flag missing ones.
+- Orders: transitions and stock rules live in `src/lib/order-flow.ts`; actions in `src/app/actions/admin/orders.ts`.
+- Backup/restore: `src/lib/backup-core.ts` (admin: Settings; CLI: `npm run backup:create|backup:restore`).
+- Inner pages use `PageBar` (mobile app bar with back button, desktop breadcrumbs + back).
+- Every admin page has a `HelpBox` explaining it in plain Persian; keep adding one for new pages.
+- Migrations: `prisma migrate dev` can fail on the shadow DB; writing the SQL by hand in
+  `prisma/migrations/<timestamp>_<name>/migration.sql` and running `prisma migrate deploy` works.
+- When testing with data, create clearly tagged throwaway rows and delete them afterwards.
+
+## Hosting
+Target is Liara (Iranian PaaS; payment gateways need an Iranian server): `liara.json` + `liara_pre_start.sh`
+(runs migrations). Production env: SMS_PROVIDER=kavenegar, PAYMENT_PROVIDER=zarinpal (or `none` = COD only),
+UPLOAD_DIR on a persistent disk. Not deployed yet (Liara account needed identity verification and credit).
+
+## Not built yet (from the Figma design)
+Wallet payment, live chat, admin "reports" page beyond the dashboard report, map picker for addresses,
+profile photo. Real contact details must be filled in `SITE` (`src/lib/shop.ts`) before applying for eNamad.

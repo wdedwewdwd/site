@@ -42,6 +42,8 @@ model User {
   tickets       Ticket[]
   cart          Cart?
   auditLogs     AuditLog[]
+  chats         ChatConversation[]
+  chatMessages  ChatMessage[]
 }
 
 model Session {
@@ -420,6 +422,57 @@ model TicketMessage {
   createdAt DateTime @default(now())
 
   @@index([ticketId])
+}
+
+// ─── Live chat ──────────────────────────────────────────────
+
+enum ChatStatus {
+  OPEN
+  CLOSED
+}
+
+// One conversation per customer (or guest) at a time; staff can close it and the customer can start a new one.
+model ChatConversation {
+  id             String        @id @default(cuid())
+  number         Int           @unique @default(autoincrement())
+  userId         String?
+  user           User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  guestKeyHash   String?       @unique // HMAC of the random guest cookie token; the raw token is never stored
+  guestName      String?
+  guestPhone     String?
+  status         ChatStatus    @default(OPEN)
+  staffUnread    Int           @default(0) // customer messages no staff member has opened yet
+  customerUnread Int           @default(0)
+  staffReadAt    DateTime? // drives the "seen" ticks on the customer's side
+  customerReadAt DateTime?
+  lastMessage    String? // preview for the inbox
+  lastMessageAt  DateTime      @default(now())
+  startedFrom    String? // page the customer was on when they started the chat
+  closedAt       DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  messages       ChatMessage[]
+
+  @@index([status, lastMessageAt])
+  @@index([updatedAt])
+  @@index([userId])
+}
+
+model ChatMessage {
+  id             String           @id @default(cuid())
+  conversationId String
+  conversation   ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  fromStaff      Boolean          @default(false)
+  system         Boolean          @default(false) // e.g. "conversation closed"
+  authorId       String?
+  author         User?            @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  body           String
+  image          String? // file name under UPLOAD_DIR/chat
+  createdAt      DateTime         @default(now())
+
+  @@index([conversationId, createdAt])
+  @@index([createdAt])
+  @@index([image])
 }
 
 model Faq {

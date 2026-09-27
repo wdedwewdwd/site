@@ -23,6 +23,18 @@ function sniff(buf: Buffer): "jpeg" | "png" | "webp" | null {
  * hidden inside the original file. Returns the public URL.
  */
 export async function saveProductImage(file: File): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
+  const saved = await saveImage(file, "products");
+  return saved.ok ? { ok: true, url: `/media/products/${saved.name}` } : saved;
+}
+
+/** Chat photos are private: they are served only through the access-checked chat media route. */
+export async function saveChatImage(file: File) {
+  return saveImage(file, "chat");
+}
+
+export const CHAT_IMAGE_NAME = /^[A-Za-z0-9_-]{16,64}\.webp$/;
+
+async function saveImage(file: File, folder: "products" | "chat"): Promise<{ ok: true; name: string } | { ok: false; error: string }> {
   if (file.size === 0) return { ok: false, error: "فایل خالی است." };
   if (file.size > MAX_BYTES) return { ok: false, error: "حجم تصویر باید کمتر از ۴ مگابایت باشد." };
   const buf = Buffer.from(await file.arrayBuffer());
@@ -40,8 +52,8 @@ export async function saveProductImage(file: File): Promise<{ ok: true; url: str
   }
 
   const name = `${randomToken(16)}.webp`;
-  const dir = path.join(UPLOAD_DIR, "products");
+  const dir = path.join(UPLOAD_DIR, folder);
   await mkdir(dir, { recursive: true });
   await writeFile(path.join(dir, name), out, { flag: "wx" });
-  return { ok: true, url: `/media/products/${name}` };
+  return { ok: true, name };
 }

@@ -1,6 +1,6 @@
 /**
  * Full-site backup and restore: every database table (except throwaway security state)
- * plus uploaded product images, in one ZIP file.
+ * plus uploaded product and chat images, in one ZIP file.
  *
  * Used by the admin panel routes and by scripts/backup.ts, so it must not import "server-only".
  */
@@ -16,9 +16,15 @@ export const BACKUP_FORMAT = 1;
 const TABLES = [
   "User", "Category", "Brand", "CarModel", "Product", "ProductImage", "ProductFitment", "Review", "WishlistItem",
   "Cart", "CartItem", "Address", "DiscountCode", "Order", "OrderItem", "OrderEvent", "Payment",
-  "Notification", "Ticket", "TicketMessage", "Faq", "Setting", "AuditLog",
+  "Notification", "Ticket", "TicketMessage", "ChatConversation", "ChatMessage", "Faq", "Setting", "AuditLog",
 ] as const;
 type Table = (typeof TABLES)[number];
+
+/** Tables added after the first release: older backups don't have them and restore them as empty. */
+const OPTIONAL_TABLES = new Set<Table>(["ChatConversation", "ChatMessage"]);
+
+/** Upload folders included in backups. */
+const UPLOAD_FOLDERS = ["products", "chat"] as const;
 
 /** Short-lived security state: never backed up, always cleared on restore (everyone signs in again). */
 const TRANSIENT = ["Session", "OtpCode", "RateLimit"] as const;
@@ -29,7 +35,7 @@ const JSON_COLUMNS: Partial<Record<Table, string[]>> = { Product: ["specs"], Aud
 const MAX_ZIP_BYTES = 500 * 1024 * 1024;
 const MAX_UNZIPPED_BYTES = 1024 * 1024 * 1024;
 const MAX_ENTRIES = 20_000;
-const UPLOAD_ENTRY = /^uploads\/products\/[A-Za-z0-9_-]{16,64}\.webp$/;
+const UPLOAD_ENTRY = /^uploads\/(products|chat)\/[A-Za-z0-9_-]{16,64}\.webp$/;
 
 type Manifest = {
   app: string;
@@ -66,14 +72,16 @@ export async function createBackup(db: PrismaClient, uploadDir: string) {
   }
 
   let fileCount = 0;
-  const productsDir = path.join(uploadDir, "products");
-  const names = await readdir(productsDir).catch(() => [] as string[]);
-  for (const name of names) {
-    const entry = `uploads/products/${name}`;
-    if (!UPLOAD_ENTRY.test(entry)) continue;
-    // Images are already compressed; store them as-is.
-    files[entry] = [new Uint8Array(await readFile(path.join(productsDir, name))), { level: 0 }];
-    fileCount++;
+  for (const folder of UPLOAD_FOLDERS) {
+    const dir = path.join(uploadDir, folder);
+    const names = await readdir(dir).catch(() => [] as string[]);
+    for (const name of names) {
+      const entry = `uploads/${folder}/${name}`;
+      if (!UPLOAD_ENTRY.test(entry)) continue;
+      // Images are already compressed; store them as-is.
+      files[entry] = [new Uint8Array(await readFile(path.join(dir, name))), { level: 0 }];
+      fileCount++;
+    }
   }
 
   const manifest: Manifest = {
@@ -122,6 +130,10 @@ export function readBackup(zipBytes: Uint8Array) {
   const tables = {} as Record<Table, Record<string, unknown>[]>;
   for (const table of TABLES) {
     const raw = unzipped[`data/${table}.json`];
+    if (!raw && OPTIONAL_TABLES.has(table)) {
+      tables[table] = [];
+      continue;
+    }
     if (!raw) throw new BackupError(`جدول ${table} در فایل بکاپ وجود ندارد.`);
     const rows = JSON.parse(strFromU8(raw));
     if (!Array.isArray(rows) || rows.some((r) => typeof r !== "object" || r === null || Array.isArray(r))) {
@@ -144,12 +156,14 @@ export async function restoreBackup(db: PrismaClient, uploadDir: string, zipByte
   const unknown = manifest.migrations.filter((m) => !current.has(m));
   if (unknown.length) throw new BackupError("این بکاپ از نسخه جدیدتری از سایت گرفته شده است. ابتدا سایت را به‌روزرسانی کنید.");
 
-  // Stage images next to the live folder first, so a write failure can't leave the DB restored without them.
-  const liveDir = path.join(uploadDir, "products");
+  // Stage images next to the live folders first, so a write failure can't leave the DB restored without them.
   const stagingDir = path.join(uploadDir, `.restore-${Date.now()}`);
-  await mkdir(stagingDir, { recursive: true });
+  for (const folder of UPLOAD_FOLDERS) await mkdir(path.join(stagingDir, folder), { recursive: true });
   try {
-    for (const [name, data] of uploads) await writeFile(path.join(stagingDir, path.basename(name)), data);
+    for (const [name, data] of uploads) {
+      const [, folder, file] = name.split("/");
+      await writeFile(path.join(stagingDir, folder, path.basename(file)), data);
+    }
 
     // Main categories before subcategories (self-reference).
     tables.Category.sort((a, b) => Number(a.parentId !== null) - Number(b.parentId !== null));
@@ -170,7 +184,7 @@ export async function restoreBackup(db: PrismaClient, uploadDir: string, zipByte
           }
         }
         // Continue auto-numbering after the restored order and ticket numbers.
-        for (const [table, column] of [["Order", "number"], ["Ticket", "number"]]) {
+        for (const [table, column] of [["Order", "number"], ["Ticket", "number"], ["ChatConversation", "number"]]) {
           await tx.$executeRawUnsafe(
             `SELECT setval(pg_get_serial_sequence('"${table}"', '${column}'), COALESCE((SELECT MAX("${column}") FROM "${table}"), 1), (SELECT MAX("${column}") FROM "${table}") IS NOT NULL)`,
           );
@@ -179,11 +193,15 @@ export async function restoreBackup(db: PrismaClient, uploadDir: string, zipByte
       { timeout: 10 * 60 * 1000, maxWait: 30_000 },
     );
 
-    // Database committed: swap the image folder.
-    const oldDir = path.join(uploadDir, `.old-${Date.now()}`);
-    await rename(liveDir, oldDir).catch(() => undefined);
-    await rename(stagingDir, liveDir);
-    await rm(oldDir, { recursive: true, force: true });
+    // Database committed: swap the image folders.
+    for (const folder of UPLOAD_FOLDERS) {
+      const liveDir = path.join(uploadDir, folder);
+      const oldDir = path.join(uploadDir, `.old-${folder}-${Date.now()}`);
+      await rename(liveDir, oldDir).catch(() => undefined);
+      await rename(path.join(stagingDir, folder), liveDir);
+      await rm(oldDir, { recursive: true, force: true });
+    }
+    await rm(stagingDir, { recursive: true, force: true });
   } catch (e) {
     await rm(stagingDir, { recursive: true, force: true });
     if (e instanceof Prisma.PrismaClientKnownRequestError || e instanceof Prisma.PrismaClientValidationError) {

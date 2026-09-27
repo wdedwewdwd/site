@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { requireStaff } from "@/lib/auth/session";
 import { audit } from "@/lib/audit";
 import { idSchema, text, toEnDigits } from "@/lib/validation";
+import { inIran, roundCoord } from "@/lib/location";
 
 export type AdminFormState = { ok: boolean; error?: string; message?: string } | null;
 
@@ -126,4 +127,28 @@ export async function saveSettings(_: AdminFormState, formData: FormData): Promi
   await audit(admin.id, "settings.update", "Setting", undefined, parsed.data);
   revalidatePath("/", "layout");
   return { ok: true, message: "تنظیمات ذخیره شد." };
+}
+
+const coord = z.string().transform((v) => Number(toEnDigits(v).trim())).pipe(z.number().finite());
+
+/** Saves (or clears) the shop pin shown on the contact page. */
+export async function saveShopLocation(_: AdminFormState, formData: FormData): Promise<AdminFormState> {
+  const admin = await requireStaff(["ADMIN"]);
+  if (formData.get("clear") === "1") {
+    await db.setting.deleteMany({ where: { key: { in: ["shop_lat", "shop_lng"] } } });
+    await audit(admin.id, "settings.location.clear", "Setting");
+    revalidatePath("/contact");
+    return { ok: true, message: "موقعیت فروشگاه حذف شد." };
+  }
+  const parsed = z.object({ lat: coord, lng: coord }).safeParse({ lat: formData.get("lat") ?? "", lng: formData.get("lng") ?? "" });
+  if (!parsed.success || !inIran(parsed.data)) return { ok: false, error: "موقعیت معتبر نیست؛ نقطه را روی نقشه ایران انتخاب کنید." };
+  const lat = String(roundCoord(parsed.data.lat));
+  const lng = String(roundCoord(parsed.data.lng));
+  await db.$transaction([
+    db.setting.upsert({ where: { key: "shop_lat" }, create: { key: "shop_lat", value: lat }, update: { value: lat } }),
+    db.setting.upsert({ where: { key: "shop_lng" }, create: { key: "shop_lng", value: lng }, update: { value: lng } }),
+  ]);
+  await audit(admin.id, "settings.location", "Setting", undefined, { lat, lng });
+  revalidatePath("/contact");
+  return { ok: true, message: "موقعیت فروشگاه ذخیره شد و در صفحه «تماس با ما» نمایش داده می‌شود." };
 }

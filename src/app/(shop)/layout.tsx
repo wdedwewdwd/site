@@ -1,8 +1,10 @@
+import { Suspense } from "react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { Toaster } from "@/components/ui/Toaster";
 import { NavigationTracker } from "@/components/layout/navigation";
+import { ChatWidget } from "@/components/chat/ChatWidget";
 import { getCartCount } from "@/lib/cart";
 
 export default async function ShopLayout({ children }: { children: React.ReactNode }) {
@@ -18,6 +20,9 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
       </main>
       <SiteFooter />
       <BottomNav cartCount={cartCount} />
+      <Suspense fallback={null}>
+        <ChatWidget />
+      </Suspense>
       <Toaster />
       <NavigationTracker />
     </>

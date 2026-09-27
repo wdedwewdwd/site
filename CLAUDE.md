@@ -34,6 +34,15 @@ build (`APP_URL=https://example.com PAYMENT_PROVIDER=none ALLOW_CONSOLE_SMS=true
 - Postal code is optional (staff call the customer); admin order pages flag missing ones.
 - Orders: transitions and stock rules live in `src/lib/order-flow.ts`; actions in `src/app/actions/admin/orders.ts`.
 - Backup/restore: `src/lib/backup-core.ts` (admin: Settings; CLI: `npm run backup:create|backup:restore`).
+  New tables go in `TABLES` (and `OPTIONAL_TABLES` so older backups still restore).
+- Live chat: `src/lib/chat.ts` (in-process event bus + DB polling fallback), SSE routes under `src/app/api/chat`
+  and `src/app/api/admin/chat`, actions in `src/app/actions/chat.ts` / `actions/admin/chat.ts`. Customer widget
+  `components/chat/ChatWidget.tsx` (open it anywhere with `openChat()` or `?chat=1`); admin inbox `/admin/chat`
+  with one shared stream per admin tab (`StaffChatProvider`, also drives the menu badge and "support online").
+  Guests chat with name + mobile via a random httpOnly cookie (only its HMAC is stored); chat photos are private
+  (`/api/chat/media/*`, access-checked). Not designed in Figma (Figma MCP quota ran out); built in the site's style.
+- Shop location: Settings → map picker (Leaflet + OpenStreetMap tiles, keys `shop_lat`/`shop_lng`); the contact page
+  shows it and links to Neshan routing (`src/lib/location.ts`).
 - Inner pages use `PageBar` (mobile app bar with back button, desktop breadcrumbs + back).
 - Every admin page has a `HelpBox` explaining it in plain Persian; keep adding one for new pages.
 - Migrations: `prisma migrate dev` can fail on the shadow DB; writing the SQL by hand in
@@ -46,6 +55,6 @@ Target is Liara (Iranian PaaS; payment gateways need an Iranian server): `liara.
 UPLOAD_DIR on a persistent disk. Not deployed yet (Liara account needed identity verification and credit).
 
 ## Not built yet (from the Figma design)
-Wallet payment, live chat, admin "reports" page beyond the dashboard report, map picker for addresses,
+Wallet payment, admin "reports" page beyond the dashboard report, map picker for customer addresses,
 profile photo. Contact details live in `SITE` (`src/lib/shop.ts`): phones and address are real; postal code and
 email are still empty (hidden on the site) and must be filled in before applying for eNamad; support hours unconfirmed.

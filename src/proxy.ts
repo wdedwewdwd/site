@@ -11,7 +11,8 @@ function buildCsp(nonce: string) {
     `style-src 'self' ${isDev ? "'unsafe-inline'" : `'nonce-${nonce}'`}`,
     // next/image and a few components set style attributes (no script execution possible).
     "style-src-attr 'unsafe-inline'",
-    "img-src 'self' data: blob: https://trustseal.enamad.ir",
+    // Map tiles for the shop location (contact page and admin settings).
+    "img-src 'self' data: blob: https://trustseal.enamad.ir https://tile.openstreetmap.org",
     "font-src 'self'",
     "connect-src 'self'",
     "frame-src 'none'",

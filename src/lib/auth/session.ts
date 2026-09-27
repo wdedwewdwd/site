@@ -80,6 +80,15 @@ export async function requireStaff(roles: Role[] = ["ADMIN"]) {
   return session.user;
 }
 
+/** Same checks as requireStaff, for API routes: returns null instead of redirecting. */
+export async function getStaff(roles: Role[] = ["ADMIN"]) {
+  const session = await getSession();
+  if (!session || !roles.includes(session.user.role)) return null;
+  if (Date.now() - session.createdAt.getTime() > STAFF_MAX_SESSION_AGE_MS) return null;
+  const hasPassword = await db.user.count({ where: { id: session.user.id, passwordHash: { not: null } } });
+  return hasPassword ? session.user : null;
+}
+
 /** Only allow same-site relative redirects (prevents open-redirect attacks). */
 export function safeNext(next: string | null | undefined) {
   if (!next || !next.startsWith("/") || next.startsWith("//") || next.startsWith("/\\")) return "/";

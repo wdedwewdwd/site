@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Plus, Search, X } from "lucide-react";
 import { db } from "@/lib/db";
 import { requireStaff } from "@/lib/auth/session";
-import { faDigits, toman } from "@/lib/format";
+import { discountPercent, faDigits, toman } from "@/lib/format";
 import { categoryOptions } from "@/lib/catalog";
 import { idSchema } from "@/lib/validation";
 import type { Prisma } from "@/generated/prisma/client";
@@ -60,6 +60,7 @@ export default async function AdminProductsPage({ searchParams }: PageProps<"/ad
           "با کادر جستجو می‌توانید بر اساس نام، کد کالا یا کد فنی (OEM) محصول را پیدا کنید.",
           "رنگ عدد موجودی: قرمز یعنی تمام شده، نارنجی یعنی ۵ عدد یا کمتر مانده.",
           "دکمه «فعال / غیرفعال» محصول را بدون حذف، از فروشگاه پنهان یا دوباره نمایان می‌کند.",
+          "زیر قیمت محصولاتی که تخفیف دارند، درصد تخفیف و قیمت اصلی (خط‌خورده) نمایش داده می‌شود. برای تغییر یا برداشتن تخفیف، محصول را باز کنید و بخش «تخفیف» را تغییر دهید.",
         ]}
       />
       <div className="card overflow-x-auto">
@@ -87,7 +88,15 @@ export default async function AdminProductsPage({ searchParams }: PageProps<"/ad
                 </td>
                 <td className="px-4 py-3" dir="ltr">{p.sku}</td>
                 <td className="px-4 py-3 text-muted">{p.category.name}</td>
-                <td className="px-4 py-3 font-bold">{toman(p.price)}</td>
+                <td className="px-4 py-3">
+                  <span className="font-bold">{toman(p.price)}</span>
+                  {discountPercent(p.price, p.compareAtPrice) > 0 && (
+                    <span className="mt-0.5 flex items-center gap-1.5 text-[11px]">
+                      <span className="rounded bg-brand-soft px-1 font-black text-brand">{faDigits(discountPercent(p.price, p.compareAtPrice))}٪</span>
+                      <s className="text-subtle">{toman(p.compareAtPrice!)}</s>
+                    </span>
+                  )}
+                </td>
                 <td className={`px-4 py-3 font-black ${p.stock === 0 ? "text-brand" : p.stock <= 5 ? "text-warning" : ""}`}>{faDigits(p.stock)}</td>
                 <td className="px-4 py-3"><ToggleActiveButton id={p.id} active={p.isActive} /></td>
               </tr>

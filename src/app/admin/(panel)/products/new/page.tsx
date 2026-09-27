@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { requireStaff } from "@/lib/auth/session";
-import { categoryOptions } from "@/lib/catalog";
+import { carRows, categoryOptions } from "@/lib/catalog";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { HelpBox } from "@/components/admin/HelpBox";
 import { ProductForm } from "@/components/admin/ProductForm";
@@ -12,7 +12,7 @@ export default async function NewProductPage() {
   const [categories, brands, cars] = await Promise.all([
     categoryOptions(),
     db.brand.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
-    db.carModel.findMany({ orderBy: { sortOrder: "asc" }, select: { id: true, name: true } }),
+    carRows(),
   ]);
   return (
     <>
@@ -21,7 +21,8 @@ export default async function NewProductPage() {
         items={[
           "فقط نام، دسته‌بندی، قیمت و موجودی الزامی است. بقیه فیلدها را می‌توانید بعداً کامل کنید.",
           "آدرس صفحه محصول و در صورت خالی بودن، کد کالا به‌طور خودکار ساخته می‌شود.",
-          "برای نمایش تخفیف، «قیمت قبل از تخفیف» را بیشتر از قیمت فروش وارد کنید.",
+          "برای تخفیف، کلید «تخفیف» را روشن کنید و درصد یا قیمت بعد از تخفیف را بنویسید؛ پیش‌نمایش قیمت همان‌جا دیده می‌شود.",
+          "خودروی جدید را با دکمه «مدیریت خودروها» در بخش خودروهای سازگار اضافه کنید؛ فهرست خودروها بین همه محصولات مشترک است.",
           "پس از ذخیره، محصول بلافاصله در فروشگاه نمایش داده می‌شود (مگر تیک «نمایش در فروشگاه» را برداشته باشید).",
         ]}
       />

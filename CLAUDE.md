@@ -37,6 +37,9 @@ build (`APP_URL=https://example.com PAYMENT_PROVIDER=none ALLOW_CONSOLE_SMS=true
 - Dates/times: Jalali calendar and Asia/Tehran everywhere (`src/lib/jalali.ts`, `src/lib/format.ts`).
 - Postal code is optional (staff call the customer); admin order pages flag missing ones.
 - Orders: transitions and stock rules live in `src/lib/order-flow.ts`; actions in `src/app/actions/admin/orders.ts`.
+- Product prices: the form shows "قیمت اصلی" + a discount switch (percent or sale price, `ProductPriceFields`); the DB
+  stores `price` (paid) and `compareAtPrice` (struck-through). Car models are one shared list edited from the product
+  form ("مدیریت خودروها", `actions/admin/cars.ts`); renaming keeps the slug, deleting removes it from all products.
 - Backup/restore: `src/lib/backup-core.ts` (admin: Settings; CLI: `npm run backup:create|backup:restore`).
   New tables go in `TABLES` (and `OPTIONAL_TABLES` so older backups still restore).
 - Live chat: `src/lib/chat.ts` (in-process event bus + DB polling fallback), SSE routes under `src/app/api/chat`

@@ -48,3 +48,6 @@ next-env.d.ts
 # uploaded files (persisted on a volume in production)
 /storage/
 !.env.example
+
+# local development database (embedded PostgreSQL)
+/.localdb/

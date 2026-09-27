@@ -14,19 +14,20 @@ function create() {
   return new PrismaClient({ adapter, log: isProd ? ["error"] : ["error", "warn"] });
 }
 
-// Reuse one client across hot reloads in development, but replace it when the generated
-// client was regenerated (e.g. after a schema change), so a stale client is never used.
-const globalForPrisma = globalThis as unknown as { prisma?: ReturnType<typeof create>; prismaClass?: typeof PrismaClient };
+// Development: reuse one client per generated-client class across hot reloads. Keying by
+// class means a regenerated client (after a schema change) gets a fresh instance, while
+// bundles that share the same class (pages, route handlers) share one connection pool.
+// Old instances are never disconnected here — other bundles may still be using them.
+const globalForPrisma = globalThis as unknown as { prismaClients?: WeakMap<object, ReturnType<typeof create>> };
 
-function reuseOrCreate() {
-  const cached = globalForPrisma.prisma;
-  if (cached && globalForPrisma.prismaClass === PrismaClient) return cached;
-  void cached?.$disconnect();
-  return create();
+function devClient() {
+  const clients = (globalForPrisma.prismaClients ??= new WeakMap());
+  let client = clients.get(PrismaClient);
+  if (!client) {
+    client = create();
+    clients.set(PrismaClient, client);
+  }
+  return client;
 }
 
-export const db = isProd ? create() : reuseOrCreate();
-if (!isProd) {
-  globalForPrisma.prisma = db;
-  globalForPrisma.prismaClass = PrismaClient;
-}
+export const db = isProd ? create() : devClient();

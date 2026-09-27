@@ -7,14 +7,16 @@ import { PageHeader } from "@/components/admin/PageHeader";
 import { HelpBox } from "@/components/admin/HelpBox";
 import { ActionForm } from "@/components/admin/ActionForm";
 import { ChangePasswordForm } from "@/components/admin/ChangePasswordForm";
+import { BackupSection } from "@/components/admin/BackupSection";
 
 export const metadata = { title: "تنظیمات" };
 
 export default async function SettingsPage() {
   await requireStaff(["ADMIN"]);
-  const [settings, logs] = await Promise.all([
+  const [settings, logs, lastBackup] = await Promise.all([
     getSettings(),
     db.auditLog.findMany({ orderBy: { createdAt: "desc" }, take: 30, include: { actor: { select: { phone: true, firstName: true, lastName: true } } } }),
+    db.auditLog.findFirst({ where: { action: "backup.download" }, orderBy: { createdAt: "desc" }, select: { createdAt: true } }),
   ]);
   return (
     <>
@@ -23,9 +25,12 @@ export default async function SettingsPage() {
         items={[
           "نماد اینماد: پس از تأیید سایت، از پنل اینماد کد نمایش نماد را بگیرید و عدد id و مقدار Code را در فیلدهای زیر وارد کنید. نماد خودکار در پایین همه صفحات نمایش داده می‌شود.",
           "کد ورود ثابت: کدی است که به‌جای کد پیامکی در صفحه ورود وارد می‌کنید. کد ۶ رقمی امنیت بسیار بیشتری دارد.",
+          "دریافت بکاپ: یک فایل ZIP شامل همه اطلاعات سایت و تصاویر محصولات دانلود می‌شود. آن را در جای امن (مثلاً فلش یا فضای ابری شخصی) نگه دارید.",
+          "بازیابی بکاپ: فایل بکاپ را انتخاب کنید و کلمه «بازیابی» را برای تأیید بنویسید. همه اطلاعات فعلی با محتوای فایل جایگزین می‌شود؛ اگر فایل خراب یا ناسازگار باشد، هیچ تغییری انجام نمی‌شود.",
           "گزارش فعالیت‌ها همه ورودها و تغییرات مدیران را با زمان و IP نشان می‌دهد تا هر کار مشکوکی قابل پیگیری باشد.",
         ]}
       />
+      <BackupSection lastBackup={lastBackup ? faDateTime(lastBackup.createdAt) : null} />
       <section className="card mb-6 p-5">
         <h2 className="mb-1 text-base font-black">نماد اعتماد الکترونیکی (اینماد)</h2>
         <p className="mb-4 text-xs leading-6 text-muted">

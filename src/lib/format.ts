@@ -19,8 +19,10 @@ export function discountPercent(price: number, compareAt?: number | null) {
   return Math.round(((compareAt - price) / compareAt) * 100);
 }
 
-const dateFmt = new Intl.DateTimeFormat("fa-IR-u-ca-persian", { year: "numeric", month: "long", day: "numeric" });
+// Always Tehran time, whatever timezone the server runs in.
+const dateFmt = new Intl.DateTimeFormat("fa-IR-u-ca-persian", { timeZone: "Asia/Tehran", year: "numeric", month: "long", day: "numeric" });
 const dateTimeFmt = new Intl.DateTimeFormat("fa-IR-u-ca-persian", {
+  timeZone: "Asia/Tehran",
   year: "numeric",
   month: "2-digit",
   day: "2-digit",

@@ -13,12 +13,16 @@
     "db:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
     "postinstall": "prisma generate",
-    "admin:set": "tsx scripts/set-admin.ts"
+    "admin:set": "tsx scripts/set-admin.ts",
+    "backup:create": "tsx scripts/backup.ts create",
+    "backup:restore": "tsx scripts/backup.ts restore",
+    "db:local": "node scripts/local-db.mjs"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "^7.10.0",
     "dotenv": "^18.0.4",
+    "fflate": "^0.8.3",
     "lucide-react": "^1.48.0",
     "next": "16.3.6",
     "pg": "^8.23.0",
@@ -35,6 +39,7 @@
     "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "embedded-postgres": "^18.4.0-beta.17",
     "eslint": "^9",
     "eslint-config-next": "16.3.6",
     "tailwindcss": "^4",

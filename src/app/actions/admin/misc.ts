@@ -25,19 +25,7 @@ export async function setUserActive(userId: string, active: boolean) {
   ]);
   await audit(admin.id, active ? "user.activate" : "user.deactivate", "User", userId);
   revalidatePath("/admin/customers");
-}
-
-export async function setUserRole(userId: string, role: "CUSTOMER" | "SUPPORT" | "ADMIN") {
-  const admin = await requireStaff(["ADMIN"]);
-  if (!idSchema.safeParse(userId).success || userId === admin.id) return;
-  if (!["CUSTOMER", "SUPPORT", "ADMIN"].includes(role)) return;
-  await db.$transaction([
-    db.user.update({ where: { id: userId }, data: { role } }),
-    // Privilege changes invalidate existing sessions.
-    db.session.deleteMany({ where: { userId } }),
-  ]);
-  await audit(admin.id, "user.role", "User", userId, { role });
-  revalidatePath("/admin/customers");
+  revalidatePath("/admin/settings");
 }
 
 // ─── Discount codes ────────────────────────────────────────

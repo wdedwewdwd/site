@@ -290,6 +290,8 @@ model Order {
   postalCode     String?
   fullAddress    String
   trackingCode   String?
+  carrier        String? // e.g. پست پیشتاز، تیپاکس، پیک
+  adminNote      String? // internal, never shown to the customer
   note           String?
   paidAt         DateTime?
   createdAt      DateTime       @default(now())

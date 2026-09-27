@@ -17,8 +17,9 @@ import {
 export type Preset = { key: string; label: string };
 
 type Props = {
-  from: JDate;
-  to: JDate;
+  /** null = no date filter ("همه تاریخ‌ها"). */
+  from: JDate | null;
+  to: JDate | null;
   today: JDate;
   activePreset: string | null;
   presets: readonly Preset[];
@@ -38,14 +39,14 @@ export function JalaliRangePicker({ from, to, today, activePreset, presets, onPr
   const [end, setEnd] = useState<JDate | null>(null);
   const [hover, setHover] = useState<JDate | null>(null);
   // The right-hand (first) visible month; the second month is the one after it.
-  const [view, setView] = useState(() => nextMonth(to.jy, to.jm, -1));
+  const [view, setView] = useState(() => nextMonth((to ?? today).jy, (to ?? today).jm, -1));
   const rootRef = useRef<HTMLDivElement>(null);
 
   const openPicker = () => {
     setStart(from);
     setEnd(to);
     setHover(null);
-    setView(nextMonth(to.jy, to.jm, -1));
+    setView(nextMonth((to ?? today).jy, (to ?? today).jm, -1));
     setOpen(true);
   };
 
@@ -93,8 +94,12 @@ export function JalaliRangePicker({ from, to, today, activePreset, presets, onPr
         className="flex h-11 items-center gap-2.5 rounded-xl border border-line bg-white px-4 text-sm font-bold shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-subtle"
       >
         <CalendarDays className="size-5 text-brand" aria-hidden />
-        <span>{jLong(from)}</span>
-        {compareJ(from, to) !== 0 && (
+        {!from || !to ? (
+          <span>همه تاریخ‌ها</span>
+        ) : (
+          <span>{jLong(from)}</span>
+        )}
+        {from && to && compareJ(from, to) !== 0 && (
           <>
             <span className="text-muted">تا</span>
             <span>{jLong(to)}</span>

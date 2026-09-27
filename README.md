@@ -34,14 +34,26 @@
 
 ```bash
 npm install
-cp .env.example .env          # سپس SESSION_SECRET و OTP_PEPPER را پر کنید
-npx prisma dev --detach       # یا هر PostgreSQL دیگر؛ آدرس را در DATABASE_URL بگذارید
-npx prisma migrate dev
+cp .env.example .env          # سپس SESSION_SECRET، OTP_PEPPER و DATABASE_URL (پورت 5433) را پر کنید
+npm run db:local              # PostgreSQL محلی (داده‌ها در پوشه .localdb؛ این پنجره باز بماند)
+npx prisma migrate deploy
 npm run db:seed               # داده نمونه (اختیاری)
 npm run dev
 ```
 
 در حالت توسعه کد ورود در ترمینال چاپ می‌شود و پرداخت با درگاه آزمایشی انجام می‌شود. برای ساخت مدیر: `npm run admin:set -- 09xxxxxxxxx` (یک کد ثابت ۴ تا ۶ رقمی می‌پرسد). مدیر در همان صفحه ورود معمولی شماره‌اش را می‌زند و به‌جای کد پیامکی، همین کد ثابت را وارد می‌کند؛ پیامکی برای او ارسال نمی‌شود.
+
+## پشتیبان‌گیری
+
+- از پنل مدیریت: **تنظیمات ← دریافت بکاپ / بازیابی بکاپ** (فایل ZIP شامل همه جدول‌ها و تصاویر محصولات).
+- از خط فرمان سرور:
+
+```bash
+npm run backup:create -- backup.zip
+npm run backup:restore -- backup.zip --yes
+```
+
+بازیابی اتمی است: اگر فایل خراب یا ناسازگار باشد هیچ تغییری اعمال نمی‌شود. `OTP_PEPPER` سرور مقصد باید با سرور مبدأ یکی باشد تا کد ورود ثابت مدیر کار کند.
 
 ## استقرار روی Railway
 

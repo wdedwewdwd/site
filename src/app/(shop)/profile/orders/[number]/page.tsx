@@ -9,6 +9,7 @@ import { SHIPPING } from "@/lib/shop";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SummaryRow } from "@/components/cart/SummaryRow";
 import { PayAgainButton } from "@/components/checkout/PayAgainButton";
+import { CopyButton } from "@/components/ui/CopyButton";
 import type { OrderStatus } from "@/generated/prisma/client";
 import { PageBar } from "@/components/layout/PageBar";
 
@@ -48,8 +49,19 @@ export default async function OrderDetailPage({ params }: PageProps<"/profile/or
             <h1 className="sr-only text-lg font-black md:not-sr-only">جزئیات سفارش #{faDigits(order.number)}</h1>
             <StatusBadge status={order.status} />
           </div>
-          {order.trackingCode && (
-            <span className="rounded-lg bg-surface px-3 py-2 text-xs font-bold">کد رهگیری مرسوله: <span dir="ltr">{faDigits(order.trackingCode)}</span></span>
+          {(order.trackingCode || order.carrier) && (
+            <span className="flex flex-wrap items-center gap-2 rounded-lg bg-surface px-3 py-2 text-xs font-bold">
+              {order.carrier && <span>{order.carrier}</span>}
+              {order.trackingCode && (
+                <>
+                  <span>کد رهگیری: <span dir="ltr">{order.trackingCode}</span></span>
+                  <CopyButton value={order.trackingCode} />
+                  {order.carrier?.startsWith("پست") && (
+                    <a href="https://tracking.post.ir/" target="_blank" rel="noopener noreferrer" className="text-info hover:underline">پیگیری در سایت پست</a>
+                  )}
+                </>
+              )}
+            </span>
           )}
         </div>
 

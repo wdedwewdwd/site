@@ -3,7 +3,7 @@ import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { Toaster } from "@/components/ui/Toaster";
-import { NavigationTracker } from "@/components/layout/navigation";
+import { MobileFooterGate, NavigationTracker } from "@/components/layout/navigation";
 import { ChatWidget } from "@/components/chat/ChatWidget";
 import { getCartCount } from "@/lib/cart";
 import { getContact } from "@/lib/settings";
@@ -28,7 +28,9 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
       <main id="main" className="min-h-[60vh]">
         {children}
       </main>
-      <SiteFooter />
+      <MobileFooterGate>
+        <SiteFooter />
+      </MobileFooterGate>
       <BottomNav cartCount={cartCount} />
       <Suspense fallback={null}>
         <ChatWidget support={support} />

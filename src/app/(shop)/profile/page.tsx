@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, LayoutDashboard } from "lucide-react";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/auth/session";
 import { faDate, faDateTime, faDigits, toman } from "@/lib/format";
@@ -35,6 +35,18 @@ export default async function ProfileDashboard() {
     <>
       <PageBar title="حساب کاربری" backHref="/" />
     <div className="flex flex-col gap-5">
+      {(user.role === "ADMIN" || user.role === "SUPPORT") && (
+        <Link href="/admin" className="flex items-center gap-4 rounded-card bg-night p-5 text-white transition-colors hover:bg-ink">
+          <span className="grid size-12 shrink-0 place-items-center rounded-full bg-white text-ink">
+            <LayoutDashboard className="size-6" aria-hidden />
+          </span>
+          <span className="flex flex-1 flex-col gap-1">
+            <span className="text-base font-black">ورود به پنل مدیریت</span>
+            <span className="text-xs text-white/60">سفارش‌ها، محصولات، گفتگوها و تنظیمات فروشگاه</span>
+          </span>
+          <ChevronLeft className="size-5 text-white/60" aria-hidden />
+        </Link>
+      )}
       <section className="card flex flex-wrap items-center justify-between gap-4 p-6">
         <div className="flex flex-col gap-1.5">
           <h1 className="text-lg font-black">سلام {name || "دوست"} عزیز!</h1>

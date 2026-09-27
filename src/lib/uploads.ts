@@ -34,7 +34,16 @@ export async function saveChatImage(file: File) {
 
 export const CHAT_IMAGE_NAME = /^[A-Za-z0-9_-]{16,64}\.webp$/;
 
-async function saveImage(file: File, folder: "products" | "chat"): Promise<{ ok: true; name: string } | { ok: false; error: string }> {
+/** Homepage banners are wide, so they keep more pixels than product photos. Returns the public URL. */
+export async function saveBannerImage(file: File): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
+  const saved = await saveImage(file, "banners", 2400);
+  return saved.ok ? { ok: true, url: `/media/banners/${saved.name}` } : saved;
+}
+
+/** Uploaded banner URLs look like this; anything else (e.g. built-in /banners/*.jpg) is never deleted. */
+export const UPLOADED_BANNER_URL = /^\/media\/banners\/([A-Za-z0-9_-]{16,64}\.webp)$/;
+
+async function saveImage(file: File, folder: "products" | "chat" | "banners", maxSide = 1600): Promise<{ ok: true; name: string } | { ok: false; error: string }> {
   if (file.size === 0) return { ok: false, error: "فایل خالی است." };
   if (file.size > MAX_BYTES) return { ok: false, error: "حجم تصویر باید کمتر از ۴ مگابایت باشد." };
   const buf = Buffer.from(await file.arrayBuffer());
@@ -44,7 +53,7 @@ async function saveImage(file: File, folder: "products" | "chat"): Promise<{ ok:
   try {
     out = await sharp(buf, { limitInputPixels: MAX_PIXELS, failOn: "error" })
       .rotate()
-      .resize(1600, 1600, { fit: "inside", withoutEnlargement: true })
+      .resize(maxSide, maxSide, { fit: "inside", withoutEnlargement: true })
       .webp({ quality: 82 })
       .toBuffer();
   } catch {

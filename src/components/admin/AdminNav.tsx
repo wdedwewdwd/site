@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Boxes, FolderTree, Headset, LayoutDashboard, LogOut, Menu, MessagesSquare, Percent, Settings, ShoppingBag, Store, Users, X } from "lucide-react";
+import { Boxes, FolderTree, GalleryHorizontalEnd, Headset, LayoutDashboard, LogOut, Menu, MessagesSquare, Percent, Settings, ShoppingBag, Store, Users, X } from "lucide-react";
 import { logoutAction } from "@/app/actions/auth";
 import { LogoMark } from "@/components/brand/Logo";
 import { faDigits } from "@/lib/format";
@@ -17,6 +17,7 @@ const ITEMS = [
   { href: "/admin/chat", label: "گفتگوی آنلاین", Icon: MessagesSquare, badgeKey: "chat" as const },
   { href: "/admin/tickets", label: "تیکت‌های پشتیبانی", Icon: Headset, badgeKey: "tickets" as const },
   { href: "/admin/categories", label: "دسته‌بندی‌ها", Icon: FolderTree },
+  { href: "/admin/banners", label: "بنرهای صفحه اصلی", Icon: GalleryHorizontalEnd },
   { href: "/admin/discounts", label: "تخفیف‌ها", Icon: Percent },
   { href: "/admin/settings", label: "تنظیمات", Icon: Settings },
 ];

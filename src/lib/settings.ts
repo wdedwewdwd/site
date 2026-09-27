@@ -3,7 +3,7 @@ import { cache } from "react";
 import { db } from "./db";
 import type { LatLng } from "./location";
 
-export const SETTING_KEYS = ["enamad_id", "enamad_code", "announcement", "shop_lat", "shop_lng"] as const;
+export const SETTING_KEYS = ["enamad_id", "enamad_code", "announcement", "shop_lat", "shop_lng", "hero_layout", "hero_autoplay"] as const;
 export type SettingKey = (typeof SETTING_KEYS)[number];
 
 export const getSettings = cache(async () => {

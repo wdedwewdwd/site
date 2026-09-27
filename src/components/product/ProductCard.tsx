@@ -45,11 +45,16 @@ export function ProductCard({ product, compact = false }: { product: ProductCard
 
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center justify-between">
-          <span className="flex items-center gap-1 text-[11px] font-bold">
-            <Star className="size-3 fill-star text-star" aria-hidden />
-            {rating(product.ratingAvg)}
-            <span className="sr-only">امتیاز</span>
-          </span>
+          {product.ratingCount > 0 ? (
+            <span className="flex items-center gap-1 text-[11px] font-bold">
+              <Star className="size-3 fill-star text-star" aria-hidden />
+              {rating(product.ratingAvg)}
+              <span className="font-normal text-muted">({faDigits(product.ratingCount)})</span>
+              <span className="sr-only">امتیاز از نظر خریداران</span>
+            </span>
+          ) : (
+            <span aria-hidden />
+          )}
           {product.brand && (
             <span className="text-[11px] font-bold text-brand" dir="ltr">
               {product.brand.latin ?? product.brand.name}

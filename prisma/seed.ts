@@ -80,8 +80,6 @@ async function main() {
       price: p.price,
       compareAtPrice: p.compareAt ?? null,
       stock: p.stock,
-      ratingAvg: p.rating,
-      ratingCount: p.ratings,
       soldCount: p.sold,
       oemCode: p.oem ?? null,
       warranty: "۱۲ ماهه آریزون یدک",

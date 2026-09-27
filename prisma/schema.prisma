@@ -194,12 +194,19 @@ model Review {
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  rating    Int
+  rating    Int // 1–5
   body      String
-  approved  Boolean  @default(false)
-  createdAt DateTime @default(now())
+  // Customer reviews are published only after a staff member approves them.
+  approved  Boolean   @default(false)
+  // Optional public answer from the shop, shown under the review.
+  reply     String?
+  repliedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
 
   @@unique([productId, userId])
+  @@index([productId, approved, createdAt])
+  @@index([approved, createdAt])
 }
 
 model WishlistItem {

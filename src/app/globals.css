@@ -9,6 +9,8 @@
   --color-brand-soft: #fdeaea;
   --color-ink: #1a1d20;
   --color-night: #191919;
+  /* Deepest black: the header's top strip. */
+  --color-coal: #0f0f10;
   --color-muted: #5f666d;
   --color-subtle: #a1a1a8;
   --color-line: #e9ecef;

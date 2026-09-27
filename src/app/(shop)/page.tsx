@@ -4,7 +4,6 @@ import { productCardSelect } from "@/lib/catalog";
 import { ProductCard } from "@/components/product/ProductCard";
 import { CategoryIcon } from "@/components/ui/CategoryIcon";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { SearchBox } from "@/components/layout/SearchBox";
 import { HeroBanners } from "@/components/home/HeroBanners";
 import { getHomeBanners } from "@/lib/banners";
 
@@ -23,8 +22,6 @@ export default async function HomePage() {
 
   return (
     <div className="container-page flex flex-col gap-8 py-4 md:gap-10 md:py-8">
-      <SearchBox className="md:hidden" />
-
       <h1 className="sr-only">آریزون یدک | فروشگاه آنلاین قطعات یدکی خودرو</h1>
       <HeroBanners layout={hero.layout} banners={hero.banners} autoplay={hero.autoplay} />
 

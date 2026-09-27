@@ -15,7 +15,7 @@ const LINKS = [
 export function NavLinks() {
   const pathname = usePathname();
   return (
-    <nav aria-label="منوی اصلی" className="hidden border-b border-line bg-white md:block">
+    <nav aria-label="منوی اصلی" className="hidden border-t border-white/[0.08] bg-night md:block">
       <ul className="container-page flex h-12 items-stretch justify-between">
         {LINKS.map((l) => {
           const active = l.match(pathname);
@@ -25,7 +25,7 @@ export function NavLinks() {
                 href={l.href}
                 aria-current={active ? "page" : undefined}
                 className={`flex items-center border-b-[3px] px-2 text-sm transition-colors ${
-                  active ? "border-brand font-extrabold text-brand" : "border-transparent font-medium text-muted hover:text-ink"
+                  active ? "border-brand font-extrabold text-white" : "border-transparent font-medium text-white/60 hover:text-white"
                 }`}
               >
                 {l.label}

@@ -27,7 +27,7 @@ type Props = {
 export function PageBar({ title, mobileTitle, backHref, crumbs = [], forceBack, actions }: Props) {
   return (
     <>
-      <div className="sticky top-0 z-30 -mx-4 -mt-6 mb-1 border-b border-line bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85 md:hidden">
+      <div className="sticky top-0 z-30 -mx-4 -mt-6 mb-1 border-b border-white/[0.08] bg-night text-white md:hidden">
         <div className="relative flex h-14 items-center justify-between px-4">
           {/* Right (start in RTL): balancing slot so the title stays centered */}
           <span className="size-10 shrink-0" aria-hidden />
@@ -36,7 +36,7 @@ export function PageBar({ title, mobileTitle, backHref, crumbs = [], forceBack, 
           </p>
           <div className="flex items-center gap-1">
             {actions}
-            <BackButton fallback={backHref} force={forceBack} />
+            <BackButton fallback={backHref} force={forceBack} tone="dark" />
           </div>
         </div>
       </div>

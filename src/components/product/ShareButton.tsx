@@ -18,7 +18,7 @@ export function ShareButton({ title }: { title: string }) {
     }
   };
   return (
-    <button type="button" onClick={share} aria-label="اشتراک‌گذاری" className="grid size-10 shrink-0 place-items-center rounded-full text-ink hover:bg-canvas">
+    <button type="button" onClick={share} aria-label="اشتراک‌گذاری" className="grid size-10 shrink-0 place-items-center rounded-full text-white transition-colors hover:bg-white/10 active:bg-white/15">
       <Share2 className="size-5" aria-hidden />
     </button>
   );

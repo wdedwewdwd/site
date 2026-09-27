@@ -30,7 +30,7 @@ export function MobileMenu({ isStaff = false }: { isStaff?: boolean }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="grid size-10 place-items-center rounded-full border border-line bg-white"
+        className="grid size-10 place-items-center rounded-full border border-white/15 bg-white/[0.06] text-white transition-colors hover:bg-white/[0.12]"
         aria-label="باز کردن منو"
         aria-expanded={open}
       >

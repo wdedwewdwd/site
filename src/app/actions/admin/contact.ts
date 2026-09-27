@@ -6,10 +6,10 @@ import { db } from "@/lib/db";
 import { requireStaff } from "@/lib/auth/session";
 import { audit } from "@/lib/audit";
 import { text, toEnDigits } from "@/lib/validation";
-import { CONTACT_KEYS, parseInstagram, parsePhone, parseTelegram, parseWhatsapp, type ContactKey } from "@/lib/contact-shared";
+import { CONTACT_KEYS, parseChannels, parseInstagram, parsePhone, parseTelegram, parseWhatsapp, type ContactKey } from "@/lib/contact-shared";
 import type { AdminFormState } from "./misc";
 
-type Field = { key: ContactKey; label: string; required?: boolean; parse: (v: string) => string | null; error: string };
+type Field = { key: ContactKey; label: string; required?: boolean; emptyError?: string; parse: (v: string) => string | null; error: string };
 
 const trimmed = (max: number) => (v: string) => {
   const r = text(max, 0).safeParse(v);
@@ -26,6 +26,14 @@ const FIELDS: Field[] = [
   { key: "social_instagram", label: "اینستاگرام", parse: parseInstagram, error: "آیدی یا لینک اینستاگرام معتبر نیست (مثلاً arizonyadak@)" },
   { key: "social_telegram", label: "تلگرام", parse: parseTelegram, error: "آیدی یا لینک تلگرام معتبر نیست (مثلاً arizonyadak@)" },
   { key: "social_whatsapp", label: "واتساپ", parse: parseWhatsapp, error: "شماره واتساپ معتبر نیست (شماره موبایل یا لینک wa.me)" },
+  {
+    key: "support_channels",
+    label: "منوی پشتیبانی",
+    required: true,
+    emptyError: "حداقل یک گزینه منوی پشتیبانی باید روشن بماند.",
+    parse: parseChannels,
+    error: "گزینه‌های منوی پشتیبانی معتبر نیست.",
+  },
 ];
 
 /** Saves all contact details at once; empty optional fields hide that item on the site. */
@@ -35,7 +43,7 @@ export async function saveContact(_: AdminFormState, formData: FormData): Promis
   for (const f of FIELDS) {
     const raw = String(formData.get(f.key) ?? "").trim().slice(0, 300);
     if (!raw) {
-      if (f.required) return { ok: false, error: `${f.label} را وارد کنید.` };
+      if (f.required) return { ok: false, error: f.emptyError ?? `${f.label} را وارد کنید.` };
       values[f.key] = "";
       continue;
     }

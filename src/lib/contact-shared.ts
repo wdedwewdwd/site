@@ -5,6 +5,10 @@
 import { faDigits } from "./format";
 import { normalizePhone, toEnDigits } from "./validation";
 
+/** Options of the floating support menu, in the order they are listed. */
+export const SUPPORT_CHANNELS = ["phone", "chat", "whatsapp", "telegram", "instagram"] as const;
+export type SupportChannel = (typeof SUPPORT_CHANNELS)[number];
+
 /** Settings keys, and the values used until the admin changes them. "" means intentionally empty. */
 export const CONTACT_DEFAULTS = {
   contact_phone: "02133947270",
@@ -16,6 +20,8 @@ export const CONTACT_DEFAULTS = {
   social_instagram: "",
   social_telegram: "",
   social_whatsapp: "",
+  // Which options the support menu may show (comma list). A social option also needs its link above.
+  support_channels: SUPPORT_CHANNELS.join(","),
 } as const;
 export type ContactKey = keyof typeof CONTACT_DEFAULTS;
 export const CONTACT_KEYS = Object.keys(CONTACT_DEFAULTS) as ContactKey[];
@@ -55,6 +61,14 @@ export function parseWhatsapp(input: string) {
   return intl ? intl[1] : null;
 }
 
+/** "whatsapp,phone" → "phone,whatsapp" (known options, fixed order); null when none or unknown. */
+export function parseChannels(input: string) {
+  const picked = new Set(input.split(",").map((s) => s.trim()).filter(Boolean));
+  if ([...picked].some((c) => !(SUPPORT_CHANNELS as readonly string[]).includes(c))) return null;
+  const list = SUPPORT_CHANNELS.filter((c) => picked.has(c));
+  return list.length ? list.join(",") : null;
+}
+
 // ─── Display helpers ───
 
 /** 02133947270 → "۰۲۱-۳۳۹۴۷۲۷۰"; mobiles stay as one block. */
@@ -83,6 +97,8 @@ export type ContactInfo = {
   whatsapp: string | null;
   whatsappUrl: string | null;
   whatsappDisplay: string | null;
+  /** Options switched on for the support menu (a social one still needs its link). */
+  supportChannels: SupportChannel[];
 };
 
 /** Builds the contact details from stored settings (missing keys fall back to the defaults). */
@@ -112,5 +128,6 @@ export function resolveContact(raw: Partial<Record<string, string>>): ContactInf
     whatsapp,
     whatsappUrl: whatsapp ? whatsappUrl(whatsapp) : null,
     whatsappDisplay: whatsapp ? whatsappDisplay(whatsapp) : null,
+    supportChannels: (parseChannels(get("support_channels")) ?? CONTACT_DEFAULTS.support_channels).split(",") as SupportChannel[],
   };
 }

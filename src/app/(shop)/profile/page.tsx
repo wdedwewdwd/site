@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { requireUser } from "@/lib/auth/session";
 import { faDate, faDateTime, faDigits, toman } from "@/lib/format";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { PageBar } from "@/components/layout/PageBar";
 
 export default async function ProfileDashboard() {
   const user = await requireUser("/profile");
@@ -31,6 +32,8 @@ export default async function ProfileDashboard() {
   ];
 
   return (
+    <>
+      <PageBar title="حساب کاربری" backHref="/" />
     <div className="flex flex-col gap-5">
       <section className="card flex flex-wrap items-center justify-between gap-4 p-6">
         <div className="flex flex-col gap-1.5">
@@ -83,5 +86,6 @@ export default async function ProfileDashboard() {
         )}
       </section>
     </div>
+    </>
   );
 }

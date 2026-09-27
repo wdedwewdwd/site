@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { requireUser } from "@/lib/auth/session";
 import { faDate, faDigits } from "@/lib/format";
 import { SITE, TICKET_STATUS } from "@/lib/shop";
+import { PageBar } from "@/components/layout/PageBar";
 
 
 export default async function SupportPage() {
@@ -11,12 +12,14 @@ export default async function SupportPage() {
   const tickets = await db.ticket.findMany({ where: { userId: user.id }, orderBy: { updatedAt: "desc" }, take: 50 });
 
   return (
+    <>
+      <PageBar title="پشتیبانی" backHref="/profile" crumbs={[{ href: "/profile", label: "حساب کاربری" }]} />
     <div className="flex flex-col gap-5">
       <section className="card flex flex-wrap items-center justify-between gap-4 p-5">
         <div className="flex items-center gap-4">
           <span className="grid size-12 place-items-center rounded-xl bg-brand-soft text-brand"><Headset className="size-6" /></span>
           <div className="flex flex-col gap-1">
-            <h1 className="text-lg font-black">پشتیبانی</h1>
+            <h1 className="sr-only text-lg font-black md:not-sr-only">پشتیبانی</h1>
             <p className="text-xs text-muted">تلفن: {SITE.supportPhone} — {SITE.supportHours}</p>
           </div>
         </div>
@@ -44,5 +47,6 @@ export default async function SupportPage() {
         )}
       </section>
     </div>
+    </>
   );
 }

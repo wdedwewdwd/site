@@ -42,6 +42,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps<"
       filters={{ ...parseFilters(sp), category: slug }}
       searchParams={sp}
       crumbs={crumbs}
+      backHref={category.parent?.isActive ? `/category/${category.parent.slug}` : "/categories"}
       intro={
         <header className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">

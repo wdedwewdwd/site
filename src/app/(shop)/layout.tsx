@@ -2,6 +2,7 @@ import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { Toaster } from "@/components/ui/Toaster";
+import { NavigationTracker } from "@/components/layout/navigation";
 import { getCartCount } from "@/lib/cart";
 
 export default async function ShopLayout({ children }: { children: React.ReactNode }) {
@@ -18,6 +19,7 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
       <SiteFooter />
       <BottomNav cartCount={cartCount} />
       <Toaster />
+      <NavigationTracker />
     </>
   );
 }

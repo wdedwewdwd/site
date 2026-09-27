@@ -25,7 +25,7 @@ export default async function EditProductPage({ params }: PageProps<"/admin/prod
   if (!product) notFound();
   return (
     <>
-      <PageHeader title="ویرایش محصول">
+      <PageHeader title="ویرایش محصول" backHref="/admin/products">
         <Link href={`/product/${product.slug}`} target="_blank" className="btn-ghost py-2.5">مشاهده در فروشگاه</Link>
       </PageHeader>
       <ProductForm product={product} categories={categories} brands={brands} cars={cars} />

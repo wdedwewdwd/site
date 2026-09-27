@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Clock, Mail, MapPin, Phone } from "lucide-react";
-import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { SITE } from "@/lib/shop";
+import { PageBar } from "@/components/layout/PageBar";
 
 export const metadata: Metadata = { title: "تماس با ما" };
 
@@ -15,7 +15,7 @@ export default function ContactPage() {
   ];
   return (
     <div className="container-page flex flex-col gap-6 py-6 md:py-8">
-      <Breadcrumbs items={[{ label: "تماس با ما" }]} />
+      <PageBar title="تماس با ما" backHref="/" />
       <div className="card mx-auto w-full max-w-4xl p-6 md:p-10">
         <h1 className="mb-2 text-xl font-black md:text-2xl">تماس با ما</h1>
         <p className="mb-8 text-sm text-muted">برای پیگیری سفارش، مشاوره خرید قطعه یا ثبت شکایت از راه‌های زیر با ما در ارتباط باشید.</p>

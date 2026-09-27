@@ -7,6 +7,7 @@ import { getUser } from "@/lib/auth/session";
 import { faDigits, toman } from "@/lib/format";
 import { SHIPPING } from "@/lib/shop";
 import { PayAgainButton } from "@/components/checkout/PayAgainButton";
+import { PageBar } from "@/components/layout/PageBar";
 
 export const metadata: Metadata = { title: "نتیجه سفارش", robots: { index: false } };
 
@@ -27,7 +28,8 @@ export default async function OrderResultPage({ params, searchParams }: PageProp
   const success = order ? order.status !== "PENDING_PAYMENT" && order.status !== "CANCELLED" : !failedParam;
 
   return (
-    <div className="container-page py-10">
+    <div className="container-page flex flex-col gap-6 py-6 md:py-10">
+      <PageBar title="نتیجه سفارش" backHref="/" forceBack />
       <div className="card mx-auto flex max-w-xl flex-col items-center gap-5 px-6 py-10 text-center">
         {success ? (
           <span className="grid size-20 place-items-center rounded-full bg-success-soft text-success"><CircleCheck className="size-10" /></span>

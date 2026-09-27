@@ -1,9 +1,9 @@
-import { Breadcrumbs } from "./Breadcrumbs";
+import { PageBar } from "@/components/layout/PageBar";
 
 export function ContentPage({ title, updated, children }: { title: string; updated?: string; children: React.ReactNode }) {
   return (
     <div className="container-page flex flex-col gap-6 py-6 md:py-8">
-      <Breadcrumbs items={[{ label: title }]} />
+      <PageBar title={title} backHref="/" />
       <article className="card mx-auto w-full max-w-4xl p-6 md:p-10">
         <header className="mb-6 border-b border-line pb-5">
           <h1 className="text-xl font-black md:text-2xl">{title}</h1>

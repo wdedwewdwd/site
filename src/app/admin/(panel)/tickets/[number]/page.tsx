@@ -21,7 +21,7 @@ export default async function AdminTicketPage({ params }: PageProps<"/admin/tick
 
   return (
     <>
-      <PageHeader title={ticket.subject}>
+      <PageHeader title={ticket.subject} backHref="/admin/tickets">
         <span className={`rounded-md px-2.5 py-1 text-xs font-bold ${TICKET_STATUS[ticket.status].cls}`}>{TICKET_STATUS[ticket.status].label}</span>
       </PageHeader>
       <div className="card flex flex-col gap-5 p-5">

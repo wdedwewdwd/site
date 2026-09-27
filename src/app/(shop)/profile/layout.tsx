@@ -17,7 +17,7 @@ export default async function ProfileLayout({ children }: { children: React.Reac
 
   return (
     <div className="container-page grid gap-6 py-6 md:py-8 lg:grid-cols-[1fr_260px]">
-      <div className="min-w-0 lg:col-start-1 lg:row-start-1">{children}</div>
+      <div className="flex min-w-0 flex-col gap-5 lg:col-start-1 lg:row-start-1">{children}</div>
       <aside className="flex flex-col gap-3 lg:col-start-2 lg:row-start-1">
         <div className="card flex items-center justify-between p-4">
           <div className="flex flex-col gap-1">

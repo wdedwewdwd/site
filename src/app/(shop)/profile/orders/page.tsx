@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/auth/session";
 import { faDate, faDigits, toman } from "@/lib/format";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import type { OrderStatus, Prisma } from "@/generated/prisma/client";
+import { PageBar } from "@/components/layout/PageBar";
 
 const TABS: { key: string; label: string; statuses?: OrderStatus[] }[] = [
   { key: "all", label: "همه" },
@@ -27,8 +28,10 @@ export default async function OrdersPage({ searchParams }: PageProps<"/profile/o
     counts.filter((c) => !t.statuses || t.statuses.includes(c.status)).reduce((s, c) => s + c._count, 0);
 
   return (
+    <>
+      <PageBar title="سفارش‌های من" backHref="/profile" crumbs={[{ href: "/profile", label: "حساب کاربری" }]} />
     <div className="card flex flex-col gap-5 p-5">
-      <h1 className="text-lg font-black">تاریخچه سفارش‌ها</h1>
+      <h1 className="sr-only text-lg font-black md:not-sr-only">تاریخچه سفارش‌ها</h1>
       <nav aria-label="فیلتر وضعیت" className="-mx-5 overflow-x-auto border-b border-line px-5">
         <ul className="flex gap-6 text-sm">
           {TABS.map((t) => (
@@ -73,5 +76,6 @@ export default async function OrdersPage({ searchParams }: PageProps<"/profile/o
         </ul>
       )}
     </div>
+    </>
   );
 }

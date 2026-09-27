@@ -10,6 +10,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SummaryRow } from "@/components/cart/SummaryRow";
 import { PayAgainButton } from "@/components/checkout/PayAgainButton";
 import type { OrderStatus } from "@/generated/prisma/client";
+import { PageBar } from "@/components/layout/PageBar";
 
 const TIMELINE: { status: OrderStatus; label: string }[] = [
   { status: "PAID", label: "ثبت و پرداخت سفارش" },
@@ -38,11 +39,13 @@ export default async function OrderDetailPage({ params }: PageProps<"/profile/or
   const cancelled = order.status === "CANCELLED" || order.status === "REFUNDED";
 
   return (
+    <>
+      <PageBar title={`سفارش #${faDigits(order.number)}`} backHref="/profile/orders" crumbs={[{ href: "/profile", label: "حساب کاربری" }, { href: "/profile/orders", label: "سفارش‌های من" }]} />
     <div className="flex flex-col gap-5">
       <section className="card flex flex-col gap-5 p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <h1 className="text-lg font-black">جزئیات سفارش #{faDigits(order.number)}</h1>
+            <h1 className="sr-only text-lg font-black md:not-sr-only">جزئیات سفارش #{faDigits(order.number)}</h1>
             <StatusBadge status={order.status} />
           </div>
           {order.trackingCode && (
@@ -126,5 +129,6 @@ export default async function OrderDetailPage({ params }: PageProps<"/profile/or
         </aside>
       </div>
     </div>
+    </>
   );
 }

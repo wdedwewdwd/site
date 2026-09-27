@@ -4,15 +4,18 @@ import { db } from "@/lib/db";
 import { requireUser } from "@/lib/auth/session";
 import { faDigits } from "@/lib/format";
 import { AddressActions } from "@/components/profile/AddressActions";
+import { PageBar } from "@/components/layout/PageBar";
 
 export default async function AddressesPage() {
   const user = await requireUser("/profile/addresses");
   const addresses = await db.address.findMany({ where: { userId: user.id }, orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }] });
 
   return (
+    <>
+      <PageBar title="آدرس‌های من" backHref="/profile" crumbs={[{ href: "/profile", label: "حساب کاربری" }]} />
     <div className="card flex flex-col gap-5 p-5">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-black">آدرس‌های من</h1>
+        <h1 className="sr-only text-lg font-black md:not-sr-only">آدرس‌های من</h1>
         <Link href="/profile/addresses/new" className="flex items-center gap-1 text-sm font-bold text-brand hover:underline">
           <Plus className="size-4" /> افزودن آدرس جدید
         </Link>
@@ -41,5 +44,6 @@ export default async function AddressesPage() {
         </ul>
       )}
     </div>
+    </>
   );
 }

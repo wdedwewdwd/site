@@ -7,12 +7,13 @@ import { getUser } from "@/lib/auth/session";
 import { productCardSelect } from "@/lib/catalog";
 import { faDate, faDigits, rating, toman } from "@/lib/format";
 import { SITE } from "@/lib/shop";
-import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { Gallery } from "@/components/product/Gallery";
 import { AddToCartButton } from "@/components/product/AddToCartButton";
 import { WishlistButton } from "@/components/product/WishlistButton";
 import { ProductCard } from "@/components/product/ProductCard";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { ShareButton } from "@/components/product/ShareButton";
+import { PageBar } from "@/components/layout/PageBar";
 
 const getProduct = cache(async (slug: string) => {
   if (!/^[a-z0-9-]{1,120}$/.test(slug)) return null;
@@ -93,12 +94,15 @@ export default async function ProductPage({ params }: PageProps<"/product/[slug]
           },
         }}
       />
-      <Breadcrumbs
-        items={[
+      <PageBar
+        title={product.name}
+        mobileTitle="جزئیات قطعه"
+        backHref={`/category/${product.category.slug}`}
+        crumbs={[
           { href: "/categories", label: "دسته‌بندی‌ها" },
-          { href: `/category/${product.category.slug}`, label: product.category.name },
-          { label: product.name },
+          { href: `/category/${product.category.slug}`, label: product.category.name }
         ]}
+        actions={<ShareButton title={product.name} />}
       />
 
       <div className="grid gap-8 lg:grid-cols-[1fr_480px] lg:gap-10">

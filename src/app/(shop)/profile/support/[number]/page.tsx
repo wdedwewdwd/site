@@ -5,6 +5,7 @@ import { faDateTime, faDigits } from "@/lib/format";
 import { replyTicket } from "@/app/actions/support";
 import { ReplyForm } from "@/components/support/ReplyForm";
 import { TICKET_STATUS } from "@/lib/shop";
+import { PageBar } from "@/components/layout/PageBar";
 
 export default async function TicketPage({ params }: PageProps<"/profile/support/[number]">) {
   const user = await requireUser("/profile/support");
@@ -17,10 +18,12 @@ export default async function TicketPage({ params }: PageProps<"/profile/support
   if (!ticket) notFound();
 
   return (
+    <>
+      <PageBar title={`تیکت #${faDigits(ticket.number)}`} backHref="/profile/support" crumbs={[{ href: "/profile", label: "حساب کاربری" }, { href: "/profile/support", label: "پشتیبانی" }]} />
     <div className="card flex flex-col gap-5 p-5">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
         <div className="flex flex-col gap-1">
-          <h1 className="text-lg font-black">{ticket.subject}</h1>
+          <h1 className="sr-only text-lg font-black md:not-sr-only">{ticket.subject}</h1>
           <p className="text-xs text-muted">
             تیکت #{faDigits(ticket.number)} · {ticket.category}
             {ticket.orderRef && <> · سفارش #{faDigits(ticket.orderRef)}</>}
@@ -39,5 +42,6 @@ export default async function TicketPage({ params }: PageProps<"/profile/support
       </ol>
       {ticket.status !== "CLOSED" && <ReplyForm ticketId={ticket.id} action={replyTicket} />}
     </div>
+    </>
   );
 }

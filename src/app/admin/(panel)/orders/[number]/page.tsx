@@ -39,7 +39,7 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/order
 
   return (
     <>
-      <PageHeader title={`سفارش #${faDigits(order.number)}`}>
+      <PageHeader title={`سفارش #${faDigits(order.number)}`} backHref="/admin/orders">
         <StatusBadge status={order.status} />
       </PageHeader>
       <HelpBox

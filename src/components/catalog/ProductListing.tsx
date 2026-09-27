@@ -5,7 +5,7 @@ import { listProducts, PAGE_SIZE, SORTS, type ProductFilters, type SortKey } fro
 import { faDigits } from "@/lib/format";
 import { ProductCard } from "@/components/product/ProductCard";
 import { FilterPanel } from "./FilterPanel";
-import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { PageBar } from "@/components/layout/PageBar";
 
 type Props = {
   title: string;
@@ -15,6 +15,8 @@ type Props = {
   crumbs?: { href?: string; label: string }[];
   /** Optional block shown above the results (e.g. category description and subcategories). */
   intro?: React.ReactNode;
+  /** Parent page for the back button. */
+  backHref?: string;
 };
 
 function hrefWith(basePath: string, sp: Props["searchParams"], patch: Record<string, string | null>) {
@@ -28,7 +30,7 @@ function hrefWith(basePath: string, sp: Props["searchParams"], patch: Record<str
   return qs ? `${basePath}?${qs}` : basePath;
 }
 
-export async function ProductListing({ title, basePath, filters, searchParams, crumbs = [], intro }: Props) {
+export async function ProductListing({ title, basePath, filters, searchParams, crumbs = [], intro, backHref }: Props) {
   const [{ items, total, page, pages }, brands, cars] = await Promise.all([
     listProducts(filters),
     db.brand.findMany({ orderBy: { name: "asc" }, select: { slug: true, name: true, latin: true } }),
@@ -40,7 +42,7 @@ export async function ProductListing({ title, basePath, filters, searchParams, c
 
   return (
     <div className="container-page flex flex-col gap-6 py-6 md:py-8">
-      <Breadcrumbs items={[...crumbs, { label: title }]} />
+      <PageBar title={title} backHref={backHref ?? crumbs.at(-1)?.href ?? "/"} crumbs={crumbs} />
       {intro ?? <h1 className="sr-only">{title}</h1>}
 
       <div className="grid gap-6 md:grid-cols-[1fr_210px] lg:grid-cols-[1fr_260px]">

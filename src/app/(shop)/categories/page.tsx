@@ -3,7 +3,7 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { faDigits } from "@/lib/format";
 import { CategoryIcon } from "@/components/ui/CategoryIcon";
-import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { PageBar } from "@/components/layout/PageBar";
 
 export const metadata: Metadata = { title: "دسته‌بندی قطعات" };
 
@@ -18,8 +18,8 @@ export default async function CategoriesPage() {
   });
   return (
     <div className="container-page flex flex-col gap-6 py-6 md:py-8">
-      <Breadcrumbs items={[{ label: "دسته‌بندی‌ها" }]} />
-      <h1 className="text-xl font-black">دسته‌بندی قطعات</h1>
+      <PageBar title="دسته‌بندی‌ها" backHref="/" />
+      <h1 className="sr-only text-xl font-black md:not-sr-only">دسته‌بندی قطعات</h1>
       <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-5 lg:grid-cols-4">
         {categories.map((c) => (
           <li key={c.id}>

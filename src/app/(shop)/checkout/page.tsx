@@ -8,6 +8,7 @@ import { SHIPPING } from "@/lib/shop";
 import { Steps } from "@/components/checkout/Steps";
 import { ShippingStep } from "@/components/checkout/ShippingStep";
 import { SummaryRow } from "@/components/cart/SummaryRow";
+import { PageBar } from "@/components/layout/PageBar";
 
 export const metadata: Metadata = { title: "اطلاعات ارسال", robots: { index: false } };
 
@@ -19,6 +20,7 @@ export default async function CheckoutPage() {
 
   return (
     <div className="container-page flex flex-col gap-8 py-6 md:py-8">
+      <PageBar title="اطلاعات ارسال" backHref="/cart" crumbs={[{ href: "/cart", label: "سبد خرید" }]} />
       <Steps current={2} />
       <h1 className="sr-only">اطلاعات ارسال</h1>
       <ShippingStep

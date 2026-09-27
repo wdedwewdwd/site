@@ -10,6 +10,7 @@ import { idSchema } from "@/lib/validation";
 import { Steps } from "@/components/checkout/Steps";
 import { PaymentStep } from "@/components/checkout/PaymentStep";
 import { SummaryRow } from "@/components/cart/SummaryRow";
+import { PageBar } from "@/components/layout/PageBar";
 
 export const metadata: Metadata = { title: "روش پرداخت", robots: { index: false } };
 
@@ -29,6 +30,11 @@ export default async function CheckoutPaymentPage({ searchParams }: PageProps<"/
 
   return (
     <div className="container-page flex flex-col gap-8 py-6 md:py-8">
+      <PageBar
+        title="روش پرداخت"
+        backHref="/checkout"
+        crumbs={[{ href: "/cart", label: "سبد خرید" }, { href: "/checkout", label: "اطلاعات ارسال" }]}
+      />
       <Steps current={3} />
       <h1 className="sr-only">روش پرداخت</h1>
       <PaymentStep

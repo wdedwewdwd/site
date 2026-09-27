@@ -8,6 +8,7 @@ import { CartItemRow } from "@/components/cart/CartItemRow";
 import { DiscountForm } from "@/components/cart/DiscountForm";
 import { ClearCartButton } from "@/components/cart/ClearCartButton";
 import { SummaryRow } from "@/components/cart/SummaryRow";
+import { PageBar } from "@/components/layout/PageBar";
 
 export const metadata: Metadata = { title: "سبد خرید", robots: { index: false } };
 
@@ -16,7 +17,8 @@ export default async function CartPage() {
 
   if (!cart || cart.items.length === 0) {
     return (
-      <div className="container-page py-10">
+      <div className="container-page flex flex-col gap-6 py-6 md:py-10">
+        <PageBar title="سبد خرید" backHref="/" />
         <div className="card mx-auto flex max-w-xl flex-col items-center gap-4 px-6 py-14 text-center">
           <span className="grid size-24 place-items-center rounded-full bg-brand-soft text-brand">
             <ShoppingCart className="size-10" />
@@ -35,7 +37,9 @@ export default async function CartPage() {
   const payable = cart.subtotal - cart.discount;
 
   return (
-    <div className="container-page grid gap-6 py-6 md:py-8 lg:grid-cols-[1fr_380px]">
+    <div className="container-page flex flex-col gap-6 py-6 md:py-8">
+    <PageBar title="سبد خرید" backHref="/" />
+    <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
       <section className="flex flex-col gap-4" aria-labelledby="cart-title">
         <div className="flex items-center justify-between">
           <h1 id="cart-title" className="text-lg font-black md:text-xl">سبد خرید شما ({faDigits(cart.count)} کالا)</h1>
@@ -91,6 +95,7 @@ export default async function CartPage() {
         </div>
         <DiscountForm applied={cart.discountCode} error={cart.discountError} />
       </aside>
+    </div>
     </div>
   );
 }

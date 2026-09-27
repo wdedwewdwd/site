@@ -8,6 +8,7 @@ import { Logo, LogoMark } from "@/components/brand/Logo";
 import { SearchBox } from "./SearchBox";
 import { NavLinks } from "./NavLinks";
 import { MobileMenu } from "./MobileMenu";
+import { OnlyOnPaths } from "./navigation";
 
 export async function SiteHeader() {
   const [user, cartCount] = await Promise.all([getUser(), getCartCount()]);
@@ -64,8 +65,9 @@ export async function SiteHeader() {
       </div>
       <NavLinks />
 
-      {/* Mobile header */}
-      <div className="sticky top-0 z-30 bg-white md:hidden">
+      {/* Mobile brand header — home only; inner pages show their own PageBar with a back button */}
+      <OnlyOnPaths paths={["/"]}>
+      <div className="border-b border-line bg-white md:hidden">
         <div className="flex items-center justify-between px-5 py-2">
           <MobileMenu isStaff={isStaff} />
           <Link href="/" className="flex items-center gap-2" aria-label={`${SITE.name} — صفحه اصلی`}>
@@ -77,6 +79,7 @@ export async function SiteHeader() {
           </Link>
         </div>
       </div>
+      </OnlyOnPaths>
     </header>
   );
 }

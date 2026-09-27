@@ -16,7 +16,7 @@ export default async function NewProductPage() {
   ]);
   return (
     <>
-      <PageHeader title="افزودن محصول جدید" />
+      <PageHeader title="افزودن محصول جدید" backHref="/admin/products" />
       <HelpBox
         items={[
           "فقط نام، دسته‌بندی، قیمت و موجودی الزامی است. بقیه فیلدها را می‌توانید بعداً کامل کنید.",

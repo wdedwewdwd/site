@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { ChevronDown } from "lucide-react";
 import { db } from "@/lib/db";
-import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { PageBar } from "@/components/layout/PageBar";
 
 export const metadata: Metadata = { title: "سوالات متداول" };
 
@@ -9,7 +9,7 @@ export default async function FaqPage() {
   const faqs = await db.faq.findMany({ orderBy: { sortOrder: "asc" } });
   return (
     <div className="container-page flex flex-col gap-6 py-6 md:py-8">
-      <Breadcrumbs items={[{ label: "سوالات متداول" }]} />
+      <PageBar title="سوالات متداول" backHref="/" />
       <div className="card mx-auto w-full max-w-4xl p-6 md:p-10">
         <h1 className="mb-6 text-xl font-black md:text-2xl">سوالات متداول</h1>
         <div className="flex flex-col gap-3">

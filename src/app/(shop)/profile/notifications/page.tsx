@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { requireUser } from "@/lib/auth/session";
 import { markAllNotificationsRead } from "@/app/actions/profile";
 import { faDateTime } from "@/lib/format";
+import { PageBar } from "@/components/layout/PageBar";
 
 export default async function NotificationsPage() {
   const user = await requireUser("/profile/notifications");
@@ -11,9 +12,11 @@ export default async function NotificationsPage() {
   const hasUnread = items.some((n) => !n.readAt);
 
   return (
+    <>
+      <PageBar title="اعلان‌ها" backHref="/profile" crumbs={[{ href: "/profile", label: "حساب کاربری" }]} />
     <div className="card flex flex-col gap-5 p-5">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-black">اعلان‌ها</h1>
+        <h1 className="sr-only text-lg font-black md:not-sr-only">اعلان‌ها</h1>
         {hasUnread && (
           <form action={markAllNotificationsRead}>
             <button type="submit" className="text-xs font-bold text-brand hover:underline">خوانده شدن همه</button>
@@ -50,5 +53,6 @@ export default async function NotificationsPage() {
         </ul>
       )}
     </div>
+    </>
   );
 }

@@ -19,10 +19,12 @@ const money = (label: string) =>
     .pipe(z.string().regex(/^\d{1,10}$/, `${label} معتبر نیست`))
     .transform(Number);
 
+// Missing counts as empty: e.g. the sale price field is not rendered while the discount switch is off.
 const optionalMoney = (label: string) =>
   z
     .string()
-    .transform((v) => toEnDigits(v).replace(/[,٬\s]/g, ""))
+    .optional()
+    .transform((v) => toEnDigits(v ?? "").replace(/[,٬\s]/g, ""))
     .pipe(z.union([z.literal(""), z.string().regex(/^\d{1,10}$/, `${label} معتبر نیست`)]))
     .transform((v) => (v === "" ? null : Number(v)));
 

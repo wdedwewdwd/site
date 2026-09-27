@@ -26,7 +26,7 @@ export default async function CustomersPage({ searchParams }: PageProps<"/admin/
         items={[
           "فهرست همه کاربرانی که در سایت ثبت‌نام کرده‌اند، همراه با تعداد سفارش‌هایشان.",
           "دکمه «فعال / مسدود»: کاربر مسدود نمی‌تواند وارد سایت شود و از همه دستگاه‌ها خارج می‌شود.",
-          "تغییر نقش به «پشتیبان» یا «مدیر» فقط وقتی کار می‌کند که برای آن شماره کد ورود ثابت تعریف شده باشد (با دستور admin:set روی سرور).",
+          "برای دادن دسترسی پنل به کسی (مدیر یا پشتیبان)، به «تنظیمات ← مدیران و پشتیبان‌ها» بروید و شماره، نام و کد ورودش را اضافه کنید.",
         ]}
       />
       <div className="card overflow-x-auto">
@@ -37,7 +37,7 @@ export default async function CustomersPage({ searchParams }: PageProps<"/admin/
               <th className="px-4 py-3 text-right font-bold">موبایل</th>
               <th className="px-4 py-3 text-right font-bold">سفارش‌ها</th>
               <th className="px-4 py-3 text-right font-bold">عضویت</th>
-              <th className="px-4 py-3 text-right font-bold">نقش و وضعیت</th>
+              <th className="px-4 py-3 text-right font-bold">وضعیت</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-line">

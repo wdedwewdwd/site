@@ -9,17 +9,31 @@ import { ActionForm } from "@/components/admin/ActionForm";
 import { ChangePasswordForm } from "@/components/admin/ChangePasswordForm";
 import { BackupSection } from "@/components/admin/BackupSection";
 import { ShopLocationForm } from "@/components/admin/ShopLocationForm";
+import { StaffManager } from "@/components/admin/StaffManager";
 
 export const metadata = { title: "تنظیمات" };
 
 export default async function SettingsPage() {
-  await requireStaff(["ADMIN"]);
-  const [settings, location, logs, lastBackup] = await Promise.all([
+  const admin = await requireStaff(["ADMIN"]);
+  const [settings, location, logs, lastBackup, staff] = await Promise.all([
     getSettings(),
     getShopLocation(),
     db.auditLog.findMany({ orderBy: { createdAt: "desc" }, take: 30, include: { actor: { select: { phone: true, firstName: true, lastName: true } } } }),
     db.auditLog.findFirst({ where: { action: "backup.download" }, orderBy: { createdAt: "desc" }, select: { createdAt: true } }),
+    db.user.findMany({
+      where: { OR: [{ role: { not: "CUSTOMER" } }, { passwordHash: { not: null } }] },
+      orderBy: { createdAt: "asc" },
+      select: { id: true, phone: true, firstName: true, lastName: true, role: true, isActive: true, passwordHash: true, lastLoginAt: true },
+    }),
   ]);
+  const staffRows = staff.map(({ passwordHash, lastLoginAt, ...u }) => ({
+    ...u,
+    firstName: u.firstName ?? "",
+    lastName: u.lastName ?? "",
+    hasCode: passwordHash !== null,
+    lastLogin: lastLoginAt ? faDateTime(lastLoginAt) : null,
+    self: u.id === admin.id,
+  }));
   return (
     <>
       <PageHeader title="تنظیمات" />
@@ -27,6 +41,7 @@ export default async function SettingsPage() {
         items={[
           "نماد اینماد: پس از تأیید سایت، از پنل اینماد کد نمایش نماد را بگیرید و عدد id و مقدار Code را در فیلدهای زیر وارد کنید. نماد خودکار در پایین همه صفحات نمایش داده می‌شود.",
           "موقعیت فروشگاه: روی نقشه بزنید یا پین قرمز را بکشید تا دقیقاً روی مغازه قرار بگیرد. اگر در مغازه هستید، دکمه «موقعیت فعلی من» را با گوشی بزنید. می‌توانید لینک مکان را از برنامه نشان یا گوگل‌مپ هم کپی کنید و در کادر مربوط بچسبانید. بعد از ذخیره، نقشه در صفحه «تماس با ما» نمایش داده می‌شود و مشتری با زدن روی آن در برنامه نشان مسیریابی می‌کند.",
+          "مدیران و پشتیبان‌ها: هر کسی که باید وارد پنل شود را با شماره موبایل، نام و یک کد ورود ثابت اضافه کنید. آن شخص در صفحه ورود سایت شماره‌اش را می‌زند و به‌جای کد پیامکی همین کد را وارد می‌کند (پیامکی برایش ارسال نمی‌شود). «مدیر کل» به همه بخش‌ها دسترسی دارد و «پشتیبان» فقط به سفارش‌ها، گفتگو و تیکت‌ها. برای تأیید هر افزودن یا تغییر، کد ورود خودتان را هم وارد کنید. «حذف دسترسی» آن شخص را به یک مشتری عادی تبدیل می‌کند.",
           "کد ورود ثابت: کدی است که به‌جای کد پیامکی در صفحه ورود وارد می‌کنید. کد ۶ رقمی امنیت بسیار بیشتری دارد.",
           "دریافت بکاپ: یک فایل ZIP شامل همه اطلاعات سایت و تصاویر محصولات دانلود می‌شود. آن را در جای امن (مثلاً فلش یا فضای ابری شخصی) نگه دارید.",
           "بازیابی بکاپ: فایل بکاپ را انتخاب کنید و کلمه «بازیابی» را برای تأیید بنویسید. همه اطلاعات فعلی با محتوای فایل جایگزین می‌شود؛ اگر فایل خراب یا ناسازگار باشد، هیچ تغییری انجام نمی‌شود.",
@@ -53,6 +68,14 @@ export default async function SettingsPage() {
           این موقعیت در صفحه «تماس با ما» نمایش داده می‌شود و مشتری با یک لمس، در برنامه نشان تا مغازه مسیریابی می‌کند.
         </p>
         <ShopLocationForm saved={location} />
+      </section>
+
+      <section className="card mb-6 p-5">
+        <h2 className="mb-1 text-base font-black">مدیران و پشتیبان‌ها</h2>
+        <p className="mb-2 text-xs leading-6 text-muted">
+          افرادی که به پنل مدیریت دسترسی دارند. هر نفر با شماره موبایل خودش و کد ثابتی که اینجا تعیین می‌کنید (بدون پیامک) وارد می‌شود.
+        </p>
+        <StaffManager staff={staffRows} />
       </section>
 
       <section className="card mb-6 p-5">

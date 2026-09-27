@@ -48,6 +48,10 @@ build (`APP_URL=https://example.com PAYMENT_PROVIDER=none ALLOW_CONSOLE_SMS=true
   with one shared stream per admin tab (`StaffChatProvider`, also drives the menu badge and "support online").
   Guests chat with name + mobile via a random httpOnly cookie (only its HMAC is stored); chat photos are private
   (`/api/chat/media/*`, access-checked). Not designed in Figma (Figma MCP quota ran out); built in the site's style.
+- Reviews: customers (signed in) rate 1–5 + text at the bottom of each product page (`ReviewsSection`/`ReviewForm`,
+  `actions/reviews.ts`); one per customer per product, editing sends it back to moderation. Staff approve/hide/delete/reply
+  at `/admin/reviews` (menu badge = pending). `Product.ratingAvg/ratingCount` come only from approved reviews
+  (`refreshProductRating` in `src/lib/reviews.ts`; restore recomputes them). "خریدار این کالا" = paid order with the product.
 - Homepage banners: `/admin/banners` (`src/lib/banners*.ts`, `components/home/HeroBanners.tsx`). Layouts: single,
   split (big + small), grid4, slider; active banners fill the layout's places in list order. Built with container
   queries (`@container/hero`) so the admin preview renders the phone and desktop versions exactly.

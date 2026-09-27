@@ -5,7 +5,7 @@ import { BadgeCheck, Bell, Star } from "lucide-react";
 import { db } from "@/lib/db";
 import { getUser } from "@/lib/auth/session";
 import { productCardSelect } from "@/lib/catalog";
-import { faDate, faDigits, rating, toman } from "@/lib/format";
+import { faDigits, rating, toman } from "@/lib/format";
 import { SITE } from "@/lib/shop";
 import { Gallery } from "@/components/product/Gallery";
 import { AddToCartButton } from "@/components/product/AddToCartButton";
@@ -14,6 +14,7 @@ import { ProductCard } from "@/components/product/ProductCard";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { ShareButton } from "@/components/product/ShareButton";
 import { PageBar } from "@/components/layout/PageBar";
+import { ReviewsSection } from "@/components/product/ReviewsSection";
 
 const getProduct = cache(async (slug: string) => {
   if (!/^[a-z0-9-]{1,120}$/.test(slug)) return null;
@@ -24,12 +25,6 @@ const getProduct = cache(async (slug: string) => {
       category: true,
       images: { orderBy: { sortOrder: "asc" } },
       fitments: { include: { carModel: true } },
-      reviews: {
-        where: { approved: true },
-        orderBy: { createdAt: "desc" },
-        take: 6,
-        include: { user: { select: { firstName: true, lastName: true } } },
-      },
     },
   });
 });
@@ -121,9 +116,15 @@ export default async function ProductPage({ params }: PageProps<"/product/[slug]
             </div>
             <h1 className="text-xl font-black leading-relaxed md:text-2xl">{product.name}</h1>
             <p className="flex items-center gap-1.5 text-sm">
-              <Star className="size-4 fill-star text-star" aria-hidden />
-              <span className="font-bold">{rating(product.ratingAvg)}</span>
-              <span className="text-xs text-muted">({faDigits(product.ratingCount)} دیدگاه از کاربران)</span>
+              {product.ratingCount > 0 ? (
+                <a href="#reviews" className="flex items-center gap-1.5 hover:text-brand">
+                  <Star className="size-4 fill-star text-star" aria-hidden />
+                  <span className="font-bold">{rating(product.ratingAvg)}</span>
+                  <span className="text-xs text-muted">({faDigits(product.ratingCount)} نظر خریداران)</span>
+                </a>
+              ) : (
+                <a href="#reviews" className="text-xs text-muted hover:text-brand">هنوز نظری ثبت نشده؛ اولین نظر را بنویسید</a>
+              )}
               <span className="mr-auto">
                 <WishlistButton productId={product.id} initial={saved} className="border border-line shadow-none" />
               </span>
@@ -201,28 +202,7 @@ export default async function ProductPage({ params }: PageProps<"/product/[slug]
         </div>
       </div>
 
-      <section className="flex flex-col gap-4" aria-labelledby="reviews">
-        <h2 id="reviews" className="text-base font-black md:text-lg">نظرات کاربران</h2>
-        {product.reviews.length === 0 ? (
-          <p className="card p-6 text-sm text-muted">هنوز دیدگاهی برای این محصول ثبت نشده است.</p>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-3">
-            {product.reviews.map((r) => (
-              <article key={r.id} className="card flex flex-col gap-3 p-4">
-                <div className="flex gap-0.5" aria-label={`امتیاز ${r.rating} از ۵`}>
-                  {Array.from({ length: 5 }, (_, i) => (
-                    <Star key={i} className={`size-4 ${i < r.rating ? "fill-star text-star" : "text-line"}`} aria-hidden />
-                  ))}
-                </div>
-                <p className="text-[13px] leading-7">{r.body}</p>
-                <p className="mt-auto text-xs text-muted">
-                  {[r.user.firstName, r.user.lastName?.[0] ? `${r.user.lastName[0]}.` : ""].filter(Boolean).join(" ") || "کاربر"} · {faDate(r.createdAt)}
-                </p>
-              </article>
-            ))}
-          </div>
-        )}
-      </section>
+      <ReviewsSection product={product} userId={user?.id ?? null} />
 
       {related.length > 0 && (
         <section className="flex flex-col gap-4" aria-labelledby="related">

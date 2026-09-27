@@ -11,17 +11,18 @@ export const metadata: Metadata = { title: { default: "پنل مدیریت", tem
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const staff = await requireStaff(["ADMIN", "SUPPORT"]);
-  const [orders, tickets, chat] = await Promise.all([
+  const [orders, tickets, chat, reviews] = await Promise.all([
     db.order.count({ where: { status: { in: ["PAID", "PROCESSING"] } } }),
     db.ticket.count({ where: { status: "OPEN" } }),
     staffUnreadTotal(),
+    db.review.count({ where: { approved: false } }),
   ]);
   const name = [staff.firstName, staff.lastName].filter(Boolean).join(" ") || staff.phone;
 
   return (
     <StaffChatProvider initialUnread={chat}>
       <div className="flex min-h-dvh flex-col bg-canvas lg:flex-row">
-        <AdminNav name={name} role={staff.role} badges={{ orders, tickets, chat }} />
+        <AdminNav name={name} role={staff.role} badges={{ orders, tickets, chat, reviews }} />
         <main className="min-w-0 flex-1 p-4 md:p-6 lg:p-8">{children}</main>
         <Toaster />
         <NavigationTracker />

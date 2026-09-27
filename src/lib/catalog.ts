@@ -10,6 +10,7 @@ export const productCardSelect = {
   compareAtPrice: true,
   stock: true,
   ratingAvg: true,
+  ratingCount: true,
   brand: { select: { name: true, latin: true } },
   images: { select: { url: true, alt: true }, orderBy: { sortOrder: "asc" }, take: 1 },
   fitments: { select: { carModel: { select: { make: true, name: true } } }, take: 3 },

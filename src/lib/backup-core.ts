@@ -199,6 +199,13 @@ export async function restoreBackup(db: PrismaClient, uploadDir: string, zipByte
             `SELECT setval(pg_get_serial_sequence('"${table}"', '${column}'), COALESCE((SELECT MAX("${column}") FROM "${table}"), 1), (SELECT MAX("${column}") FROM "${table}") IS NOT NULL)`,
           );
         }
+        // Shown ratings come only from approved reviews (older backups carried sample numbers).
+        await tx.$executeRawUnsafe(`UPDATE "Product" SET "ratingAvg" = 0, "ratingCount" = 0`);
+        await tx.$executeRawUnsafe(
+          `UPDATE "Product" p SET "ratingAvg" = s.avg, "ratingCount" = s.cnt
+           FROM (SELECT "productId", ROUND(AVG("rating")::numeric, 1)::float8 AS avg, COUNT(*)::int AS cnt FROM "Review" WHERE "approved" GROUP BY "productId") s
+           WHERE s."productId" = p."id"`,
+        );
       },
       { timeout: 10 * 60 * 1000, maxWait: 30_000 },
     );

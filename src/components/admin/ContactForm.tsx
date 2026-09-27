@@ -6,7 +6,9 @@ import { saveContact } from "@/app/actions/admin/contact";
 import type { AdminFormState } from "@/app/actions/admin/misc";
 import {
   CONTACT_DEFAULTS,
+  SUPPORT_CHANNELS,
   formatPhone,
+  parseChannels,
   instagramUrl,
   parseInstagram,
   parsePhone,
@@ -16,11 +18,60 @@ import {
   telegramUrl,
   whatsappUrl,
   type ContactKey,
+  type SupportChannel,
 } from "@/lib/contact-shared";
 import { SupportChannels } from "@/components/support/SupportChannels";
 import { ChannelIcon, type Channel } from "@/components/support/ChannelIcon";
 
 type Values = Record<ContactKey, string>;
+
+const CHANNEL_TITLE: Record<SupportChannel, string> = {
+  phone: "تماس تلفنی",
+  chat: "گفتگوی آنلاین",
+  whatsapp: "واتساپ",
+  telegram: "تلگرام",
+  instagram: "اینستاگرام",
+};
+
+/** On/off switches for the options of the floating support menu, with what each one needs to appear. */
+function SupportMenuSwitches({ value, onChange, available }: { value: string; onChange: (v: string) => void; available: Record<SupportChannel, boolean> }) {
+  const on = new Set(value.split(","));
+  const toggle = (c: SupportChannel) => {
+    const next = new Set(on);
+    if (next.has(c)) next.delete(c);
+    else next.add(c);
+    const parsed = parseChannels([...next].join(","));
+    if (parsed) onChange(parsed); // the last option can't be switched off
+  };
+  return (
+    <ul className="divide-y divide-line rounded-xl border border-line">
+      {SUPPORT_CHANNELS.map((c) => {
+        const enabled = on.has(c);
+        const last = enabled && on.size === 1;
+        const status = !enabled
+          ? { cls: "text-muted", text: "خاموش؛ در منو نمایش داده نمی‌شود" }
+          : available[c]
+            ? { cls: "text-success", text: "در منو نمایش داده می‌شود" }
+            : { cls: "text-warning", text: `روشن است، ولی تا ${c === "whatsapp" ? "شماره" : "آیدی"} ${CHANNEL_TITLE[c]} را در بخش بالا وارد نکنید، نمایش داده نمی‌شود` };
+        return (
+          <li key={c} className="flex items-center gap-3 px-4 py-3">
+            <span className={enabled ? "" : "opacity-40 grayscale transition"}>
+              <ChannelIcon channel={c} size="sm" />
+            </span>
+            <span className="flex min-w-0 flex-1 flex-col">
+              <span className="text-sm font-bold">{CHANNEL_TITLE[c]}</span>
+              <span className={`text-[11px] leading-5 ${status.cls}`}>{status.text}</span>
+            </span>
+            <label className={`relative shrink-0 ${last ? "cursor-not-allowed" : "cursor-pointer"}`} title={last ? "حداقل یک گزینه باید روشن بماند" : undefined}>
+              <input type="checkbox" role="switch" checked={enabled} disabled={last} onChange={() => toggle(c)} className="peer sr-only" aria-label={`نمایش «${CHANNEL_TITLE[c]}» در منوی پشتیبانی`} />
+              <span aria-hidden className="block h-6 w-11 rounded-full bg-line transition-colors after:absolute after:top-0.5 after:right-0.5 after:size-5 after:rounded-full after:bg-white after:shadow after:transition-transform peer-checked:bg-success peer-checked:after:-translate-x-5 peer-disabled:opacity-60 peer-focus-visible:outline-2 peer-focus-visible:outline-brand" />
+            </label>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
 
 /** What the site will actually use for a field, for the ✓ / ⚠ line under it. */
 function check(key: ContactKey, v: string): { ok: boolean; text: string; url?: string } | null {
@@ -114,10 +165,25 @@ export function ContactForm({ initial }: { initial: Values }) {
           <h2 className="text-base font-black">شبکه‌های اجتماعی</h2>
           <p className="-mt-2 text-xs leading-6 text-muted">آیدی را با @ یا لینک کامل صفحه را کپی کنید؛ هر کدام خالی باشد، در سایت نمایش داده نمی‌شود.</p>
           <div className="grid gap-4 md:grid-cols-2">
-            {field("social_instagram", "اینستاگرام", { icon: brand("instagram"), placeholder: "@arizonyadak", ltr: true, hint: "در منوی پشتیبانی، فوتر و صفحه تماس با ما" })}
             {field("social_whatsapp", "واتساپ", { icon: brand("whatsapp"), placeholder: "09122054839", ltr: true, hint: "شماره موبایلی که واتساپ روی آن فعال است" })}
-            {field("social_telegram", "تلگرام", { icon: brand("telegram"), placeholder: "@arizonyadak", ltr: true, hint: "در فوتر و صفحه تماس با ما" })}
+            {field("social_telegram", "تلگرام", { icon: brand("telegram"), placeholder: "@arizonyadak", ltr: true, hint: "در منوی پشتیبانی، فوتر و صفحه تماس با ما" })}
+            {field("social_instagram", "اینستاگرام", { icon: brand("instagram"), placeholder: "@arizonyadak", ltr: true, hint: "در منوی پشتیبانی، فوتر و صفحه تماس با ما" })}
           </div>
+        </section>
+
+        <section className="card flex flex-col gap-4 p-5">
+          <div>
+            <h2 className="text-base font-black">گزینه‌های منوی «پشتیبانی»</h2>
+            <p className="mt-1 text-xs leading-6 text-muted">
+              انتخاب کنید کدام راه‌های ارتباطی در منوی دکمه قرمز «پشتیبانی» (پایین همه صفحات سایت) نمایش داده شوند. گزینه‌ها به همین ترتیب در منو می‌آیند.
+            </p>
+          </div>
+          <input type="hidden" name="support_channels" value={v.support_channels} />
+          <SupportMenuSwitches
+            value={v.support_channels}
+            onChange={(next) => setV((s) => ({ ...s, support_channels: next }))}
+            available={{ phone: true, chat: true, whatsapp: !!contact.whatsappUrl, telegram: !!contact.telegramUrl, instagram: !!contact.instagramUrl }}
+          />
         </section>
 
         <section className="card flex flex-col gap-4 p-5">
@@ -160,7 +226,7 @@ export function ContactForm({ initial }: { initial: Values }) {
           </p>
         </div>
         <p className="text-[11px] leading-5 text-muted">
-          ترتیب: تماس، گفتگوی آنلاین، اینستاگرام، واتساپ. اگر فیلد اینستاگرام یا واتساپ خالی باشد، آن گزینه نمایش داده نمی‌شود. پیش‌فرض تلفن: {formatPhone(CONTACT_DEFAULTS.contact_phone)}
+          فقط گزینه‌هایی که در «گزینه‌های منوی پشتیبانی» روشن هستند نمایش داده می‌شوند؛ واتساپ، تلگرام و اینستاگرام علاوه بر روشن بودن، شماره یا آیدی هم لازم دارند. پیش‌فرض تلفن: {formatPhone(CONTACT_DEFAULTS.contact_phone)}
         </p>
       </aside>
     </form>

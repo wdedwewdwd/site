@@ -1,16 +1,19 @@
 import { ChevronLeft } from "lucide-react";
 import { faDigits } from "@/lib/format";
-import type { ContactInfo } from "@/lib/contact-shared";
+import type { ContactInfo, SupportChannel } from "@/lib/contact-shared";
 import { ChannelIcon, type Channel } from "./ChannelIcon";
 
 /** The contact details the support menu needs (all public). */
-export type SupportContact = Pick<ContactInfo, "phone" | "phoneDisplay" | "hours" | "instagram" | "instagramUrl" | "whatsappUrl" | "whatsappDisplay">;
+export type SupportContact = Pick<
+  ContactInfo,
+  "phone" | "phoneDisplay" | "hours" | "instagram" | "instagramUrl" | "telegram" | "telegramUrl" | "whatsappUrl" | "whatsappDisplay" | "supportChannels"
+>;
 
 type Row = { channel: Channel; title: string; sub: React.ReactNode; href?: string; external?: boolean; onClick?: () => void; badge?: number };
 
 /**
- * Ways to reach support, in the shop's order of preference: phone, live chat, Instagram, WhatsApp.
- * Channels without a link in the admin panel are left out.
+ * Ways to reach support: phone, live chat, WhatsApp, Telegram, Instagram — the ones switched on in the admin
+ * panel ("اطلاعات تماس و شبکه‌ها"). A social option without its ID/number is left out.
  */
 export function SupportChannels({
   contact,
@@ -26,9 +29,9 @@ export function SupportChannels({
   unread?: number;
   online?: boolean | null;
 }) {
-  const rows: Row[] = [
-    { channel: "phone", title: "تماس تلفنی", sub: <span dir="ltr">{contact.phoneDisplay}</span>, href: `tel:${contact.phone}` },
-    {
+  const all: Record<SupportChannel, Row | null> = {
+    phone: { channel: "phone", title: "تماس تلفنی", sub: <span dir="ltr">{contact.phoneDisplay}</span>, href: `tel:${contact.phone}` },
+    chat: {
       channel: "chat",
       title: "گفتگوی آنلاین",
       sub:
@@ -42,9 +45,17 @@ export function SupportChannels({
       onClick: onChat,
       badge: unread,
     },
-    ...(contact.instagramUrl ? [{ channel: "instagram" as const, title: "اینستاگرام", sub: <span dir="ltr">@{contact.instagram}</span>, href: contact.instagramUrl, external: true }] : []),
-    ...(contact.whatsappUrl ? [{ channel: "whatsapp" as const, title: "واتساپ", sub: "پیام در واتساپ", href: contact.whatsappUrl, external: true }] : []),
-  ];
+    whatsapp: contact.whatsappUrl
+      ? { channel: "whatsapp", title: "واتساپ", sub: <span dir="ltr">{contact.whatsappDisplay}</span>, href: contact.whatsappUrl, external: true }
+      : null,
+    telegram: contact.telegramUrl
+      ? { channel: "telegram", title: "تلگرام", sub: <span dir="ltr">@{contact.telegram}</span>, href: contact.telegramUrl, external: true }
+      : null,
+    instagram: contact.instagramUrl
+      ? { channel: "instagram", title: "اینستاگرام", sub: <span dir="ltr">@{contact.instagram}</span>, href: contact.instagramUrl, external: true }
+      : null,
+  };
+  const rows = contact.supportChannels.map((c) => all[c]).filter((r): r is Row => r !== null);
 
   return (
     <ul className="flex flex-col gap-0.5 p-2">

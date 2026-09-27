@@ -18,6 +18,9 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
     instagramUrl: contact.instagramUrl,
     whatsappUrl: contact.whatsappUrl,
     whatsappDisplay: contact.whatsappDisplay,
+    telegram: contact.telegram,
+    telegramUrl: contact.telegramUrl,
+    supportChannels: contact.supportChannels,
   };
   return (
     <>

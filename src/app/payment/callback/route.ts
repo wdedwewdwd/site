@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { verifyPayment } from "@/lib/payment";
+import type { OrderStatus } from "@/generated/prisma/client";
 
 export const dynamic = "force-dynamic";
 
@@ -46,8 +47,15 @@ export async function GET(req: NextRequest) {
     const order = payment.order;
     // Re-read inside the transaction: the order may have been auto-cancelled meanwhile.
     // FOR UPDATE serializes this with the auto-cancel job, which updates the same row.
-    const [current] = await tx.$queryRaw<{ status: string }[]>`SELECT "status" FROM "Order" WHERE "id" = ${order.id} FOR UPDATE`;
+    const [current] = await tx.$queryRaw<{ status: OrderStatus }[]>`SELECT "status" FROM "Order" WHERE "id" = ${order.id} FOR UPDATE`;
     const late = current?.status === "CANCELLED";
+    // Staff may already have confirmed the order by hand (e.g. card-to-card); never move it backwards.
+    if (current && current.status !== "PENDING_PAYMENT" && !late) {
+      await tx.orderEvent.create({
+        data: { orderId: order.id, status: current.status, note: `پرداخت آنلاین پس از تأیید دستی — کد پیگیری ${verified.refId}. مبلغ دوبار دریافت شده؛ بازپرداخت را بررسی کنید.` },
+      });
+      return;
+    }
     await tx.order.update({ where: { id: order.id }, data: { status: "PAID", paidAt: new Date() } });
     const items = await tx.orderItem.findMany({ where: { orderId: order.id, productId: { not: null } } });
     for (const i of items) {

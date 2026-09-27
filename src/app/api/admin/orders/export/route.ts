@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { requireStaff } from "@/lib/auth/session";
-import { orderWhere, parseOrderFilters } from "@/lib/admin-orders";
+import { orderSort, orderWhere, parseOrderFilters } from "@/lib/admin-orders";
 import { jNumeric, tehranJDate, tehranParts } from "@/lib/jalali";
 import { ORDER_STATUS, SHIPPING } from "@/lib/shop";
 
@@ -19,7 +19,7 @@ export async function GET(req: Request) {
   const f = parseOrderFilters(Object.fromEntries(new URL(req.url).searchParams));
   const orders = await db.order.findMany({
     where: orderWhere(f),
-    orderBy: { createdAt: "desc" },
+    orderBy: orderSort(f),
     take: 20_000,
     include: { user: { select: { firstName: true, lastName: true, phone: true } }, items: { select: { name: true, quantity: true } }, payments: { where: { status: "SUCCEEDED" }, take: 1 } },
   });

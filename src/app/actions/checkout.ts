@@ -61,7 +61,9 @@ export async function placeOrder(input: z.input<typeof placeSchema>): Promise<Re
         // Atomic stock reservation: fails if someone else bought the last units.
         const reserved = await tx.product.updateMany({
           where: { id: p.id, stock: { gte: item.quantity } },
-          data: { stock: { decrement: item.quantity } },
+          // Cash-on-delivery orders are confirmed right away, so they count as sold now;
+          // online orders count once the payment is verified.
+          data: { stock: { decrement: item.quantity }, ...(payment === "COD" ? { soldCount: { increment: item.quantity } } : {}) },
         });
         if (reserved.count === 0) throw new CheckoutError(`موجودی «${p.name}» کافی نیست.`);
         subtotal += p.price * item.quantity;

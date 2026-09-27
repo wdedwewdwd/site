@@ -12,6 +12,7 @@ import { PageHeader } from "@/components/admin/PageHeader";
 import { HelpBox } from "@/components/admin/HelpBox";
 import { OrderActions } from "@/components/admin/orders/OrderActions";
 import { AdminNoteForm, ShippingEditButton } from "@/components/admin/orders/OrderSideForms";
+import { CopyButton } from "@/components/ui/CopyButton";
 
 export const metadata = { title: "جزئیات سفارش" };
 
@@ -26,7 +27,7 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/order
     include: {
       user: { select: { id: true, firstName: true, lastName: true, phone: true, nationalCode: true, createdAt: true } },
       items: { include: { product: { select: { slug: true, stock: true, images: { take: 1, orderBy: { sortOrder: "asc" }, select: { url: true } } } } } },
-      events: { orderBy: { createdAt: "desc" } },
+      events: { orderBy: { createdAt: "desc" }, include: { actor: { select: { firstName: true, lastName: true, phone: true } } } },
       payments: { orderBy: { createdAt: "desc" } },
     },
   });
@@ -40,6 +41,15 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/order
   const paid = order.payments.find((p) => p.status === "SUCCEEDED");
   const customerName = [order.user.firstName, order.user.lastName].filter(Boolean).join(" ") || "بدون نام";
   const itemCount = order.items.reduce((s, i) => s + i.quantity, 0);
+  // Ready to paste into a courier's booking form.
+  const addressText = [
+    `گیرنده: ${order.receiverName}`,
+    `موبایل: ${order.receiverPhone}`,
+    `نشانی: ${order.province}، ${order.city}، ${order.fullAddress}`,
+    order.postalCode ? `کد پستی: ${order.postalCode}` : null,
+  ]
+    .filter(Boolean)
+    .join("\n");
 
   return (
     <>
@@ -52,9 +62,10 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/order
       <HelpBox
         items={[
           "دکمه‌های «اقدام بعدی» فقط کارهای مجاز برای وضعیت فعلی را نشان می‌دهند؛ مسیر معمول: شروع آماده‌سازی ← ثبت ارسال (با روش ارسال و کد رهگیری) ← تحویل شد.",
-          "با هر تغییر وضعیت، اگر تیک «اطلاع‌رسانی به مشتری» زده باشد، یک اعلان در حساب مشتری ثبت می‌شود.",
+          "با هر تغییر وضعیت، اگر تیک «اطلاع‌رسانی به مشتری» زده باشد، یک اعلان در حساب مشتری ثبت می‌شود. در «تاریخچه» نوشته می‌شود هر تغییر را چه کسی انجام داده است.",
           "لغو یا مرجوعی، موجودی کالاها را به انبار برمی‌گرداند و بازگشایی سفارش، دوباره از موجودی کم می‌کند.",
-          "برای سفارش پرداخت در محل، بعد از دریافت پول «ثبت دریافت وجه در محل» را بزنید تا در گزارش‌ها «پرداخت‌شده» حساب شود.",
+          "سفارش پرداخت در محل: هنگام زدن «تحویل شد»، تیک «مبلغ دریافت شد» را بگذارید تا پرداخت هم همان‌جا ثبت شود (یا جداگانه «ثبت دریافت وجه در محل» را بزنید). فقط پرداخت‌های ثبت‌شده در گزارش‌ها حساب می‌شوند.",
+          "دکمه «کپی نام، تلفن و نشانی» اطلاعات گیرنده را برای ثبت مرسوله در سایت پست یا تیپاکس کپی می‌کند.",
           "یادداشت داخلی فقط برای مدیران قابل مشاهده است.",
         ]}
       />
@@ -112,7 +123,7 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/order
             </div>
             <dl className="flex flex-col gap-3 border-t border-line p-5">
               <SummaryRow label="جمع کالاها" value={order.subtotal} />
-              {order.discount > 0 && <SummaryRow label={`تخفیف (${order.discountCode})`} value={order.discount} tone="red" />}
+              {order.discount > 0 && <SummaryRow label={order.discountCode ? `تخفیف (${order.discountCode})` : "تخفیف"} value={order.discount} tone="red" />}
               <SummaryRow label={`ارسال — ${SHIPPING[order.shippingMethod].title}`} value={order.shippingCost} />
               <SummaryRow label="مبلغ کل" value={order.total} strong />
             </dl>
@@ -144,7 +155,15 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/order
                   shipping={{ receiverName: order.receiverName, receiverPhone: order.receiverPhone, province: order.province, city: order.city, postalCode: order.postalCode, fullAddress: order.fullAddress }}
                 />
               </div>
-              <p><b>{order.receiverName}</b> — <span dir="ltr">{faDigits(order.receiverPhone)}</span></p>
+              <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <b>{order.receiverName}</b>
+                <span dir="ltr">{faDigits(order.receiverPhone)}</span>
+                {order.receiverPhone !== order.user.phone && (
+                  <a href={`tel:${order.receiverPhone}`} className="flex items-center gap-1 rounded-lg bg-success-soft px-2.5 py-1 text-xs font-bold text-success">
+                    <Phone className="size-3.5" /> تماس با گیرنده
+                  </a>
+                )}
+              </p>
               <p className="leading-7">{order.province}، {order.city}، {order.fullAddress}</p>
               {order.postalCode ? (
                 <p>کد پستی: {faDigits(order.postalCode)}</p>
@@ -154,10 +173,14 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/order
                 </p>
               )}
               {(order.carrier || order.trackingCode) && (
-                <p className="rounded-lg bg-canvas px-3 py-2">
-                  {order.carrier}{order.trackingCode && <> — کد رهگیری: <b dir="ltr">{order.trackingCode}</b></>}
+                <p className="flex flex-wrap items-center gap-1 rounded-lg bg-canvas px-3 py-2">
+                  {order.carrier}
+                  {order.trackingCode && <> — کد رهگیری: <b dir="ltr">{order.trackingCode}</b> <CopyButton value={order.trackingCode} /></>}
                 </p>
               )}
+              <div className="-mr-2">
+                <CopyButton value={addressText} label="کپی نام، تلفن و نشانی (برای ثبت در پست / تیپاکس)" />
+              </div>
             </section>
           </div>
 
@@ -210,7 +233,10 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/order
                   <span className="absolute -right-[23px] top-1 size-3 rounded-full border-2 border-white bg-subtle" aria-hidden />
                   <p className="font-bold">{ORDER_STATUS[e.status].label}</p>
                   {e.note && <p className="leading-6 text-muted">{e.note}</p>}
-                  <p className="text-[11px] text-muted">{faDateTime(e.createdAt)}</p>
+                  <p className="text-[11px] text-muted">
+                    {faDateTime(e.createdAt)}
+                    {e.actor && <> · توسط {[e.actor.firstName, e.actor.lastName].filter(Boolean).join(" ") || faDigits(e.actor.phone)}</>}
+                  </p>
                 </li>
               ))}
             </ol>

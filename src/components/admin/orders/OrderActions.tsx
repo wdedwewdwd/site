@@ -94,12 +94,13 @@ export function OrderActions(props: Props) {
   );
 }
 
-function ActionForm({ action, orderId, carrier, trackingCode, onDone }: Props & { action: OrderAction; onDone: () => void }) {
+function ActionForm({ action, orderId, carrier, trackingCode, paymentMethod, hasPayment, total, onDone }: Props & { action: OrderAction; onDone: () => void }) {
   const [state, formAction, pending] = useActionState<OrderActionState, FormData>(changeOrderStatus, null);
   const [chosenCarrier, setChosenCarrier] = useState(carrier ?? "");
   useSuccess(state, onDone);
   const reasons = action.kind === "cancel" ? CANCEL_REASONS : action.kind === "refund" ? REFUND_REASONS : null;
   const needsTracking = action.kind === "ship" && !CARRIERS_WITHOUT_TRACKING.includes(chosenCarrier);
+  const offerCod = action.to === "DELIVERED" && paymentMethod === "COD" && !hasPayment;
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
@@ -137,6 +138,16 @@ function ActionForm({ action, orderId, carrier, trackingCode, onDone }: Props & 
           <label htmlFor="reference" className="label">شماره پیگیری یا مرجع واریز (اختیاری)</label>
           <input id="reference" name="reference" maxLength={80} dir="ltr" className="input" />
         </div>
+      )}
+
+      {offerCod && (
+        <label className="flex items-start gap-2 rounded-xl border border-success/40 bg-success-soft p-3 text-sm text-success">
+          <input type="checkbox" name="codCollected" defaultChecked className="mt-0.5 size-4 shrink-0 accent-brand" />
+          <span>
+            <b>مبلغ {total} تومان در محل دریافت شد</b>
+            <span className="block text-[11px]">پرداخت این سفارش هم‌زمان ثبت می‌شود. اگر هنوز پول را نگرفته‌اید، تیک را بردارید.</span>
+          </span>
+        </label>
       )}
 
       <div>

@@ -47,4 +47,5 @@ UPLOAD_DIR on a persistent disk. Not deployed yet (Liara account needed identity
 
 ## Not built yet (from the Figma design)
 Wallet payment, live chat, admin "reports" page beyond the dashboard report, map picker for addresses,
-profile photo. Real contact details must be filled in `SITE` (`src/lib/shop.ts`) before applying for eNamad.
+profile photo. Contact details live in `SITE` (`src/lib/shop.ts`): phones and address are real; postal code and
+email are still empty (hidden on the site) and must be filled in before applying for eNamad; support hours unconfirmed.

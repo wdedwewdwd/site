@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { ContentPage } from "@/components/ui/ContentPage";
-import { SITE } from "@/lib/shop";
+import { SITE, SITE_ADDRESS } from "@/lib/shop";
 
 export const metadata: Metadata = { title: "درباره ما" };
 
@@ -21,11 +21,10 @@ export default function AboutPage() {
       </ul>
       <h2>اطلاعات تماس</h2>
       <p>
-        نشانی: {SITE.address} — کد پستی: {SITE.postalCode}
+        نشانی: {SITE_ADDRESS}
         <br />
-        تلفن پشتیبانی: {SITE.supportPhone} ({SITE.supportHours})
-        <br />
-        ایمیل: <span dir="ltr">{SITE.email}</span>
+        تلفن ثابت: <span dir="ltr">{SITE.supportPhone}</span> — موبایل: <span dir="ltr">{SITE.supportMobile}</span> ({SITE.supportHours})
+        {SITE.email && <><br />ایمیل: <span dir="ltr">{SITE.email}</span></>}
       </p>
     </ContentPage>
   );

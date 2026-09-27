@@ -20,7 +20,10 @@ export default async function SupportPage() {
           <span className="grid size-12 place-items-center rounded-xl bg-brand-soft text-brand"><Headset className="size-6" /></span>
           <div className="flex flex-col gap-1">
             <h1 className="sr-only text-lg font-black md:not-sr-only">پشتیبانی</h1>
-            <p className="text-xs text-muted">تلفن: {SITE.supportPhone} — {SITE.supportHours}</p>
+            <p className="text-xs text-muted">
+              تلفن: <a href={`tel:${SITE.supportPhoneTel}`} dir="ltr">{SITE.supportPhone}</a> — موبایل:{" "}
+              <a href={`tel:${SITE.supportMobileTel}`} dir="ltr">{SITE.supportMobile}</a> — {SITE.supportHours}
+            </p>
           </div>
         </div>
         <Link href="/profile/support/new" className="btn-primary"><Plus className="size-4" /> ثبت تیکت جدید</Link>

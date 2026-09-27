@@ -37,7 +37,8 @@ export default function TermsPage() {
       <p>نحوه جمع‌آوری و نگهداری اطلاعات کاربران در صفحه <Link href="/privacy">حریم خصوصی</Link> شرح داده شده است.</p>
       <h2>۷. رسیدگی به شکایات</h2>
       <p>
-        شکایات از طریق <Link href="/support">سامانه پشتیبانی</Link>، تلفن {SITE.supportPhone} یا ایمیل <span dir="ltr">{SITE.email}</span> دریافت
+        شکایات از طریق <Link href="/support">سامانه پشتیبانی</Link>، تلفن <span dir="ltr">{SITE.supportPhone}</span> و <span dir="ltr">{SITE.supportMobile}</span>
+        {SITE.email && <> یا ایمیل <span dir="ltr">{SITE.email}</span></>} دریافت
         و حداکثر ظرف ۴۸ ساعت کاری پاسخ داده می‌شود. در صورت عدم رضایت، کاربر می‌تواند به مراجع قانونی ذی‌صلاح مراجعه کند.
       </p>
     </ContentPage>

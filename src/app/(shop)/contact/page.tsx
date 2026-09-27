@@ -1,17 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Clock, Mail, MapPin, Phone } from "lucide-react";
-import { SITE } from "@/lib/shop";
+import { Clock, Mail, MapPin, Phone, Smartphone } from "lucide-react";
+import { SITE, SITE_ADDRESS } from "@/lib/shop";
 import { PageBar } from "@/components/layout/PageBar";
 
 export const metadata: Metadata = { title: "تماس با ما" };
 
 export default function ContactPage() {
-  const items = [
-    { Icon: Phone, label: "تلفن پشتیبانی", value: SITE.supportPhone, href: "tel:02112345678" },
+  const items: { Icon: typeof Phone; label: string; value: string; href?: string; ltr?: boolean }[] = [
+    { Icon: Phone, label: "تلفن ثابت پشتیبانی", value: SITE.supportPhone, href: `tel:${SITE.supportPhoneTel}`, ltr: true },
+    { Icon: Smartphone, label: "موبایل پشتیبانی", value: SITE.supportMobile, href: `tel:${SITE.supportMobileTel}`, ltr: true },
     { Icon: Clock, label: "ساعات پاسخگویی", value: SITE.supportHours },
-    { Icon: Mail, label: "ایمیل", value: SITE.email, href: `mailto:${SITE.email}`, ltr: true },
-    { Icon: MapPin, label: "نشانی دفتر مرکزی", value: `${SITE.address} — کد پستی: ${SITE.postalCode}` },
+    ...(SITE.email ? [{ Icon: Mail, label: "ایمیل", value: SITE.email, href: `mailto:${SITE.email}`, ltr: true }] : []),
+    { Icon: MapPin, label: "نشانی فروشگاه", value: SITE_ADDRESS },
   ];
   return (
     <div className="container-page flex flex-col gap-6 py-6 md:py-8">

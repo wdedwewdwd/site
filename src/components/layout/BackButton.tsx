@@ -10,10 +10,12 @@ type Props = {
   /** Always use `fallback` (e.g. after a payment redirect, history points at the bank). */
   force?: boolean;
   variant?: "icon" | "pill";
+  /** Icon variant on a dark bar (the mobile PageBar). */
+  tone?: "light" | "dark";
   className?: string;
 };
 
-export function BackButton({ fallback, force, variant = "icon", className = "" }: Props) {
+export function BackButton({ fallback, force, variant = "icon", tone = "light", className = "" }: Props) {
   const router = useRouter();
   const goBack = () => {
     if (!force && canGoBackInSite()) router.back();
@@ -37,7 +39,7 @@ export function BackButton({ fallback, force, variant = "icon", className = "" }
       type="button"
       onClick={goBack}
       aria-label="بازگشت"
-      className={`grid size-10 shrink-0 place-items-center rounded-full text-ink transition-colors hover:bg-canvas active:bg-surface ${className}`}
+      className={`grid size-10 shrink-0 place-items-center rounded-full transition-colors ${tone === "dark" ? "text-white hover:bg-white/10 active:bg-white/15" : "text-ink hover:bg-canvas active:bg-surface"} ${className}`}
     >
       <ArrowLeft className="size-6" strokeWidth={2.25} aria-hidden />
     </button>

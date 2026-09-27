@@ -6,9 +6,19 @@ import { Toaster } from "@/components/ui/Toaster";
 import { NavigationTracker } from "@/components/layout/navigation";
 import { ChatWidget } from "@/components/chat/ChatWidget";
 import { getCartCount } from "@/lib/cart";
+import { getContact } from "@/lib/settings";
 
 export default async function ShopLayout({ children }: { children: React.ReactNode }) {
-  const cartCount = await getCartCount();
+  const [cartCount, contact] = await Promise.all([getCartCount(), getContact()]);
+  const support = {
+    phone: contact.phone,
+    phoneDisplay: contact.phoneDisplay,
+    hours: contact.hours,
+    instagram: contact.instagram,
+    instagramUrl: contact.instagramUrl,
+    whatsappUrl: contact.whatsappUrl,
+    whatsappDisplay: contact.whatsappDisplay,
+  };
   return (
     <>
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:right-2 focus:z-50 focus:rounded-lg focus:bg-white focus:px-4 focus:py-2">
@@ -21,7 +31,7 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
       <SiteFooter />
       <BottomNav cartCount={cartCount} />
       <Suspense fallback={null}>
-        <ChatWidget />
+        <ChatWidget support={support} />
       </Suspense>
       <Toaster />
       <NavigationTracker />

@@ -1,36 +1,13 @@
 import type { OrderStatus, ShippingMethod } from "@/generated/prisma/client";
 
-export const SITE: {
-  name: string;
-  latinName: string;
-  description: string;
-  supportPhone: string;
-  supportPhoneTel: string;
-  supportMobile: string;
-  supportMobileTel: string;
-  supportHours: string;
-  email: string;
-  address: string;
-  postalCode: string;
-} = {
+export const SITE = {
   name: "آریزون یدک",
   latinName: "Arizon Yadak Auto Parts",
   description:
     "آریزون یدک، مرجع تخصصی تامین و توزیع قطعات یدکی انواع خودروهای داخلی و خارجی. ضمانت اصالت کالا، بهترین قیمت بازار و ارسال سریع به سراسر کشور.",
-  // These must exactly match the details registered with eNamad.
-  supportPhone: "۰۲۱-۳۳۹۴۷۲۷۰",
-  supportPhoneTel: "02133947270",
-  supportMobile: "۰۹۱۲۲۰۵۴۸۳۹",
-  supportMobileTel: "09122054839",
-  supportHours: "۷ روز هفته، ۲۴ ساعته",
-  // Empty values are hidden on the site until they are filled in.
-  email: "",
-  address: "تهران، خیابان امیرکبیر، پاساژ کاشانی، طبقه همکف، پلاک ۱۱۰",
-  postalCode: "",
-};
+} as const;
 
-/** Address followed by the postal code when one is set. */
-export const SITE_ADDRESS = SITE.postalCode ? `${SITE.address} — کد پستی: ${SITE.postalCode}` : SITE.address;
+// Phone numbers, address, hours and social links are editable in the admin panel: see getContact().
 
 export const MAX_QTY_PER_ITEM = 20;
 

@@ -1,5 +1,6 @@
 import { requireStaff } from "@/lib/auth/session";
 import { idSchema } from "@/lib/validation";
+import { getContact } from "@/lib/settings";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { HelpBox } from "@/components/admin/HelpBox";
 import { StaffChatInbox } from "@/components/admin/chat/StaffChatInbox";
@@ -7,7 +8,7 @@ import { StaffChatInbox } from "@/components/admin/chat/StaffChatInbox";
 export const metadata = { title: "گفتگوی آنلاین" };
 
 export default async function AdminChatPage({ searchParams }: PageProps<"/admin/chat">) {
-  const staff = await requireStaff(["ADMIN", "SUPPORT"]);
+  const [staff, contact] = await Promise.all([requireStaff(["ADMIN", "SUPPORT"]), getContact()]);
   const c = (await searchParams).c;
   const initialId = typeof c === "string" && idSchema.safeParse(c).success ? c : null;
 
@@ -24,7 +25,7 @@ export default async function AdminChatPage({ searchParams }: PageProps<"/admin/
           "پس از پایان کار، «بستن گفتگو» را بزنید. اگر مشتری دوباره پیام بدهد، گفتگوی تازه‌ای شروع می‌شود. گفتگوهای مزاحم را مدیر ارشد می‌تواند با دکمه سطل زباله برای همیشه حذف کند.",
         ]}
       />
-      <StaffChatInbox initialId={initialId} isAdmin={staff.role === "ADMIN"} />
+      <StaffChatInbox initialId={initialId} isAdmin={staff.role === "ADMIN"} supportPhone={contact.phoneDisplay} />
     </>
   );
 }

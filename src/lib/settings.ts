@@ -2,8 +2,19 @@ import "server-only";
 import { cache } from "react";
 import { db } from "./db";
 import type { LatLng } from "./location";
+import { CONTACT_KEYS, resolveContact } from "./contact-shared";
 
-export const SETTING_KEYS = ["enamad_id", "enamad_code", "announcement", "shop_lat", "shop_lng", "hero_layout", "hero_autoplay"] as const;
+export const SETTING_KEYS = [
+  "enamad_id",
+  "enamad_code",
+  "announcement",
+  "shop_lat",
+  "shop_lng",
+  "hero_layout",
+  "hero_autoplay",
+  // Contact details and social links (defaults and parsing in contact-shared.ts).
+  ...CONTACT_KEYS,
+] as const;
 export type SettingKey = (typeof SETTING_KEYS)[number];
 
 export const getSettings = cache(async () => {
@@ -18,3 +29,6 @@ export async function getShopLocation(): Promise<LatLng | null> {
   const lng = Number(s.shop_lng);
   return s.shop_lat && s.shop_lng && Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null;
 }
+
+/** Shop phone numbers, address, hours and social links, as edited in the admin panel. */
+export const getContact = cache(async () => resolveContact(await getSettings()));

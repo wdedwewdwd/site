@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { requireStaff } from "@/lib/auth/session";
 import { faDateTime, faDigits, toman } from "@/lib/format";
 import { SHIPPING, SITE } from "@/lib/shop";
+import { getContact } from "@/lib/settings";
 import { LogoMark } from "@/components/brand/Logo";
 import { PrintButton } from "@/components/admin/orders/PrintButton";
 import { BackButton } from "@/components/layout/BackButton";
@@ -19,6 +20,7 @@ export default async function InvoicePage({ params }: PageProps<"/admin/invoice/
     include: { user: { select: { firstName: true, lastName: true, phone: true, nationalCode: true } }, items: true, payments: { where: { status: "SUCCEEDED" }, take: 1 } },
   });
   if (!order) notFound();
+  const contact = await getContact();
 
   const buyer = [order.user.firstName, order.user.lastName].filter(Boolean).join(" ") || order.receiverName;
   const paid = order.payments.length > 0;
@@ -51,9 +53,12 @@ export default async function InvoicePage({ params }: PageProps<"/admin/invoice/
           <div className="rounded-lg border border-line p-3">
             <p className="mb-1 font-black">فروشنده</p>
             <p>{SITE.name}</p>
-            <p>نشانی: {SITE.address}</p>
-            {SITE.postalCode && <p>کد پستی: {SITE.postalCode}</p>}
-            <p>تلفن: <span dir="ltr">{SITE.supportPhone}</span> — <span dir="ltr">{SITE.supportMobile}</span></p>
+            <p>نشانی: {contact.address}</p>
+            {contact.postalCode && <p>کد پستی: {contact.postalCode}</p>}
+            <p>
+              تلفن: <span dir="ltr">{contact.phoneDisplay}</span>
+              {contact.mobile && <> — <span dir="ltr">{contact.mobileDisplay}</span></>}
+            </p>
           </div>
           <div className="rounded-lg border border-line p-3">
             <p className="mb-1 font-black">خریدار</p>
@@ -106,9 +111,12 @@ export default async function InvoicePage({ params }: PageProps<"/admin/invoice/
             <div className="flex flex-col gap-1 border-l border-line pl-4">
               <p className="font-black">فرستنده</p>
               <p>{SITE.name}</p>
-              <p>{SITE.address}</p>
-              {SITE.postalCode && <p>کد پستی: {SITE.postalCode}</p>}
-              <p>تلفن: <span dir="ltr">{SITE.supportPhone}</span> — <span dir="ltr">{SITE.supportMobile}</span></p>
+              <p>{contact.address}</p>
+              {contact.postalCode && <p>کد پستی: {contact.postalCode}</p>}
+              <p>
+                تلفن: <span dir="ltr">{contact.phoneDisplay}</span>
+                {contact.mobile && <> — <span dir="ltr">{contact.mobileDisplay}</span></>}
+              </p>
             </div>
             <div className="flex flex-col gap-1">
               <p className="font-black">گیرنده</p>

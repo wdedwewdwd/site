@@ -1,23 +1,29 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Clock, Mail, MapPin, MessageCircleMore, Phone, Smartphone } from "lucide-react";
-import { SITE, SITE_ADDRESS } from "@/lib/shop";
-import { getShopLocation } from "@/lib/settings";
+import { ChevronLeft, Clock, Mail, MapPin, MessageCircleMore, Phone, Smartphone } from "lucide-react";
+import { getContact, getShopLocation } from "@/lib/settings";
 import { PageBar } from "@/components/layout/PageBar";
 import { OpenChatButton } from "@/components/chat/OpenChatButton";
 import { ShopMap } from "@/components/map/ShopMap";
+import { ChannelIcon, type Channel } from "@/components/support/ChannelIcon";
 
 export const metadata: Metadata = { title: "تماس با ما" };
 
 export default async function ContactPage() {
-  const location = await getShopLocation();
+  const [location, contact] = await Promise.all([getShopLocation(), getContact()]);
   const items: { Icon: typeof Phone; label: string; value: string; href?: string; ltr?: boolean }[] = [
-    { Icon: Phone, label: "تلفن ثابت پشتیبانی", value: SITE.supportPhone, href: `tel:${SITE.supportPhoneTel}`, ltr: true },
-    { Icon: Smartphone, label: "موبایل پشتیبانی", value: SITE.supportMobile, href: `tel:${SITE.supportMobileTel}`, ltr: true },
-    { Icon: Clock, label: "ساعات پاسخگویی", value: SITE.supportHours },
-    ...(SITE.email ? [{ Icon: Mail, label: "ایمیل", value: SITE.email, href: `mailto:${SITE.email}`, ltr: true }] : []),
-    { Icon: MapPin, label: "نشانی فروشگاه", value: SITE_ADDRESS },
+    { Icon: Phone, label: "تلفن پشتیبانی", value: contact.phoneDisplay, href: `tel:${contact.phone}`, ltr: true },
+    ...(contact.mobile ? [{ Icon: Smartphone, label: "موبایل پشتیبانی", value: contact.mobileDisplay!, href: `tel:${contact.mobile}`, ltr: true }] : []),
+    { Icon: Clock, label: "ساعات پاسخگویی", value: contact.hours },
+    ...(contact.email ? [{ Icon: Mail, label: "ایمیل", value: contact.email, href: `mailto:${contact.email}`, ltr: true }] : []),
+    { Icon: MapPin, label: "نشانی فروشگاه", value: contact.addressLine },
   ];
+  const socials: { channel: Channel; label: string; handle: string; url: string }[] = [
+    ...(contact.instagramUrl ? [{ channel: "instagram" as const, label: "اینستاگرام", handle: `@${contact.instagram}`, url: contact.instagramUrl }] : []),
+    ...(contact.telegramUrl ? [{ channel: "telegram" as const, label: "تلگرام", handle: `@${contact.telegram}`, url: contact.telegramUrl }] : []),
+    ...(contact.whatsappUrl ? [{ channel: "whatsapp" as const, label: "واتساپ", handle: contact.whatsappDisplay!, url: contact.whatsappUrl }] : []),
+  ];
+
   return (
     <div className="container-page flex flex-col gap-6 py-6 md:py-8">
       <PageBar title="تماس با ما" backHref="/" />
@@ -55,11 +61,31 @@ export default async function ContactPage() {
           ))}
         </ul>
 
+        {socials.length > 0 && (
+          <section className="mt-8" aria-labelledby="socials-title">
+            <h2 id="socials-title" className="mb-4 text-base font-black">ما را در شبکه‌های اجتماعی دنبال کنید</h2>
+            <ul className="grid gap-3 sm:grid-cols-3">
+              {socials.map((s) => (
+                <li key={s.channel}>
+                  <a href={s.url} target="_blank" rel="noopener noreferrer" className="group flex items-center gap-3 rounded-card border border-line p-4 transition-colors hover:border-subtle hover:bg-canvas">
+                    <ChannelIcon channel={s.channel} />
+                    <span className="flex min-w-0 flex-1 flex-col">
+                      <span className="text-sm font-extrabold">{s.label}</span>
+                      <span className="truncate text-xs text-muted" dir="ltr">{s.handle}</span>
+                    </span>
+                    <ChevronLeft className="size-4 text-subtle transition-transform group-hover:-translate-x-0.5" aria-hidden />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
         {location && (
           <section className="mt-8" aria-labelledby="map-title">
             <h2 id="map-title" className="mb-1 text-base font-black">موقعیت فروشگاه روی نقشه</h2>
-            <p className="mb-4 text-xs leading-6 text-muted">{SITE.address}</p>
-            <ShopMap location={location} address={SITE.address} />
+            <p className="mb-4 text-xs leading-6 text-muted">{contact.address}</p>
+            <ShopMap location={location} address={contact.address} />
           </section>
         )}
 

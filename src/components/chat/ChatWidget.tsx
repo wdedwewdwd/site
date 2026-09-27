@@ -3,11 +3,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { ChevronDown, Headset, MessageCircleMore, Phone } from "lucide-react";
+import { ChevronDown, Clock, Headset, Phone, X } from "lucide-react";
 import { markChatRead, sendChatMessage } from "@/app/actions/chat";
 import { SITE } from "@/lib/shop";
 import { faDigits } from "@/lib/format";
 import type { ChatMessageDTO, CustomerChatSnapshot, CustomerChatState } from "@/lib/chat-types";
+import { SupportChannels, type SupportContact } from "@/components/support/SupportChannels";
 import { Composer, MessageList, mergeMessages, useEventStream, type UiMessage } from "./parts";
 
 /** Any button on the site can open the chat with `openChat()`. */
@@ -39,10 +40,16 @@ const makeLocalId = () => `local-${++localSeq}-${Date.now()}`;
 
 const TOPICS = ["استعلام قیمت و موجودی قطعه", "مشاوره برای انتخاب قطعه مناسب", "پیگیری سفارش", "شرایط ارسال و مرجوعی"];
 
-export function ChatWidget() {
+/**
+ * The floating "پشتیبانی" button (a menu of ways to reach support: phone, live chat, Instagram,
+ * WhatsApp) and the live chat window it can open.
+ */
+export function ChatWidget({ support }: { support: SupportContact }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRoot = useRef<HTMLDivElement>(null);
   const [snapshot, setSnapshot] = useState<CustomerChatSnapshot | null>(null);
   const [messages, setMessages] = useState<UiMessage[]>([]);
   const [state, setState] = useState<CustomerChatState | null>(null);
@@ -86,6 +93,7 @@ export function ChatWidget() {
   // Open from anywhere: openChat(), or a link with ?chat=1 (e.g. from a notification).
   useEffect(() => {
     const onOpen = () => {
+      setMenuOpen(false);
       setOpen(true);
       void load();
     };
@@ -204,13 +212,50 @@ export function ChatWidget() {
     void fetch("/api/chat/typing", { method: "POST" }).catch(() => undefined);
   }
 
+  // The support menu closes on Escape or a click anywhere else.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDown = (e: PointerEvent) => {
+      if (!menuRoot.current?.contains(e.target as Node)) setMenuOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setMenuOpen(false);
+    document.addEventListener("pointerdown", onDown);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onDown);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [menuOpen]);
+
   if (pathname.startsWith("/checkout")) return null;
 
   return (
     <>
       {!open && (
-        <div className="fixed bottom-20 left-4 z-40 flex flex-col items-start gap-2 md:bottom-6 md:left-6">
-          {preview && unread > 0 && (
+        <div ref={menuRoot} className="fixed bottom-20 left-4 z-40 flex flex-col items-start gap-2 md:bottom-6 md:left-6">
+          {menuOpen && (
+            <div
+              id="support-menu"
+              role="dialog"
+              aria-label="راه‌های ارتباط با پشتیبانی"
+              className="absolute bottom-[calc(100%+12px)] left-0 w-[min(20rem,calc(100vw-2rem))] origin-bottom-left animate-pop-in overflow-hidden rounded-2xl border border-line bg-white shadow-2xl"
+            >
+              <div className="flex items-start justify-between gap-3 bg-night px-4 py-3.5 text-white">
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-sm font-black">پشتیبانی {SITE.name}</span>
+                  <span className="text-[11px] text-white/70">از چه راهی با ما در ارتباط باشید؟</span>
+                </div>
+                <button type="button" onClick={() => setMenuOpen(false)} aria-label="بستن" className="grid size-8 place-items-center rounded-lg text-white/70 hover:bg-white/10 hover:text-white">
+                  <X className="size-4" />
+                </button>
+              </div>
+              <SupportChannels contact={support} onChat={openChat} onPick={() => setMenuOpen(false)} unread={unread} online={state?.online ?? snapshot?.online ?? null} />
+              <p className="flex items-center gap-1.5 border-t border-line px-4 py-2.5 text-[11px] text-muted">
+                <Clock className="size-3.5 shrink-0" aria-hidden /> ساعات پاسخگویی: {support.hours}
+              </p>
+            </div>
+          )}
+          {!menuOpen && preview && unread > 0 && (
             <button
               type="button"
               onClick={openChat}
@@ -222,13 +267,19 @@ export function ChatWidget() {
           )}
           <button
             type="button"
-            onClick={openChat}
-            aria-label={unread ? `گفتگوی آنلاین — ${faDigits(unread)} پیام خوانده‌نشده` : "گفتگوی آنلاین با پشتیبانی"}
+            onClick={() => {
+              setMenuOpen((v) => !v);
+              // Fresh "online" status for the menu.
+              if (!menuOpen) void load();
+            }}
+            aria-expanded={menuOpen}
+            aria-controls="support-menu"
+            aria-label={menuOpen ? "بستن منوی پشتیبانی" : unread ? `پشتیبانی — ${faDigits(unread)} پیام خوانده‌نشده` : "پشتیبانی"}
             className="group relative flex h-14 items-center gap-2 rounded-full bg-brand pl-5 pr-4 text-white shadow-lg shadow-brand/30 transition-transform hover:scale-[1.03] hover:bg-brand-dark max-md:w-14 max-md:justify-center max-md:p-0"
           >
-            <MessageCircleMore className="size-6" aria-hidden />
-            <span className="text-sm font-extrabold max-md:hidden">گفتگوی آنلاین</span>
-            {unread > 0 && (
+            {menuOpen ? <X className="size-6" aria-hidden /> : <Headset className="size-6" aria-hidden />}
+            <span className="text-sm font-extrabold max-md:hidden">{menuOpen ? "بستن" : "پشتیبانی"}</span>
+            {!menuOpen && unread > 0 && (
               <span className="absolute -top-1 -right-1 grid min-w-6 place-items-center rounded-full border-2 border-white bg-ink px-1 text-[11px] font-black">{faDigits(unread)}</span>
             )}
           </button>
@@ -250,7 +301,7 @@ export function ChatWidget() {
               <span className="truncate text-sm font-black">پشتیبانی آنلاین {SITE.name}</span>
               <span className="text-[11px] text-white/70">{online ? "آنلاین · معمولاً در چند دقیقه پاسخ می‌دهیم" : "پیام بگذارید؛ در اولین فرصت پاسخ می‌دهیم"}</span>
             </div>
-            <a href={`tel:${SITE.supportPhoneTel}`} aria-label="تماس تلفنی با پشتیبانی" className="grid size-10 place-items-center rounded-xl text-white/80 hover:bg-white/10 hover:text-white">
+            <a href={`tel:${support.phone}`} aria-label="تماس تلفنی با پشتیبانی" className="grid size-10 place-items-center rounded-xl text-white/80 hover:bg-white/10 hover:text-white">
               <Phone className="size-5" />
             </a>
             <button type="button" onClick={() => setOpen(false)} aria-label="بستن گفتگو" className="grid size-10 place-items-center rounded-xl text-white/80 hover:bg-white/10 hover:text-white">

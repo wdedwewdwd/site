@@ -5,7 +5,6 @@ import Link from "next/link";
 import { Bell, BellOff, ChevronRight, Lock, LockOpen, MessagesSquare, MonitorSmartphone, Phone, Search, Trash2, UserRound, Volume2, VolumeX } from "lucide-react";
 import { deleteChatConversation, staffMarkChatRead, staffSendChat, staffSetChatStatus } from "@/app/actions/admin/chat";
 import { faDigits, toman } from "@/lib/format";
-import { SITE } from "@/lib/shop";
 import type { ChatMessageDTO, StaffConversationDTO, StaffCustomerInfo } from "@/lib/chat-types";
 import { Composer, MessageList, mergeMessages, relativeTime, type UiMessage } from "@/components/chat/parts";
 import { toast } from "@/components/ui/Toaster";
@@ -19,14 +18,14 @@ const FILTERS: { key: Filter; label: string }[] = [
   { key: "all", label: "همه" },
 ];
 
-const QUICK_REPLIES = [
+const quickReplies = (supportPhone: string) => [
   "سلام، وقت بخیر. در خدمتم؛ لطفاً مدل و سال ساخت خودرو را بفرمایید.",
   "اگر امکانش هست، عکس قطعه یا کد فنی (OEM) روی آن را بفرستید تا دقیق راهنمایی کنم.",
   "این قطعه موجود است و می‌توانید همین حالا از سایت سفارش دهید.",
   "متأسفانه این قطعه در حال حاضر موجود نیست؛ به محض موجود شدن به شما اطلاع می‌دهیم.",
   "سفارش شما در حال آماده‌سازی است و به‌زودی ارسال می‌شود.",
   "کد رهگیری مرسوله در بخش «سفارش‌های من» در حساب کاربری شما قابل مشاهده است.",
-  `برای هماهنگی بیشتر می‌توانید با شماره ${SITE.supportPhone} تماس بگیرید.`,
+  `برای هماهنگی بیشتر می‌توانید با شماره ${supportPhone} تماس بگیرید.`,
   "ممنون از پیام شما؛ اگر سؤال دیگری داشتید در خدمتیم.",
 ];
 
@@ -38,7 +37,7 @@ type Detail = { conversation: StaffConversationDTO; messages: UiMessage[]; custo
 let localSeq = 0;
 const makeLocalId = () => `local-${++localSeq}-${Date.now()}`;
 
-export function StaffChatInbox({ initialId, isAdmin }: { initialId: string | null; isAdmin: boolean }) {
+export function StaffChatInbox({ initialId, isAdmin, supportPhone }: { initialId: string | null; isAdmin: boolean; supportPhone: string }) {
   const live = useStaffChat();
   const [filter, setFilter] = useState<Filter>("open");
   const [q, setQ] = useState("");
@@ -369,7 +368,7 @@ export function StaffChatInbox({ initialId, isAdmin }: { initialId: string | nul
               onSend={send}
               onTyping={onTyping}
               disabled={closed}
-              quickReplies={QUICK_REPLIES}
+              quickReplies={quickReplies(supportPhone)}
               placeholder={closed ? "این گفتگو بسته است" : "پاسخ به مشتری…"}
               error={error}
               notice={

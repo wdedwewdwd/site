@@ -46,6 +46,8 @@ build (`APP_URL=https://example.com PAYMENT_PROVIDER=none ALLOW_CONSOLE_SMS=true
 - Homepage banners: `/admin/banners` (`src/lib/banners*.ts`, `components/home/HeroBanners.tsx`). Layouts: single,
   split (big + small), grid4, slider; active banners fill the layout's places in list order. Built with container
   queries (`@container/hero`) so the admin preview renders the phone and desktop versions exactly.
+- Floating "پشتیبانی" button (`ChatWidget`): menu of call, live chat, Instagram, WhatsApp (in that order; empty
+  channels hidden), built from `getContact()` in the shop layout.
 - Shop location: Settings → map picker (Leaflet + OpenStreetMap tiles, keys `shop_lat`/`shop_lng`); the contact page
   shows it and links to Neshan routing (`src/lib/location.ts`).
 - Inner pages use `PageBar` (mobile app bar with back button, desktop breadcrumbs + back).
@@ -61,5 +63,7 @@ UPLOAD_DIR on a persistent disk. Not deployed yet (Liara account needed identity
 
 ## Not built yet (from the Figma design)
 Wallet payment, admin "reports" page beyond the dashboard report, map picker for customer addresses,
-profile photo. Contact details live in `SITE` (`src/lib/shop.ts`): phones and address are real; postal code and
-email are still empty (hidden on the site) and must be filled in before applying for eNamad; support hours unconfirmed.
+profile photo. Phones, hours, address, postal code, email and social links are edited by the owner at
+`/admin/contact` (Settings keys `contact_*`/`social_*`, defaults and parsing in `src/lib/contact-shared.ts`, read
+with `getContact()`); `SITE` in `src/lib/shop.ts` only holds the brand name/description. Postal code and email are
+still empty and must be filled in before applying for eNamad; support hours unconfirmed.

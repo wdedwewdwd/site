@@ -19,8 +19,13 @@ export const TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
   REFUNDED: [],
 };
 
+/** Orders the shop still has to prepare or send (the admin menu badge and the «نیاز به اقدام» tab). */
+export const NEEDS_ACTION: OrderStatus[] = ["PAID", "PROCESSING"];
+
 /** Orders in these states hold their items' stock. */
 export const holdsStock = (s: OrderStatus) => s !== "CANCELLED" && s !== "REFUNDED";
+/** Orders in these states count towards a product's sales (the "best-selling" sort). */
+export const countsAsSold = (s: OrderStatus) => holdsStock(s) && s !== "PENDING_PAYMENT";
 
 export type ActionKind = "plain" | "ship" | "cancel" | "refund" | "payment";
 export type OrderAction = { to: OrderStatus; label: string; kind: ActionKind; primary?: boolean; danger?: boolean; hint: string };

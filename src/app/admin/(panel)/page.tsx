@@ -3,6 +3,7 @@ import { AlertTriangle, Boxes, Clock3, Headset } from "lucide-react";
 import { db } from "@/lib/db";
 import { requireStaff } from "@/lib/auth/session";
 import { expireStaleOrders, housekeeping } from "@/lib/orders";
+import { NEEDS_ACTION } from "@/lib/order-flow";
 import { faDateTime, faDigits, toman } from "@/lib/format";
 import { jFull, tehranParts, tehranToday } from "@/lib/jalali";
 import { PRESETS, parseReportParams, salesReport } from "@/lib/reports";
@@ -22,7 +23,7 @@ async function loadOperations() {
   const [activeProducts, openTickets, awaiting, lowStock, recent] = await Promise.all([
     db.product.count({ where: { isActive: true } }),
     db.ticket.count({ where: { status: "OPEN" } }),
-    db.order.count({ where: { status: { in: ["PAID", "PROCESSING"] } } }),
+    db.order.count({ where: { status: { in: NEEDS_ACTION } } }),
     db.product.findMany({ where: { isActive: true, stock: { lte: 5 } }, orderBy: { stock: "asc" }, take: 6, select: { id: true, name: true, stock: true } }),
     db.order.findMany({ orderBy: { createdAt: "desc" }, take: 8, include: { user: { select: { firstName: true, lastName: true, phone: true } } } }),
   ]);
@@ -148,7 +149,7 @@ export default async function AdminDashboard({ searchParams }: PageProps<"/admin
       {/* Operations (not scoped by the date range) */}
       <h2 className="mb-4 mt-10 text-lg font-black">وضعیت فعلی فروشگاه</h2>
       <div className="grid gap-3 sm:grid-cols-3">
-        <Link href="/admin/orders?status=PAID" className="card flex items-center gap-4 p-4 hover:border-brand">
+        <Link href="/admin/orders?status=todo" className="card flex items-center gap-4 p-4 hover:border-brand">
           <span className="grid size-11 place-items-center rounded-xl bg-brand-soft text-brand"><AlertTriangle className="size-5" /></span>
           <span className="flex flex-col"><span className="text-xs text-muted">منتظر آماده‌سازی / ارسال</span><b className="text-lg">{num(ops.awaiting)} سفارش</b></span>
         </Link>

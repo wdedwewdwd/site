@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
 import { requireStaff } from "@/lib/auth/session";
 import { audit } from "@/lib/audit";
 import { PROVINCES } from "@/lib/iran";
-import { CANCEL_REASONS, CARRIERS, CARRIERS_WITHOUT_TRACKING, customerMessage, holdsStock, REFUND_REASONS, TRANSITIONS } from "@/lib/order-flow";
+import { CANCEL_REASONS, CARRIERS, CARRIERS_WITHOUT_TRACKING, countsAsSold, customerMessage, holdsStock, REFUND_REASONS, TRANSITIONS } from "@/lib/order-flow";
 import { ORDER_STATUS } from "@/lib/shop";
 import { idSchema, optionalPostalCodeSchema, phoneSchema, text, toEnDigits } from "@/lib/validation";
 import type { OrderStatus } from "@/generated/prisma/client";
@@ -36,6 +36,7 @@ const changeSchema = z.object({
   reference: optional(80),
   note: optional(500),
   notify: z.string().optional(),
+  codCollected: z.string().optional(),
 });
 
 /** Changes an order's status with the side effects each step needs (stock, payment record, customer notice). */
@@ -43,7 +44,7 @@ export async function changeOrderStatus(_: OrderActionState, formData: FormData)
   const staff = await requireStaff(["ADMIN", "SUPPORT"]);
   const parsed = changeSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { ok: false, message: parsed.error.issues[0].message };
-  const { orderId, to, carrier, trackingCode, reason, reference, note, notify } = parsed.data;
+  const { orderId, to, carrier, trackingCode, reason, reference, note, notify, codCollected } = parsed.data;
 
   const order = await db.order.findUnique({ where: { id: orderId }, include: { items: true, payments: { where: { status: "SUCCEEDED" } } } });
   if (!order) return { ok: false, message: "سفارش یافت نشد." };
@@ -59,7 +60,15 @@ export async function changeOrderStatus(_: OrderActionState, formData: FormData)
   if ((to === "CANCELLED" || to === "REFUNDED") && !reason) return { ok: false, message: "علت را انتخاب کنید." };
 
   const needsPaymentRecord = to === "PAID" && order.payments.length === 0;
-  const eventNote = [reason, reference ? `مرجع پرداخت: ${reference}` : null, to === "SHIPPED" ? [carrier, trackingCode].filter(Boolean).join(" — ") : null, note]
+  // Delivering a cash-on-delivery order can record the collected cash in the same step.
+  const collectCod = to === "DELIVERED" && codCollected === "on" && order.paymentMethod === "COD" && order.payments.length === 0;
+  const eventNote = [
+    reason,
+    collectCod ? "وجه در محل دریافت شد" : null,
+    reference ? `مرجع پرداخت: ${reference}` : null,
+    to === "SHIPPED" ? [carrier, trackingCode].filter(Boolean).join(" — ") : null,
+    note,
+  ]
     .filter(Boolean)
     .join(" | ") || null;
 
@@ -71,28 +80,34 @@ export async function changeOrderStatus(_: OrderActionState, formData: FormData)
         data: {
           status: to,
           ...(to === "SHIPPED" ? { carrier, trackingCode: trackingCode || null } : {}),
-          ...(to === "PAID" && !order.paidAt ? { paidAt: new Date() } : {}),
+          ...((to === "PAID" || collectCod) && !order.paidAt ? { paidAt: new Date() } : {}),
         },
       });
       if (res.count === 0) throw new OrderError("این سفارش هم‌زمان تغییر کرد؛ صفحه را تازه کنید.");
 
       // Stock follows the order: released on cancel/refund, re-reserved when reopened.
-      if (holdsStock(from) && !holdsStock(to)) {
-        for (const i of order.items) if (i.productId) await tx.product.update({ where: { id: i.productId }, data: { stock: { increment: i.quantity } } });
-      } else if (!holdsStock(from) && holdsStock(to)) {
-        for (const i of order.items) {
-          if (!i.productId) continue;
+      // Sales counts follow it too: counted once confirmed, taken back on cancel/refund.
+      const release = holdsStock(from) && !holdsStock(to);
+      const reserve = !holdsStock(from) && holdsStock(to);
+      const sold = countsAsSold(to) === countsAsSold(from) ? 0 : countsAsSold(to) ? 1 : -1;
+      for (const i of order.items) {
+        if (!i.productId) continue;
+        if (release) await tx.product.update({ where: { id: i.productId }, data: { stock: { increment: i.quantity } } });
+        if (reserve) {
           const ok = await tx.product.updateMany({ where: { id: i.productId, stock: { gte: i.quantity } }, data: { stock: { decrement: i.quantity } } });
           if (ok.count === 0) throw new OrderError(`موجودی «${i.name}» برای بازگشایی سفارش کافی نیست.`);
         }
+        if (sold > 0) await tx.product.update({ where: { id: i.productId }, data: { soldCount: { increment: i.quantity } } });
+        // Orders placed before sales were counted this way never added to soldCount; don't go below zero.
+        if (sold < 0) await tx.$executeRaw`UPDATE "Product" SET "soldCount" = GREATEST("soldCount" - ${i.quantity}, 0) WHERE "id" = ${i.productId}`;
       }
 
-      if (needsPaymentRecord) {
+      if (needsPaymentRecord || collectCod) {
         await tx.payment.create({
-          data: { orderId: order.id, gateway: "manual", amount: order.total, status: "SUCCEEDED", refId: reference, verifiedAt: new Date() },
+          data: { orderId: order.id, gateway: collectCod ? "cod" : "manual", amount: order.total, status: "SUCCEEDED", refId: reference, verifiedAt: new Date() },
         });
       }
-      await tx.orderEvent.create({ data: { orderId: order.id, status: to, note: eventNote } });
+      await tx.orderEvent.create({ data: { orderId: order.id, status: to, note: eventNote, actorId: staff.id } });
       if (notify === "on") {
         await tx.notification.create({
           data: {
@@ -110,6 +125,7 @@ export async function changeOrderStatus(_: OrderActionState, formData: FormData)
   }
 
   await audit(staff.id, "order.status", "Order", order.id, { from, to, carrier, trackingCode: trackingCode || undefined, reason });
+  if (collectCod) await audit(staff.id, "order.cod_paid", "Order", order.id, { amount: order.total });
   refresh(order.number);
   return { ok: true, message: `وضعیت به «${ORDER_STATUS[to].label}» تغییر کرد.` };
 }
@@ -127,9 +143,11 @@ export async function recordCodPayment(_: OrderActionState, formData: FormData):
   if (order.payments.length) return { ok: false, message: "پرداخت این سفارش قبلاً ثبت شده است." };
   if (!holdsStock(order.status)) return { ok: false, message: "سفارش لغو یا مرجوع شده است." };
 
+  const ref = parsed.data.reference;
   await db.$transaction([
-    db.payment.create({ data: { orderId: order.id, gateway: "cod", amount: order.total, status: "SUCCEEDED", refId: parsed.data.reference, verifiedAt: new Date() } }),
+    db.payment.create({ data: { orderId: order.id, gateway: "cod", amount: order.total, status: "SUCCEEDED", refId: ref, verifiedAt: new Date() } }),
     db.order.update({ where: { id: order.id }, data: { paidAt: new Date() } }),
+    db.orderEvent.create({ data: { orderId: order.id, status: order.status, note: `دریافت وجه در محل ثبت شد${ref ? ` | مرجع: ${ref}` : ""}`, actorId: staff.id } }),
   ]);
   await audit(staff.id, "order.cod_paid", "Order", order.id, { amount: order.total });
   refresh(order.number);
@@ -164,11 +182,12 @@ const noteSchema = z.object({ orderId: idSchema, adminNote: z.union([z.literal("
 
 /** Private staff note; never shown to the customer. */
 export async function saveAdminNote(_: OrderActionState, formData: FormData): Promise<OrderActionState> {
-  await requireStaff(["ADMIN", "SUPPORT"]);
+  const staff = await requireStaff(["ADMIN", "SUPPORT"]);
   const parsed = noteSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { ok: false, message: parsed.error.issues[0].message };
   const order = await db.order.update({ where: { id: parsed.data.orderId }, data: { adminNote: parsed.data.adminNote || null }, select: { number: true } }).catch(() => null);
   if (!order) return { ok: false, message: "سفارش یافت نشد." };
+  await audit(staff.id, "order.note", "Order", parsed.data.orderId);
   refresh(order.number);
   return { ok: true, message: "یادداشت ذخیره شد." };
 }

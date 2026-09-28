@@ -6,13 +6,14 @@ import { Toaster } from "@/components/ui/Toaster";
 import { NavigationTracker } from "@/components/layout/navigation";
 import { StaffChatProvider } from "@/components/admin/chat/StaffChatProvider";
 import { staffUnreadTotal } from "@/lib/chat";
+import { NEEDS_ACTION } from "@/lib/order-flow";
 
 export const metadata: Metadata = { title: { default: "پنل مدیریت", template: "%s | پنل مدیریت" }, robots: { index: false, follow: false } };
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const staff = await requireStaff(["ADMIN", "SUPPORT"]);
   const [orders, tickets, chat, reviews] = await Promise.all([
-    db.order.count({ where: { status: { in: ["PAID", "PROCESSING"] } } }),
+    db.order.count({ where: { status: { in: NEEDS_ACTION } } }),
     db.ticket.count({ where: { status: "OPEN" } }),
     staffUnreadTotal(),
     db.review.count({ where: { approved: false } }),

@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { PackageSearch } from "lucide-react";
 import { db } from "@/lib/db";
-import { listProducts, PAGE_SIZE, SORTS, type ProductFilters, type SortKey } from "@/lib/catalog";
+import { activeSort, listProducts, PAGE_SIZE, SORTS, type ProductFilters, type SortKey } from "@/lib/catalog";
 import { faDigits } from "@/lib/format";
 import { ProductCard } from "@/components/product/ProductCard";
 import { FilterPanel } from "./FilterPanel";
 import { PageBar } from "@/components/layout/PageBar";
+import { OpenChatButton } from "@/components/chat/OpenChatButton";
 
 type Props = {
   title: string;
@@ -31,12 +32,13 @@ function hrefWith(basePath: string, sp: Props["searchParams"], patch: Record<str
 }
 
 export async function ProductListing({ title, basePath, filters, searchParams, crumbs = [], intro, backHref }: Props) {
-  const [{ items, total, page, pages }, brands, cars] = await Promise.all([
+  const [{ items, total, page, pages, partial }, brands, cars] = await Promise.all([
     listProducts(filters),
     db.brand.findMany({ orderBy: { name: "asc" }, select: { slug: true, name: true, latin: true } }),
     db.carModel.findMany({ orderBy: { sortOrder: "asc" }, select: { slug: true, name: true } }),
   ]);
-  const sort: SortKey = filters.sort ?? "newest";
+  const sort = activeSort(filters);
+  const sorts = (Object.keys(SORTS) as SortKey[]).filter((k) => k !== "relevance" || filters.q);
   const from = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
   const to = Math.min(page * PAGE_SIZE, total);
 
@@ -51,7 +53,7 @@ export async function ProductListing({ title, basePath, filters, searchParams, c
           <div className="card flex flex-wrap items-center justify-between gap-3 px-5 py-3.5">
             <nav aria-label="مرتب‌سازی" className="flex flex-wrap items-center gap-4 text-[13px]">
               <span className="font-extrabold">مرتب‌سازی بر اساس:</span>
-              {(Object.keys(SORTS) as SortKey[]).map((k) => (
+              {sorts.map((k) => (
                 <Link
                   key={k}
                   href={hrefWith(basePath, searchParams, { sort: k, page: null })}
@@ -68,12 +70,23 @@ export async function ProductListing({ title, basePath, filters, searchParams, c
             </p>
           </div>
 
+          {partial && items.length > 0 && (
+            <p className="rounded-xl bg-warning-soft px-4 py-3 text-[13px] font-bold text-warning">
+              کالایی دقیقاً با «{filters.q}» پیدا نشد؛ نزدیک‌ترین نتایج را می‌بینید.
+            </p>
+          )}
+
           {items.length === 0 ? (
             <div className="card flex flex-col items-center gap-3 px-6 py-16 text-center">
               <PackageSearch className="size-12 text-subtle" />
               <p className="font-extrabold">محصولی با این مشخصات پیدا نشد.</p>
-              <p className="text-sm text-muted">فیلترها را تغییر دهید یا عبارت دیگری جستجو کنید.</p>
-              <Link href={basePath} className="btn-ghost mt-2">حذف همه فیلترها</Link>
+              <p className="text-sm text-muted">
+                {filters.q ? "کلمه کوتاه‌تر، نام خودرو یا کد فنی قطعه را امتحان کنید؛ یا از پشتیبانی بپرسید تا قطعه را برایتان پیدا کنیم." : "فیلترها را تغییر دهید یا عبارت دیگری جستجو کنید."}
+              </p>
+              <div className="mt-2 flex flex-wrap justify-center gap-3">
+                {filters.q && <OpenChatButton className="btn-primary" label="پرسیدن از پشتیبانی" />}
+                <Link href={basePath} className="btn-ghost">حذف همه فیلترها</Link>
+              </div>
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-3 md:gap-5 lg:grid-cols-3">

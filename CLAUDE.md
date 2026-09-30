@@ -35,6 +35,10 @@ build (`APP_URL=https://example.com PAYMENT_PROVIDER=none ALLOW_CONSOLE_SMS=true
   admins add/edit/remove staff (ADMIN or SUPPORT, phone + name + code) in Settings → «مدیران و پشتیبان‌ها»
   (`actions/admin/staff.ts`, re-enters the acting admin's own code). Removing access turns the person into a customer.
 - Dates/times: Jalali calendar and Asia/Tehran everywhere (`src/lib/jalali.ts`, `src/lib/format.ts`).
+- Product search: `src/lib/search.ts` (pure engine: Persian normalization, every word must match name/brand/
+  category/cars/codes in any order, suffixes, Latin car names, typo only as a flagged fallback, relevance ranking)
+  over an in-memory index rebuilt every 30 s (`src/lib/search-index.ts`). Used by `/search` (sort «مرتبط‌ترین»)
+  and the header suggestions (`/api/search`, `components/layout/SearchBox.tsx`). Add car names to `SYNONYMS`/`KNOWN_WORDS`.
 - Postal code is optional (staff call the customer); admin order pages flag missing ones.
 - Orders: transitions and stock rules live in `src/lib/order-flow.ts`; actions in `src/app/actions/admin/orders.ts`.
   Admin list tab «نیاز به اقدام» (`status=todo`) = `NEEDS_ACTION` (PAID + PROCESSING, oldest first; also the menu badge).

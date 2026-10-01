@@ -1,6 +1,7 @@
 import "server-only";
 import { db } from "./db";
 import { searchProducts } from "./search-index";
+import { carMaker, isMakerKey, type MakerKey } from "./makers";
 import type { Prisma } from "@/generated/prisma/client";
 
 export const productCardSelect = {
@@ -36,6 +37,7 @@ export type ProductFilters = {
   category?: string; // slug
   brands?: string[]; // slugs
   cars?: string[]; // slugs
+  maker?: MakerKey; // ایران خودرو / سایپا, chosen on the home page
   inStock?: boolean;
   offers?: boolean;
   sort?: SortKey;
@@ -45,9 +47,21 @@ export type ProductFilters = {
 /** The sort in effect: search results default to relevance, other listings to newest. */
 export const activeSort = (f: ProductFilters): SortKey => (f.sort === "relevance" && !f.q ? "newest" : (f.sort ?? (f.q ? "relevance" : "newest")));
 
+/** Ids of the shared car list's models built by this maker. */
+export async function makerCarIds(maker: MakerKey) {
+  const cars = await db.carModel.findMany({ select: { id: true, make: true, name: true } });
+  return cars.filter((c) => carMaker(c.make, c.name) === maker).map((c) => c.id);
+}
+
+/** Products for a maker's cars, plus general parts that have no car ticked (oil, bulbs…). */
+export const makerWhere = (carIds: string[]): Prisma.ProductWhereInput => ({
+  OR: [{ fitments: { some: { carModelId: { in: carIds } } } }, { fitments: { none: {} } }],
+});
+
 /** Filters other than the search text (that goes through `searchProducts`). */
-export function buildProductWhere(f: ProductFilters): Prisma.ProductWhereInput {
+export function buildProductWhere(f: ProductFilters, makerCars?: string[]): Prisma.ProductWhereInput {
   const and: Prisma.ProductWhereInput[] = [{ isActive: true }];
+  if (makerCars) and.push(makerWhere(makerCars));
   if (f.category) and.push({ category: { OR: [{ slug: f.category }, { parent: { slug: f.category } }] } });
   if (f.brands?.length) and.push({ brand: { slug: { in: f.brands } } });
   if (f.cars?.length) and.push({ fitments: { some: { carModel: { slug: { in: f.cars } } } } });
@@ -59,7 +73,7 @@ export function buildProductWhere(f: ProductFilters): Prisma.ProductWhereInput {
 export async function listProducts(f: ProductFilters) {
   const page = Math.max(1, Math.min(f.page ?? 1, 500));
   const sort = activeSort(f);
-  let where = buildProductWhere(f);
+  let where = buildProductWhere(f, f.maker ? await makerCarIds(f.maker) : undefined);
   let partial = false;
 
   if (f.q?.trim()) {
@@ -108,6 +122,7 @@ export function parseFilters(sp: Record<string, string | string[] | undefined>):
     q: one("q") || undefined,
     brands: many("brand"),
     cars: many("car"),
+    maker: isMakerKey(one("maker")) ? (one("maker") as MakerKey) : undefined,
     inStock: one("stock") === "1",
     offers: one("offers") === "1",
     sort: sort && sort in SORTS ? (sort as SortKey) : undefined,

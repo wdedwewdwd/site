@@ -29,6 +29,9 @@ export default async function CategoryPage({ params, searchParams }: PageProps<"
   const [{ slug }, sp] = await Promise.all([params, searchParams]);
   const category = await getCategory(slug);
   if (!category) notFound();
+  const filters = { ...parseFilters(sp), category: slug };
+  // Subcategory links keep the carmaker chosen on the home page.
+  const keep = filters.maker ? `?maker=${filters.maker}` : "";
 
   const crumbs = [
     { href: "/categories", label: "دسته‌بندی‌ها" },
@@ -39,7 +42,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps<"
     <ProductListing
       title={category.name}
       basePath={`/category/${slug}`}
-      filters={{ ...parseFilters(sp), category: slug }}
+      filters={filters}
       searchParams={sp}
       crumbs={crumbs}
       backHref={category.parent?.isActive ? `/category/${category.parent.slug}` : "/categories"}
@@ -54,7 +57,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps<"
               <ul className="flex flex-wrap gap-2">
                 {category.children.map((c) => (
                   <li key={c.slug}>
-                    <Link href={`/category/${c.slug}`} className="flex items-center gap-2 rounded-full border border-line bg-white px-4 py-2 text-xs font-bold transition-colors hover:border-brand hover:text-brand">
+                    <Link href={`/category/${c.slug}${keep}`} className="flex items-center gap-2 rounded-full border border-line bg-white px-4 py-2 text-xs font-bold transition-colors hover:border-brand hover:text-brand">
                       <CategoryIcon name={c.icon} className="size-4" />
                       {c.name}
                     </Link>

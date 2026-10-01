@@ -1,8 +1,10 @@
+import Image from "next/image";
 import Link from "next/link";
-import { PackageSearch } from "lucide-react";
+import { PackageSearch, X } from "lucide-react";
 import { db } from "@/lib/db";
 import { activeSort, listProducts, PAGE_SIZE, SORTS, type ProductFilters, type SortKey } from "@/lib/catalog";
 import { faDigits } from "@/lib/format";
+import { MAKERS } from "@/lib/makers";
 import { ProductCard } from "@/components/product/ProductCard";
 import { FilterPanel } from "./FilterPanel";
 import { PageBar } from "@/components/layout/PageBar";
@@ -69,6 +71,21 @@ export async function ProductListing({ title, basePath, filters, searchParams, c
               نمایش {faDigits(from)} - {faDigits(to)} از {faDigits(total)} قطعه
             </p>
           </div>
+
+          {filters.maker && (
+            <div className="flex flex-wrap items-center gap-3 rounded-card border border-line bg-white px-4 py-3 text-[13px]">
+              <span className="grid size-9 place-items-center rounded-xl" style={{ background: MAKERS[filters.maker].soft }}>
+                <Image src={MAKERS[filters.maker].logo} alt="" width={24} height={24} unoptimized={MAKERS[filters.maker].logo.endsWith(".svg")} className="size-6 object-contain" />
+              </span>
+              <span className="flex-1 font-bold">
+                قطعات مناسب خودروهای {MAKERS[filters.maker].name}
+                <span className="block text-[11px] font-normal text-muted">به‌همراه قطعات عمومی (مثل روغن و لامپ) که مخصوص خودروی خاصی نیستند.</span>
+              </span>
+              <Link href={hrefWith(basePath, searchParams, { maker: null, page: null })} scroll={false} className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold text-brand hover:bg-brand-soft">
+                <X className="size-3.5" aria-hidden /> همه خودروها
+              </Link>
+            </div>
+          )}
 
           {partial && items.length > 0 && (
             <p className="rounded-xl bg-warning-soft px-4 py-3 text-[13px] font-bold text-warning">

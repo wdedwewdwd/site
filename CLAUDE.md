@@ -60,6 +60,10 @@ build (`APP_URL=https://example.com PAYMENT_PROVIDER=none ALLOW_CONSOLE_SMS=true
   `actions/reviews.ts`); one per customer per product, editing sends it back to moderation. Staff approve/hide/delete/reply
   at `/admin/reviews` (menu badge = pending). `Product.ratingAvg/ratingCount` come only from approved reviews
   (`refreshProductRating` in `src/lib/reviews.ts`; restore recomputes them). "خریدار این کالا" = paid order with the product.
+- Home page categories start with the carmaker (`components/home/MakerPicker.tsx`): ایران خودرو / سایپا cards
+  (logos in `public/brand/makers`), then that maker's categories with counts (`src/lib/home-makers.ts`); choice kept
+  in `/?maker=`. Cars belong to a maker automatically by «سازنده»/model words (`carMaker` in `src/lib/makers.ts`).
+  Listings accept `?maker=` = parts ticked for that maker's cars + general parts with no car ticked (chip to remove it).
 - Homepage banners: `/admin/banners` (`src/lib/banners*.ts`, `components/home/HeroBanners.tsx`). Layouts: single,
   split (big + small), grid4, slider; active banners fill the layout's places in list order. Built with container
   queries (`@container/hero`) so the admin preview renders the phone and desktop versions exactly.

@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireStaff } from "@/lib/auth/session";
-import { getContact } from "@/lib/settings";
+import { getContact, getShippingConfig } from "@/lib/settings";
 import { PrintButton } from "@/components/admin/orders/PrintButton";
 import { InvoiceSheet, invoiceInclude } from "@/components/admin/orders/InvoiceSheet";
 import { BackButton } from "@/components/layout/BackButton";
@@ -23,7 +23,7 @@ export default async function InvoicePage({ params }: PageProps<"/admin/invoice/
         <BackButton fallback={`/admin/orders/${order.number}`} variant="pill" />
         <PrintButton />
       </div>
-      <InvoiceSheet order={order} contact={contact} />
+      <InvoiceSheet order={order} contact={contact} shipping={await getShippingConfig()} />
     </main>
   );
 }

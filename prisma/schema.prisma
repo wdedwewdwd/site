@@ -275,8 +275,11 @@ enum PaymentMethod {
 }
 
 enum ShippingMethod {
-  EXPRESS
+  EXPRESS // پیک
   POST
+  TIPAX
+  FREIGHT // باربری
+  PICKUP // تحویل حضوری
 }
 
 model Order {
@@ -290,6 +293,8 @@ model Order {
   subtotal       Int
   discount       Int            @default(0)
   shippingCost   Int
+  // «پس‌کرایه»: the customer pays the carrier on delivery, so shippingCost is 0.
+  shippingCollect Boolean @default(false)
   total          Int
   discountCode   String?
   // Address snapshot — orders must not change if the user edits an address later.

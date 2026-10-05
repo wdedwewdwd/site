@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { CreditCard, LoaderCircle, ShieldCheck, Truck } from "lucide-react";
+import { CreditCard, LoaderCircle, ShieldCheck, Store, Truck } from "lucide-react";
 import { placeOrder } from "@/app/actions/checkout";
 import { RadioCard } from "./RadioCard";
 import { toman } from "@/lib/format";
+import type { ShippingMethod } from "@/generated/prisma/client";
 
-type Props = { addressId: string; shipping: "EXPRESS" | "POST"; total: number; onlineEnabled: boolean; summary: React.ReactNode };
+type Props = { addressId: string; shipping: ShippingMethod; total: number; onlineEnabled: boolean; summary: React.ReactNode };
 
 export function PaymentStep({ addressId, shipping, total, onlineEnabled, summary }: Props) {
   const [payment, setPayment] = useState<"ONLINE" | "COD">(onlineEnabled ? "ONLINE" : "COD");
@@ -29,9 +30,18 @@ export function PaymentStep({ addressId, shipping, total, onlineEnabled, summary
           <span className="text-sm font-extrabold">درگاه آنلاین بانکی</span>
           <span className="text-xs text-muted">{onlineEnabled ? "پرداخت امن شتابی با تمام کارت‌های عضو شبکه بانکی کشور (شاپرک)" : "به‌زودی فعال می‌شود"}</span>
         </RadioCard>
-        <RadioCard name="payment" value="COD" checked={payment === "COD"} onChange={() => setPayment("COD")} aside={<Truck className="size-6 text-muted" />}>
-          <span className="text-sm font-extrabold">پرداخت در محل (کارت به کارت یا کارتخوان)</span>
-          <span className="text-xs text-muted">پرداخت با دستگاه کارتخوان مأمور ارسال هنگام تحویل قطعات</span>
+        <RadioCard name="payment" value="COD" checked={payment === "COD"} onChange={() => setPayment("COD")} aside={shipping === "PICKUP" ? <Store className="size-6 text-muted" /> : <Truck className="size-6 text-muted" />}>
+          {shipping === "PICKUP" ? (
+            <>
+              <span className="text-sm font-extrabold">پرداخت در فروشگاه</span>
+              <span className="text-xs text-muted">پرداخت با کارتخوان یا نقدی هنگام تحویل سفارش در فروشگاه</span>
+            </>
+          ) : (
+            <>
+              <span className="text-sm font-extrabold">پرداخت در محل (کارت به کارت یا کارتخوان)</span>
+              <span className="text-xs text-muted">پرداخت هنگام تحویل قطعات</span>
+            </>
+          )}
         </RadioCard>
         <p className="flex items-center gap-2 rounded-lg bg-success-soft p-3 text-xs font-bold text-success">
           <ShieldCheck className="size-4 shrink-0" />
@@ -44,7 +54,7 @@ export function PaymentStep({ addressId, shipping, total, onlineEnabled, summary
         {summary}
         <div className="flex items-center justify-between text-[13px]">
           <span className="text-muted">روش انتخابی</span>
-          <span className="font-extrabold text-success">{payment === "ONLINE" ? "درگاه آنلاین" : "پرداخت در محل"}</span>
+          <span className="font-extrabold text-success">{payment === "ONLINE" ? "درگاه آنلاین" : shipping === "PICKUP" ? "پرداخت در فروشگاه" : "پرداخت در محل"}</span>
         </div>
         {error && <p className="rounded-lg bg-brand-soft p-3 text-xs font-bold text-brand" role="alert">{error}</p>}
         <button type="button" onClick={submit} disabled={pending} className="btn-primary w-full py-3.5 text-base">

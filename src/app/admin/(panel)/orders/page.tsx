@@ -138,7 +138,7 @@ export default async function AdminOrdersPage({ searchParams }: PageProps<"/admi
               <span className={`font-bold ${o.paid ? "text-success" : "text-muted"}`}>
                 {o.paymentMethod === "ONLINE" ? "آنلاین" : "در محل"} · {o.paid ? "پرداخت‌شده" : "پرداخت‌نشده"}
               </span>
-              {!o.postalCode && <span className="rounded bg-warning-soft px-1.5 py-0.5 font-bold text-warning">بدون کد پستی</span>}
+              {!o.postalCode && o.shippingMethod !== "PICKUP" && <span className="rounded bg-warning-soft px-1.5 py-0.5 font-bold text-warning">بدون کد پستی</span>}
               <span className="mr-auto text-muted">{faDateTime(o.createdAt)}</span>
             </p>
             {o.waiting && <Waiting {...o.waiting} />}
@@ -174,7 +174,7 @@ export default async function AdminOrdersPage({ searchParams }: PageProps<"/admi
                 <td className="px-4 py-3">
                   {o.customer}
                   <span className="block text-[11px] text-muted" dir="ltr">{faDigits(o.user.phone)}</span>
-                  {!o.postalCode && <span className="mt-1 inline-block rounded bg-warning-soft px-1.5 py-0.5 text-[10px] font-bold text-warning">بدون کد پستی</span>}
+                  {!o.postalCode && o.shippingMethod !== "PICKUP" && <span className="mt-1 inline-block rounded bg-warning-soft px-1.5 py-0.5 text-[10px] font-bold text-warning">بدون کد پستی</span>}
                 </td>
                 <td className="px-4 py-3 text-muted">{o.city}</td>
                 <td className="px-4 py-3">{faDigits(o._count.items)}</td>

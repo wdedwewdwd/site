@@ -17,6 +17,7 @@ type Props = {
   total: string;
   carrier: string | null;
   trackingCode: string | null;
+  pickup?: boolean;
 };
 
 const ICONS: Partial<Record<OrderStatus, typeof Truck>> = {
@@ -44,7 +45,7 @@ function useSuccess(state: OrderActionState, done: () => void) {
 export function OrderActions(props: Props) {
   const [active, setActive] = useState<OrderAction | null>(null);
   const [codOpen, setCodOpen] = useState(false);
-  const actions = actionsFor(props.status, { paidOnline: props.hasPayment, paymentMethod: props.paymentMethod });
+  const actions = actionsFor(props.status, { paidOnline: props.hasPayment, paymentMethod: props.paymentMethod, pickup: props.pickup });
   const showCod = props.paymentMethod === "COD" && !props.hasPayment && props.status !== "CANCELLED" && props.status !== "REFUNDED";
 
   return (

@@ -1,19 +1,27 @@
 import type { Metadata } from "next";
 import { ContentPage } from "@/components/ui/ContentPage";
 import { toman } from "@/lib/format";
-import { SHIPPING } from "@/lib/shop";
+import { getShippingConfig } from "@/lib/settings";
 
 export const metadata: Metadata = { title: "رویه ارسال سفارش" };
 
-export default function ShippingPage() {
+export default async function ShippingPage() {
+  const config = await getShippingConfig();
+  const methods = config.order.filter((k) => config.methods[k].enabled).map((k) => config.methods[k]);
   return (
     <ContentPage title="رویه ارسال سفارش">
       <p>سفارش‌ها پس از تأیید پرداخت، در روزهای کاری کنترل کیفی، بسته‌بندی و ارسال می‌شوند.</p>
       <h2>روش‌های ارسال</h2>
       <ul>
-        {Object.values(SHIPPING).map((s) => (
+        {methods.map((s) => (
           <li key={s.title}>
-            <b>{s.title}</b>: {s.description} — هزینه {toman(s.price)} تومان
+            <b>{s.title}</b>{s.description && <>: {s.description}</>} —{" "}
+            {s.pricing === "collect"
+              ? "پس‌کرایه (هزینه هنگام تحویل پرداخت می‌شود)"
+              : s.pricing === "free"
+                ? "رایگان"
+                : `هزینه ${toman(s.price)} تومان${s.freeOver !== null ? `؛ رایگان برای خریدهای بالای ${toman(s.freeOver)} تومان` : ""}`}
+            {s.tehranOnly && "؛ فقط داخل استان تهران"}
           </li>
         ))}
       </ul>

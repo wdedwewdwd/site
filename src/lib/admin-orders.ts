@@ -58,7 +58,7 @@ export function orderWhere(f: OrderFilters, withStatus = true): Prisma.OrderWher
   const and: Prisma.OrderWhereInput[] = [];
   if (withStatus && f.status) and.push({ status: f.status === "todo" ? { in: NEEDS_ACTION } : f.status });
   if (f.pay) and.push({ paymentMethod: f.pay });
-  if (f.noPostal) and.push({ postalCode: null });
+  if (f.noPostal) and.push({ postalCode: null, shippingMethod: { not: "PICKUP" } });
   if (f.from && f.to) and.push({ createdAt: { gte: tehranDayStart(f.from), lt: tehranDayStart(addDays(f.to, 1)) } });
   if (f.q) {
     const digits = f.q.replace(/[۰-۹]/g, (d) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d))).replace(/^#/, "");

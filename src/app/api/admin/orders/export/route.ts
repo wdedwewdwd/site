@@ -2,7 +2,8 @@ import { db } from "@/lib/db";
 import { requireStaff } from "@/lib/auth/session";
 import { orderSort, orderWhere, parseOrderFilters } from "@/lib/admin-orders";
 import { jNumeric, tehranJDate, tehranParts } from "@/lib/jalali";
-import { ORDER_STATUS, SHIPPING } from "@/lib/shop";
+import { ORDER_STATUS } from "@/lib/shop";
+import { getShippingConfig } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +17,7 @@ const cell = (v: string | number | null | undefined) => {
 /** CSV of the filtered order list (UTF-8 BOM for Excel). */
 export async function GET(req: Request) {
   await requireStaff(["ADMIN", "SUPPORT"]);
+  const shipping = await getShippingConfig();
   const f = parseOrderFilters(Object.fromEntries(new URL(req.url).searchParams));
   const orders = await db.order.findMany({
     where: orderWhere(f),
@@ -42,11 +44,11 @@ export async function GET(req: Request) {
       o.items.map((i) => `${i.name} ×${i.quantity}`).join(" / "),
       o.subtotal,
       o.discount,
-      o.shippingCost,
+      o.shippingCollect ? "پس‌کرایه" : o.shippingCost,
       o.total,
       o.paymentMethod === "ONLINE" ? "آنلاین" : "در محل",
       o.payments.length ? "پرداخت‌شده" : "پرداخت‌نشده",
-      SHIPPING[o.shippingMethod].title,
+      shipping.methods[o.shippingMethod].title,
       o.carrier,
       o.trackingCode,
       ORDER_STATUS[o.status].label,

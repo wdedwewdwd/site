@@ -76,6 +76,9 @@ build (`APP_URL=https://example.com PAYMENT_PROVIDER=none ALLOW_CONSOLE_SMS=true
   channels hidden), built from `getContact()` in the shop layout.
 - Shop location: Settings → map picker (Leaflet + OpenStreetMap tiles, keys `shop_lat`/`shop_lng`); the contact page
   shows it and links to Neshan routing (`src/lib/location.ts`).
+- Category icons: names stored in `Category.icon`, whitelist + Persian labels in `src/lib/shop.ts`, renderers in
+  `components/ui/CategoryIcon.tsx`. Auto-part icons (spark-plug, shock-absorber, engine, brake-disc, gearbox) are drawn
+  on Lucide's grid in `components/ui/part-icons.ts` (`createLucideIcon`).
 - Inner pages use `PageBar` (mobile app bar with back button, desktop breadcrumbs + back).
 - Every admin page has a `HelpBox` explaining it in plain Persian; keep adding one for new pages.
 - Migrations: `prisma migrate dev` can fail on the shadow DB; writing the SQL by hand in

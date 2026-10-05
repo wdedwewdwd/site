@@ -1,4 +1,4 @@
-import type { OrderStatus, ShippingMethod } from "@/generated/prisma/client";
+import type { OrderStatus } from "@/generated/prisma/client";
 
 export const SITE = {
   name: "آریزون یدک",
@@ -10,19 +10,6 @@ export const SITE = {
 // Phone numbers, address, hours and social links are editable in the admin panel: see getContact().
 
 export const MAX_QTY_PER_ITEM = 20;
-
-export const SHIPPING: Record<ShippingMethod, { title: string; description: string; price: number }> = {
-  EXPRESS: {
-    title: "ارسال سریع (۱-۲ روز کاری)",
-    description: "تحویل با پیک اختصاصی آریزون یدک (مخصوص تهران)",
-    price: 85_000,
-  },
-  POST: {
-    title: "ارسال عادی پست پیشتاز (۳-۴ روز کاری)",
-    description: "تحویل توسط اداره پست جمهوری اسلامی ایران",
-    price: 45_000,
-  },
-};
 
 export const ORDER_STATUS: Record<OrderStatus, { label: string; tone: "green" | "amber" | "red" | "blue" | "gray" }> = {
   PENDING_PAYMENT: { label: "در انتظار پرداخت", tone: "red" },

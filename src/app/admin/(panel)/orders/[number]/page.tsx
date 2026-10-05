@@ -5,7 +5,10 @@ import { AlertTriangle, Phone, Printer, UserRound } from "lucide-react";
 import { db } from "@/lib/db";
 import { requireStaff } from "@/lib/auth/session";
 import { faDateTime, faDigits, toman } from "@/lib/format";
-import { ORDER_STATUS, SHIPPING } from "@/lib/shop";
+import { ORDER_STATUS } from "@/lib/shop";
+import { getShippingConfig } from "@/lib/settings";
+import { shippingBadge } from "@/lib/shipping-shared";
+import { DEFAULT_CARRIER } from "@/lib/order-flow";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SummaryRow } from "@/components/cart/SummaryRow";
 import { PageHeader } from "@/components/admin/PageHeader";
@@ -33,6 +36,8 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/order
   });
   if (!order) notFound();
 
+  const shipping = await getShippingConfig();
+  const pickup = order.shippingMethod === "PICKUP";
   const customerStats = await db.order.aggregate({
     where: { userId: order.user.id, status: { in: ["PAID", "PROCESSING", "SHIPPED", "DELIVERED"] } },
     _count: true,
@@ -82,7 +87,7 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/order
                 {order.paymentMethod === "ONLINE" ? "آنلاین" : "در محل"} — {paid ? "پرداخت‌شده" : "پرداخت‌نشده"}
               </b>
             </div>
-            <div className="flex flex-col gap-1"><span className="text-xs text-muted">ارسال</span><b>{order.carrier ?? SHIPPING[order.shippingMethod].title.split(" (")[0]}</b></div>
+            <div className="flex flex-col gap-1"><span className="text-xs text-muted">ارسال</span><b>{order.carrier ?? shipping.methods[order.shippingMethod].title}{order.shippingCollect && <span className="text-xs font-bold text-muted"> (پس‌کرایه)</span>}</b></div>
           </section>
 
           {/* Items */}
@@ -124,7 +129,7 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/order
             <dl className="flex flex-col gap-3 border-t border-line p-5">
               <SummaryRow label="جمع کالاها" value={order.subtotal} />
               {order.discount > 0 && <SummaryRow label={order.discountCode ? `تخفیف (${order.discountCode})` : "تخفیف"} value={order.discount} tone="red" />}
-              <SummaryRow label={`ارسال — ${SHIPPING[order.shippingMethod].title}`} value={order.shippingCost} />
+              <SummaryRow label={`ارسال — ${shipping.methods[order.shippingMethod].title}`} value={order.shippingCost} text={shippingBadge(order.shippingCost, order.shippingCollect)} />
               <SummaryRow label="مبلغ کل" value={order.total} strong />
             </dl>
           </section>
@@ -165,7 +170,9 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/order
                 )}
               </p>
               <p className="leading-7">{order.province}، {order.city}، {order.fullAddress}</p>
-              {order.postalCode ? (
+              {pickup ? (
+                <p className="rounded-lg bg-info-soft px-3 py-2 text-xs font-bold text-info">مشتری «تحویل حضوری از فروشگاه» را انتخاب کرده؛ وقتی سفارش آماده شد با او تماس بگیرید.</p>
+              ) : order.postalCode ? (
                 <p>کد پستی: {faDigits(order.postalCode)}</p>
               ) : (
                 <p className="flex items-center gap-2 rounded-lg bg-warning-soft px-3 py-2 text-xs font-bold text-warning">
@@ -215,7 +222,8 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/order
               paymentMethod={order.paymentMethod}
               hasPayment={!!paid}
               total={toman(order.total)}
-              carrier={order.carrier}
+              carrier={order.carrier ?? DEFAULT_CARRIER[order.shippingMethod]}
+              pickup={pickup}
               trackingCode={order.trackingCode}
             />
           </section>

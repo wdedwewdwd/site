@@ -5,7 +5,8 @@ import { Check, Circle, CreditCard } from "lucide-react";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/auth/session";
 import { faDateTime, faDigits, toman } from "@/lib/format";
-import { SHIPPING } from "@/lib/shop";
+import { getShippingConfig } from "@/lib/settings";
+import { shippingBadge } from "@/lib/shipping-shared";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SummaryRow } from "@/components/cart/SummaryRow";
 import { PayAgainButton } from "@/components/checkout/PayAgainButton";
@@ -36,6 +37,7 @@ export default async function OrderDetailPage({ params }: PageProps<"/profile/or
   });
   if (!order) notFound();
 
+  const shipping = await getShippingConfig();
   const reached = (s: OrderStatus) => order.events.find((e) => e.status === s);
   const cancelled = order.status === "CANCELLED" || order.status === "REFUNDED";
 
@@ -121,8 +123,8 @@ export default async function OrderDetailPage({ params }: PageProps<"/profile/or
           <section className="card flex flex-col gap-3 p-5 text-[13px]" aria-labelledby="delivery">
             <h2 id="delivery" className="text-base font-black">اطلاعات تحویل و مرسوله</h2>
             <p><span className="text-muted">تحویل‌گیرنده: </span>{order.receiverName} (<span dir="ltr">{faDigits(order.receiverPhone)}</span>)</p>
-            <p className="leading-7"><span className="text-muted">نشانی ارسال: </span>{order.province}، {order.city}، {order.fullAddress}{order.postalCode && <> — کد پستی {faDigits(order.postalCode)}</>}</p>
-            <p><span className="text-muted">روش ارسال: </span>{SHIPPING[order.shippingMethod].title}</p>
+            <p className="leading-7"><span className="text-muted">{order.shippingMethod === "PICKUP" ? "محل تحویل: " : "نشانی ارسال: "}</span>{order.province}، {order.city}، {order.fullAddress}{order.postalCode && <> — کد پستی {faDigits(order.postalCode)}</>}</p>
+            <p><span className="text-muted">روش ارسال: </span>{shipping.methods[order.shippingMethod].title}</p>
             <p><span className="text-muted">روش پرداخت: </span>{order.paymentMethod === "ONLINE" ? "درگاه آنلاین بانکی" : "پرداخت در محل"}</p>
             {order.payments[0]?.refId && (
               <p><span className="text-muted">کد پیگیری پرداخت: </span><span dir="ltr">{faDigits(order.payments[0].refId)}</span></p>
@@ -132,7 +134,7 @@ export default async function OrderDetailPage({ params }: PageProps<"/profile/or
             <dl className="flex flex-col gap-3">
               <SummaryRow label="جمع کالاها" value={order.subtotal} />
               {order.discount > 0 && <SummaryRow label="تخفیف" value={order.discount} tone="red" />}
-              <SummaryRow label="هزینه ارسال" value={order.shippingCost} />
+              <SummaryRow label="هزینه ارسال" value={order.shippingCost} text={shippingBadge(order.shippingCost, order.shippingCollect)} />
               <div className="border-t border-dashed border-line pt-3">
                 <SummaryRow label="مبلغ کل" value={order.total} strong />
               </div>

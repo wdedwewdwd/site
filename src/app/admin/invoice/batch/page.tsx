@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireStaff } from "@/lib/auth/session";
 import { faDigits } from "@/lib/format";
-import { getContact } from "@/lib/settings";
+import { getContact, getShippingConfig } from "@/lib/settings";
 import { PrintButton } from "@/components/admin/orders/PrintButton";
 import { InvoiceSheet, invoiceInclude } from "@/components/admin/orders/InvoiceSheet";
 import { BackButton } from "@/components/layout/BackButton";
@@ -20,9 +20,10 @@ export default async function BatchInvoicePage({ searchParams }: PageProps<"/adm
     .slice(0, MAX_ORDERS);
   if (numbers.length === 0) notFound();
 
-  const [orders, contact] = await Promise.all([
+  const [orders, contact, shipping] = await Promise.all([
     db.order.findMany({ where: { number: { in: numbers } }, orderBy: { number: "asc" }, include: invoiceInclude }),
     getContact(),
+    getShippingConfig(),
   ]);
   if (orders.length === 0) notFound();
 
@@ -34,7 +35,7 @@ export default async function BatchInvoicePage({ searchParams }: PageProps<"/adm
         <PrintButton />
       </div>
       <div className="flex flex-col gap-6 print:gap-0">
-        {orders.map((o) => <InvoiceSheet key={o.id} order={o} contact={contact} />)}
+        {orders.map((o) => <InvoiceSheet key={o.id} order={o} contact={contact} shipping={shipping} />)}
       </div>
     </main>
   );

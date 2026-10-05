@@ -1,5 +1,6 @@
 import { faDateTime, faDigits, toman } from "@/lib/format";
-import { SHIPPING, SITE } from "@/lib/shop";
+import { SITE } from "@/lib/shop";
+import { shippingCostText, type ShippingConfig } from "@/lib/shipping-shared";
 import type { getContact } from "@/lib/settings";
 import { LogoMark } from "@/components/brand/Logo";
 import type { Prisma } from "@/generated/prisma/client";
@@ -14,7 +15,7 @@ export const invoiceInclude = {
 export type InvoiceOrder = Prisma.OrderGetPayload<{ include: typeof invoiceInclude }>;
 
 /** One A4 invoice with a cut-out shipping label; each sheet prints on its own page. */
-export function InvoiceSheet({ order, contact }: { order: InvoiceOrder; contact: Awaited<ReturnType<typeof getContact>> }) {
+export function InvoiceSheet({ order, contact, shipping }: { order: InvoiceOrder; contact: Awaited<ReturnType<typeof getContact>>; shipping: ShippingConfig }) {
   const buyer = [order.user.firstName, order.user.lastName].filter(Boolean).join(" ") || order.receiverName;
   const paid = order.payments.length > 0;
   const codDue = order.paymentMethod === "COD" && !paid;
@@ -82,7 +83,7 @@ export function InvoiceSheet({ order, contact }: { order: InvoiceOrder; contact:
         <tfoot>
           <tr><td colSpan={5} className="border border-line px-2 py-1.5 text-left">جمع کالاها</td><td className="border border-line px-2 py-1.5">{toman(order.subtotal)}</td></tr>
           {order.discount > 0 && <tr><td colSpan={5} className="border border-line px-2 py-1.5 text-left">تخفیف</td><td className="border border-line px-2 py-1.5">{toman(order.discount)}−</td></tr>}
-          <tr><td colSpan={5} className="border border-line px-2 py-1.5 text-left">هزینه ارسال ({SHIPPING[order.shippingMethod].title})</td><td className="border border-line px-2 py-1.5">{toman(order.shippingCost)}</td></tr>
+          <tr><td colSpan={5} className="border border-line px-2 py-1.5 text-left">هزینه ارسال ({shipping.methods[order.shippingMethod].title})</td><td className="border border-line px-2 py-1.5">{order.shippingCollect || order.shippingCost === 0 ? shippingCostText(order.shippingCost, order.shippingCollect, toman) : toman(order.shippingCost)}</td></tr>
           <tr className="bg-surface font-black"><td colSpan={5} className="border border-line px-2 py-1.5 text-left">مبلغ قابل پرداخت</td><td className="border border-line px-2 py-1.5">{toman(order.total)}</td></tr>
         </tfoot>
       </table>

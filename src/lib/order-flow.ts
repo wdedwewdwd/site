@@ -1,4 +1,4 @@
-import type { OrderStatus } from "@/generated/prisma/client";
+import type { OrderStatus, ShippingMethod } from "@/generated/prisma/client";
 
 /** Carriers offered when marking an order as shipped. */
 export const CARRIERS = ["پست پیشتاز", "پست سفارشی", "تیپاکس", "چاپار", "پیک آریزون یدک", "باربری", "تحویل حضوری"] as const;
@@ -7,6 +7,15 @@ export const CARRIERS_WITHOUT_TRACKING: readonly string[] = ["پیک آریزو�
 
 export const CANCEL_REASONS = ["اتمام موجودی کالا", "درخواست مشتری", "عدم پرداخت", "عدم پاسخگویی مشتری", "اشتباه در قیمت یا مشخصات", "سایر"] as const;
 export const REFUND_REASONS = ["مرجوعی در مهلت ۷ روزه", "کالای معیوب یا مغایر", "گم شدن مرسوله", "لغو پس از پرداخت", "سایر"] as const;
+
+/** The courier pre-selected in «ثبت ارسال», from the shipping method the customer chose. */
+export const DEFAULT_CARRIER: Record<ShippingMethod, (typeof CARRIERS)[number]> = {
+  POST: "پست پیشتاز",
+  TIPAX: "تیپاکس",
+  EXPRESS: "پیک آریزون یدک",
+  FREIGHT: "باربری",
+  PICKUP: "تحویل حضوری",
+};
 
 /** Status changes an admin may make. Anything else is rejected on the server. */
 export const TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
@@ -31,7 +40,7 @@ export type ActionKind = "plain" | "ship" | "cancel" | "refund" | "payment";
 export type OrderAction = { to: OrderStatus; label: string; kind: ActionKind; primary?: boolean; danger?: boolean; hint: string };
 
 /** The buttons shown for each status, in the order an admin normally uses them. */
-export function actionsFor(status: OrderStatus, opts: { paidOnline: boolean; paymentMethod: "ONLINE" | "COD" }): OrderAction[] {
+export function actionsFor(status: OrderStatus, opts: { paidOnline: boolean; paymentMethod: "ONLINE" | "COD"; pickup?: boolean }): OrderAction[] {
   switch (status) {
     case "PENDING_PAYMENT":
       return [
@@ -45,6 +54,13 @@ export function actionsFor(status: OrderStatus, opts: { paidOnline: boolean; pay
         { to: "CANCELLED", label: "لغو سفارش", kind: "cancel", danger: true, hint: "موجودی برمی‌گردد. بازگرداندن وجه را از پنل درگاه انجام دهید." },
       ];
     case "PROCESSING":
+      // «تحویل حضوری»: the next step is the customer collecting the order at the shop.
+      if (opts.pickup)
+        return [
+          { to: "DELIVERED", label: "مشتری سفارش را تحویل گرفت", kind: "plain", primary: true, hint: "سفارش در فروشگاه به مشتری تحویل داده شد." },
+          { to: "SHIPPED", label: "ثبت ارسال", kind: "ship", hint: "اگر مشتری خواست سفارش برایش فرستاده شود." },
+          { to: "CANCELLED", label: "لغو سفارش", kind: "cancel", danger: true, hint: "موجودی کالاها به انبار برمی‌گردد." },
+        ];
       return [
         { to: "SHIPPED", label: "ثبت ارسال", kind: "ship", primary: true, hint: "روش ارسال و کد رهگیری را وارد کنید." },
         { to: "DELIVERED", label: "تحویل شد (پیک / حضوری)", kind: "plain", hint: "اگر سفارش بدون پست و مستقیم تحویل داده شد." },

@@ -45,6 +45,11 @@ build (`APP_URL=https://example.com PAYMENT_PROVIDER=none ALLOW_CONSOLE_SMS=true
   `Product.soldCount` follows `countsAsSold` (COD counts at checkout, online on payment; cancel/refund takes it back).
   `OrderEvent.actorId` = staff member who made the change (shown in the order history). Invoices share
   `components/admin/orders/InvoiceSheet.tsx`; ticked orders print together at `/admin/invoice/batch?n=..&n=..`.
+- Shipping: methods POST, TIPAX, EXPRESS (پیک, Tehran-only by default), FREIGHT (باربری), PICKUP (تحویل حضوری, no address;
+  the order stores the shop address). Owner edits title/description/price/on-off/order at `/admin/shipping` (Setting
+  `shipping_config` JSON; defaults, schema and `quoteShipping` in `src/lib/shipping-shared.ts`, `getShippingConfig()`).
+  Pricing: fixed (+ optional free-over amount), collect «پس‌کرایه» (`Order.shippingCollect`, cost 0) or free. Prices are
+  always recomputed on the server in `placeOrder`.
 - Product prices: the form shows "قیمت اصلی" + a discount switch (percent or sale price, `ProductPriceFields`); the DB
   stores `price` (paid) and `compareAtPrice` (struck-through). Car models are one shared list edited from the product
   form ("مدیریت خودروها", `actions/admin/cars.ts`); renaming keeps the slug, deleting removes it from all products.

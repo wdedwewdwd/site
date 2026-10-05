@@ -10,14 +10,17 @@ import { beginOnlinePayment, expireStaleOrders, PAYMENT_WINDOW_MIN } from "@/lib
 import { onlinePaymentEnabled } from "@/lib/payment";
 import { rateLimit } from "@/lib/rate-limit";
 import { clientIp } from "@/lib/request";
-import { SHIPPING } from "@/lib/shop";
+import { getContact, getShippingConfig } from "@/lib/settings";
+import { needsAddress, quoteShipping, SHIPPING_METHODS } from "@/lib/shipping-shared";
+import { SITE } from "@/lib/shop";
 import { idSchema } from "@/lib/validation";
 
 type Result = { ok: false; error: string };
 
 const placeSchema = z.object({
-  addressId: idSchema,
-  shipping: z.enum(["EXPRESS", "POST"]),
+  // Not needed for «تحویل حضوری».
+  addressId: z.union([z.literal(""), idSchema]).optional(),
+  shipping: z.enum(SHIPPING_METHODS),
   payment: z.enum(["ONLINE", "COD"]),
 });
 
@@ -35,14 +38,38 @@ export async function placeOrder(input: z.input<typeof placeSchema>): Promise<Re
 
   await expireStaleOrders();
 
-  const [cart, address] = await Promise.all([
+  const [cart, address, config] = await Promise.all([
     getCart(),
-    db.address.findFirst({ where: { id: addressId, userId: user.id } }),
+    addressId ? db.address.findFirst({ where: { id: addressId, userId: user.id } }) : null,
+    getShippingConfig(),
   ]);
   if (!cart || cart.items.length === 0) return { ok: false, error: "سبد خرید شما خالی است." };
-  if (!address) return { ok: false, error: "آدرس انتخاب شده معتبر نیست." };
-  if (shipping === "EXPRESS" && address.province !== "تهران")
-    return { ok: false, error: "ارسال سریع فقط برای تهران امکان‌پذیر است." };
+  const method = config.methods[shipping];
+  if (!method.enabled) return { ok: false, error: "این روش ارسال دیگر فعال نیست؛ روش دیگری انتخاب کنید." };
+  if (addressId && !address) return { ok: false, error: "آدرس انتخاب شده معتبر نیست." };
+  if (needsAddress(shipping) && !address) return { ok: false, error: "برای این روش ارسال، یک آدرس انتخاب کنید." };
+  if (method.tehranOnly && address?.province !== "تهران") return { ok: false, error: `«${method.title}» فقط برای آدرس‌های استان تهران است.` };
+
+  // «تحویل حضوری»: the order carries the shop's address and the customer's contact details.
+  const pickup = !needsAddress(shipping);
+  const contact = pickup ? await getContact() : null;
+  const receiver = pickup
+    ? {
+        receiverName: address?.receiverName ?? ([user.firstName, user.lastName].filter(Boolean).join(" ") || "مشتری"),
+        receiverPhone: address?.receiverPhone ?? user.phone,
+        province: "تحویل حضوری",
+        city: SITE.name,
+        postalCode: null,
+        fullAddress: contact!.address,
+      }
+    : {
+        receiverName: address!.receiverName,
+        receiverPhone: address!.receiverPhone,
+        province: address!.province,
+        city: address!.city,
+        postalCode: address!.postalCode,
+        fullAddress: address!.fullAddress,
+      };
 
   let order: { id: string; number: number; total: number };
   try {
@@ -84,7 +111,9 @@ export async function placeOrder(input: z.input<typeof placeSchema>): Promise<Re
         discountCode = check.code.code;
       }
 
-      const shippingCost = SHIPPING[shipping].price;
+      // The price always comes from the saved shipping settings, never from the browser.
+      const quote = quoteShipping(method, subtotal - discount);
+      const shippingCost = quote.cost;
       const total = subtotal - discount + shippingCost;
       const initialStatus = payment === "COD" ? "PROCESSING" : "PENDING_PAYMENT";
 
@@ -98,13 +127,9 @@ export async function placeOrder(input: z.input<typeof placeSchema>): Promise<Re
           discount,
           discountCode,
           shippingCost,
+          shippingCollect: quote.collect,
           total,
-          receiverName: address.receiverName,
-          receiverPhone: address.receiverPhone,
-          province: address.province,
-          city: address.city,
-          postalCode: address.postalCode,
-          fullAddress: address.fullAddress,
+          ...receiver,
           items: {
             create: cart.items.map((i) => {
               const p = byId.get(i.productId)!;

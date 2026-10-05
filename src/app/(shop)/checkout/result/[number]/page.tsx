@@ -5,7 +5,7 @@ import { CircleCheck, CircleX } from "lucide-react";
 import { db } from "@/lib/db";
 import { getUser } from "@/lib/auth/session";
 import { faDigits, toman } from "@/lib/format";
-import { SHIPPING } from "@/lib/shop";
+import { getShippingConfig } from "@/lib/settings";
 import { PayAgainButton } from "@/components/checkout/PayAgainButton";
 import { PageBar } from "@/components/layout/PageBar";
 
@@ -25,6 +25,7 @@ export default async function OrderResultPage({ params, searchParams }: PageProp
       })
     : null;
 
+  const shipping = await getShippingConfig();
   const success = order ? order.status !== "PENDING_PAYMENT" && order.status !== "CANCELLED" : !failedParam;
 
   return (
@@ -63,7 +64,7 @@ export default async function OrderResultPage({ params, searchParams }: PageProp
             )}
             <div className="flex flex-col gap-1">
               <dt className="text-xs text-muted">روش تحویل انتخابی</dt>
-              <dd className="font-bold">{SHIPPING[order.shippingMethod].title}</dd>
+              <dd className="font-bold">{shipping.methods[order.shippingMethod].title}</dd>
             </div>
           </dl>
         )}

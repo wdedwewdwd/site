@@ -7,7 +7,7 @@ import { NEEDS_ACTION } from "@/lib/order-flow";
 import { faDateTime, faDigits, toman } from "@/lib/format";
 import { jFull, tehranParts, tehranToday } from "@/lib/jalali";
 import { PRESETS, parseReportParams, salesReport } from "@/lib/reports";
-import { SHIPPING } from "@/lib/shop";
+import { getShippingConfig } from "@/lib/settings";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { HelpBox } from "@/components/admin/HelpBox";
@@ -35,7 +35,7 @@ export default async function AdminDashboard({ searchParams }: PageProps<"/admin
   await Promise.all([expireStaleOrders(), housekeeping()]);
 
   const { from, to, granularity, preset } = parseReportParams(await searchParams);
-  const [report, ops] = await Promise.all([salesReport(from, to, granularity), loadOperations()]);
+  const [report, ops, shippingConfig] = await Promise.all([salesReport(from, to, granularity), loadOperations(), getShippingConfig()]);
   const now = tehranParts(new Date());
   const today = tehranToday();
   const { totals, previous } = report;
@@ -119,7 +119,7 @@ export default async function AdminDashboard({ searchParams }: PageProps<"/admin
           />
           <BarList
             title="روش ارسال"
-            rows={report.shipping.map((s) => ({ key: s.key, label: SHIPPING[s.key].title, value: s.revenue, secondary: `${num(s.orders)} سفارش` }))}
+            rows={report.shipping.map((s) => ({ key: s.key, label: shippingConfig.methods[s.key].title, value: s.revenue, secondary: `${num(s.orders)} سفارش` }))}
           />
           <BarList
             title="استان‌های پرخرید"

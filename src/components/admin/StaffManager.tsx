@@ -107,7 +107,7 @@ function AddStaffForm({ onClose, onDone }: { onClose: () => void; onDone: (messa
       </label>
       <NameFields />
       <RoleField />
-      <CodeField name="code" label="کد ورود ثابت (۴ تا ۶ رقم)" required />
+      <CodeField name="code" label="کد ورود ثابت (۶ رقم)" required />
       <CodeField name="confirm" label="تکرار کد ورود" required />
       <div className="sm:col-span-2 lg:col-span-3">
         <div className="max-w-xs">
@@ -130,7 +130,7 @@ function EditStaffForm({ row, onClose, onDone }: { row: StaffRow; onClose: () =>
       <input type="hidden" name="id" value={row.id} />
       <NameFields first={row.firstName} last={row.lastName} />
       <RoleField value={row.role} />
-      <CodeField name="code" label={row.hasCode ? "کد ورود جدید (خالی = بدون تغییر)" : "کد ورود ثابت (۴ تا ۶ رقم)"} required={!row.hasCode} />
+      <CodeField name="code" label={row.hasCode ? "کد ورود جدید (خالی = بدون تغییر)" : "کد ورود ثابت (۶ رقم)"} required={!row.hasCode} />
       <CodeField name="confirm" label="تکرار کد ورود جدید" required={!row.hasCode} />
       <CodeField name="myCode" label="کد ورود خودتان (برای تأیید)" required autoComplete="current-password" />
       <SubmitRow pending={pending} label="ذخیره" onCancel={onClose} state={state} />

@@ -1,5 +1,5 @@
 /**
- * Creates or updates a staff account and sets its fixed login code (4–6 digits).
+ * Creates or updates a staff account and sets its fixed login code (6 digits).
  * The staff member types this code on the normal login form instead of an SMS code.
  * This is the only way to create an admin: it needs shell access to the server.
  *
@@ -36,7 +36,7 @@ async function main() {
   if (!pepper || pepper.length < 32) throw new Error("OTP_PEPPER must be set (same value as the running site).");
 
   const password = toEnDigits(await readPassword());
-  if (!staffCodeSchema.safeParse(password).success) throw new Error("The login code must be 4 to 6 digits.");
+  if (!staffCodeSchema.safeParse(password).success) throw new Error("The login code must be 6 digits.");
   if (password.length < 6) console.warn("WARNING: a 6-digit code is much harder to guess than a shorter one.");
 
   const db = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }) });
@@ -45,7 +45,7 @@ async function main() {
     const user = await db.user.upsert({
       where: { phone },
       create: { phone, role, passwordHash },
-      update: { role, passwordHash, isActive: true },
+      update: { role, passwordHash, weakStaffCode: false, isActive: true },
     });
     // A password change signs the account out everywhere.
     await db.session.deleteMany({ where: { userId: user.id } });

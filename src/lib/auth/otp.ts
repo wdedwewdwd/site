@@ -16,13 +16,15 @@ type Result = { ok: true } | { ok: false; error: string };
 
 export async function issueOtp(phone: string, ip: string): Promise<Result> {
   // Throttle per phone (SMS bombing) and per IP (enumeration / cost abuse).
-  const [perPhoneShort, perPhoneHour, perIp] = await Promise.all([
+  const [perPhoneShort, perPhoneHour, perIp, global] = await Promise.all([
     rateLimit(`otp:send:phone:${phone}`, 1, OTP_RESEND_SEC),
     rateLimit(`otp:send:phone-h:${phone}`, 5, 3600),
     rateLimit(`otp:send:ip:${ip}`, 15, 3600),
+    // Backstop against SMS-cost abuse spread over many numbers and addresses; far above a shop's real traffic.
+    rateLimit("otp:send:global", 400, 3600),
   ]);
   if (!perPhoneShort.ok) return { ok: false, error: `لطفاً ${perPhoneShort.retryAfterSec} ثانیه دیگر دوباره تلاش کنید.` };
-  if (!perPhoneHour.ok || !perIp.ok) return { ok: false, error: "تعداد درخواست‌ها زیاد است. لطفاً بعداً تلاش کنید." };
+  if (!perPhoneHour.ok || !perIp.ok || !global.ok) return { ok: false, error: "تعداد درخواست‌ها زیاد است. لطفاً بعداً تلاش کنید." };
 
   const code = numericCode(OTP_LENGTH);
   await db.$transaction([

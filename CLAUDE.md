@@ -31,7 +31,8 @@ build (`APP_URL=https://example.com PAYMENT_PROVIDER=none ALLOW_CONSOLE_SMS=true
   and writes admin changes to the audit log. Prices always come from the DB. CSP with nonces in proxy.
 - Auth: everyone signs in with an SMS code at `/login`. Staff accounts have a fixed 4–6 digit code
   (`User.passwordHash`, scrypt + OTP_PEPPER) typed in the same form instead of an SMS code; no SMS is sent to
-  them and the form looks identical. The first admin on a new database is created with `npm run admin:set`; after that
+  them and the form looks identical. New/changed staff codes must be 6 digits and not trivial (`staffCodeSchema`);
+  older shorter codes still work but set `User.weakStaffCode`, which shows a «change your code» banner in the panel. The first admin on a new database is created with `npm run admin:set`; after that
   admins add/edit/remove staff (ADMIN or SUPPORT, phone + name + code) in Settings → «مدیران و پشتیبان‌ها»
   (`actions/admin/staff.ts`, re-enters the acting admin's own code). Removing access turns the person into a customer.
 - Dates/times: Jalali calendar and Asia/Tehran everywhere (`src/lib/jalali.ts`, `src/lib/format.ts`).

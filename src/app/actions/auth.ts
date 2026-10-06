@@ -10,7 +10,7 @@ import { mergeGuestCart } from "@/lib/cart";
 import { verifyPassword } from "@/lib/password";
 import { rateLimit } from "@/lib/rate-limit";
 import { clientIp } from "@/lib/request";
-import { otpSchema, phoneSchema } from "@/lib/validation";
+import { otpSchema, phoneSchema, STAFF_CODE_LENGTH } from "@/lib/validation";
 
 export type AuthState = { ok: boolean; error?: string; step?: "phone" | "code"; phone?: string } | null;
 
@@ -64,7 +64,11 @@ export async function verifyOtpAction(_: AuthState, formData: FormData): Promise
   if (existing && !existing.isActive) return { ok: false, step: "phone", error: "حساب کاربری شما غیرفعال شده است. با پشتیبانی تماس بگیرید." };
 
   const user = existing
-    ? await db.user.update({ where: { id: existing.id }, data: { lastLoginAt: new Date() } })
+    ? await db.user.update({
+        where: { id: existing.id },
+        // Older staff codes may be shorter than 6 digits; the panel then asks for a new one.
+        data: { lastLoginAt: new Date(), ...(isStaffLogin ? { weakStaffCode: code.length < STAFF_CODE_LENGTH } : {}) },
+      })
     : await db.user.create({ data: { phone, lastLoginAt: new Date() } });
 
   // Session fixation defense: drop any session presented with this request before issuing a new one.

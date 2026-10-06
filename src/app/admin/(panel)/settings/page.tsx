@@ -78,7 +78,7 @@ export default async function SettingsPage() {
         <StaffManager staff={staffRows} />
       </section>
 
-      <section className="card mb-6 p-5">
+      <section id="password" className="card mb-6 scroll-mt-4 p-5">
         <h2 className="mb-4 text-base font-black">کد ورود ثابت من</h2>
         <ChangePasswordForm />
       </section>

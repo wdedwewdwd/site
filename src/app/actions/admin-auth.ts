@@ -32,7 +32,7 @@ export async function changeOwnPassword(_: ChangePasswordState, formData: FormDa
 
   const passwordHash = await hashPassword(parsed.data.next, env.OTP_PEPPER);
   await db.$transaction([
-    db.user.update({ where: { id: user.id }, data: { passwordHash } }),
+    db.user.update({ where: { id: user.id }, data: { passwordHash, weakStaffCode: false } }),
     // Sign out every other device.
     db.session.deleteMany({ where: { userId: user.id } }),
   ]);

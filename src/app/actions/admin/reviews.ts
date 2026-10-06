@@ -29,6 +29,7 @@ function refresh(slug: string) {
 /** Publishes or hides a review; the product's rating follows the published reviews. */
 export async function setReviewApproved(id: string, approved: boolean): Promise<ReviewAdminResult> {
   const staff = await requireStaff(["ADMIN", "SUPPORT"]);
+  if (typeof approved !== "boolean") return { ok: false, message: "درخواست نامعتبر است." };
   const review = await load(id);
   if (!review) return { ok: false, message: "این نظر پیدا نشد." };
   if (review.approved === approved) return { ok: true, message: approved ? "این نظر قبلاً منتشر شده است." : "این نظر منتشر نشده است." };

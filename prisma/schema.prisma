@@ -526,3 +526,29 @@ model Setting {
   key   String @id
   value String
 }
+
+// One page view on the storefront, for the admin's visit statistics (first-party, nothing leaves the site).
+// Staff, bots and the admin panel are not counted. Visitor and session ids are HMACs of random cookies.
+// Not part of backups (it can grow large); rows older than ~13 months are removed by housekeeping.
+model PageView {
+  id         String   @id @default(cuid())
+  visitorId  String // HMAC of the 400-day visitor cookie
+  sessionId  String // HMAC of the 30-minute session cookie
+  path       String // pathname only, e.g. /product/brake-pad-206
+  productId  String? // product pages (no relation: deleting a product keeps its history)
+  search     String? // the query on /search
+  referrer   String? // external site that sent the visitor (entry views only), e.g. google.com
+  source     String? // utm_source, if the link had one
+  device     String // mobile | tablet | desktop
+  os         String
+  browser    String
+  isEntry    Boolean  @default(false) // first view of a session
+  newVisitor Boolean  @default(false) // first view ever from this browser
+  userId     String? // signed-in customer
+  durationMs Int? // time the page was visible, sent when the visitor leaves it
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([sessionId])
+  @@index([productId, createdAt])
+}

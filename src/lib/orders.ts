@@ -1,5 +1,6 @@
 import "server-only";
 import { db } from "./db";
+import { PAGE_VIEW_RETENTION_DAYS } from "./analytics";
 import { env } from "./env";
 import { startPayment } from "./payment";
 
@@ -30,6 +31,7 @@ export async function expireStaleOrders() {
 export async function housekeeping() {
   const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
   await Promise.all([
+    db.pageView.deleteMany({ where: { createdAt: { lt: new Date(Date.now() - PAGE_VIEW_RETENTION_DAYS * 24 * 60 * 60 * 1000) } } }),
     db.session.deleteMany({ where: { expiresAt: { lt: new Date() } } }),
     db.otpCode.deleteMany({ where: { createdAt: { lt: dayAgo } } }),
     db.rateLimit.deleteMany({ where: { windowStart: { lt: dayAgo } } }),

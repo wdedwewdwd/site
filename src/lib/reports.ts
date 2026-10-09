@@ -88,10 +88,10 @@ export function parseReportParams(sp: Record<string, string | string[] | undefin
   return { from, to, days: span, granularity, preset: presetKey ?? (one("from") ? null : "30d") };
 }
 
-type Bucket = { key: string; label: string; fullLabel: string; start: number; end: number };
+export type Bucket = { key: string; label: string; fullLabel: string; start: number; end: number };
 
 /** Splits [from, to] into Jalali day / week (Saturday–Friday) / month buckets with Tehran-midnight boundaries. */
-function buildBuckets(from: JDate, to: JDate, g: Granularity): Bucket[] {
+export function buildBuckets(from: JDate, to: JDate, g: Granularity): Bucket[] {
   const buckets: Bucket[] = [];
   let cur = from;
   while (compareJ(cur, to) <= 0) {

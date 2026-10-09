@@ -84,7 +84,8 @@ export function ColumnChart({ data, formatValue, height = 280, label, color = "v
         tabIndex={0}
         onKeyDown={onKey}
         onBlur={() => setActive(null)}
-        className="block overflow-visible outline-none focus-visible:rounded-lg focus-visible:ring-2 focus-visible:ring-brand/40"
+        // max-w-full: the first render (before the box is measured) must not stretch its card on phones.
+        className="block max-w-full overflow-visible outline-none focus-visible:rounded-lg focus-visible:ring-2 focus-visible:ring-brand/40"
       >
         <title id={titleId}>{label}</title>
         {/* Gridlines + y ticks (right side in RTL) */}

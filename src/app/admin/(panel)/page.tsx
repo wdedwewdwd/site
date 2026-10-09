@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AlertTriangle, Boxes, Clock3, Headset } from "lucide-react";
+import { AlertTriangle, Boxes, ChartNoAxesCombined, Clock3, Headset } from "lucide-react";
 import { db } from "@/lib/db";
 import { requireStaff } from "@/lib/auth/session";
 import { expireStaleOrders, housekeeping } from "@/lib/orders";
@@ -7,6 +7,7 @@ import { NEEDS_ACTION } from "@/lib/order-flow";
 import { faDateTime, faDigits, toman } from "@/lib/format";
 import { jFull, tehranParts, tehranToday } from "@/lib/jalali";
 import { PRESETS, parseReportParams, salesReport } from "@/lib/reports";
+import { visitorsToday } from "@/lib/analytics";
 import { getShippingConfig } from "@/lib/settings";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { PageHeader } from "@/components/admin/PageHeader";
@@ -35,9 +36,9 @@ export default async function AdminDashboard({ searchParams }: PageProps<"/admin
   await Promise.all([expireStaleOrders(), housekeeping()]);
 
   const { from, to, granularity, preset } = parseReportParams(await searchParams);
-  const [report, ops, shippingConfig] = await Promise.all([salesReport(from, to, granularity), loadOperations(), getShippingConfig()]);
-  const now = tehranParts(new Date());
   const today = tehranToday();
+  const [report, ops, shippingConfig, visits] = await Promise.all([salesReport(from, to, granularity), loadOperations(), getShippingConfig(), visitorsToday(today)]);
+  const now = tehranParts(new Date());
   const { totals, previous } = report;
 
   return (
@@ -77,7 +78,7 @@ export default async function AdminDashboard({ searchParams }: PageProps<"/admin
 
         <SalesPanel series={report.series} granularityLabel={GRANULARITY_LABEL[granularity]} />
 
-        <div className="grid gap-5 xl:grid-cols-2">
+        <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
           <section className="card flex flex-col gap-3 p-5" aria-labelledby="top-products">
             <h2 id="top-products" className="text-base font-black">پرفروش‌ترین قطعات این بازه</h2>
             {report.topProducts.length === 0 ? (
@@ -109,10 +110,15 @@ export default async function AdminDashboard({ searchParams }: PageProps<"/admin
               </div>
             )}
           </section>
-          <HourPanel hours={report.hours} weekdays={report.weekdays} />
+          <HourPanel
+            title="زمان خرید مشتریان (به وقت تهران)"
+            unit="سفارش"
+            hours={report.hours.map((h) => ({ hour: h.hour, value: h.orders, details: [{ label: "مبلغ", value: `${num(h.revenue)} تومان` }] }))}
+            weekdays={report.weekdays.map((d) => ({ index: d.index, value: d.orders }))}
+          />
         </div>
 
-        <div className="grid gap-5 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
           <BarList
             title="روش پرداخت"
             rows={report.payment.map((p) => ({ key: p.key, label: p.key === "ONLINE" ? "درگاه آنلاین" : "پرداخت در محل", value: p.revenue, secondary: `${num(p.orders)} سفارش` }))}
@@ -148,7 +154,7 @@ export default async function AdminDashboard({ searchParams }: PageProps<"/admin
 
       {/* Operations (not scoped by the date range) */}
       <h2 className="mb-4 mt-10 text-lg font-black">وضعیت فعلی فروشگاه</h2>
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Link href="/admin/orders?status=todo" className="card flex items-center gap-4 p-4 hover:border-brand">
           <span className="grid size-11 place-items-center rounded-xl bg-brand-soft text-brand"><AlertTriangle className="size-5" /></span>
           <span className="flex flex-col"><span className="text-xs text-muted">منتظر آماده‌سازی / ارسال</span><b className="text-lg">{num(ops.awaiting)} سفارش</b></span>
@@ -161,9 +167,17 @@ export default async function AdminDashboard({ searchParams }: PageProps<"/admin
           <span className="grid size-11 place-items-center rounded-xl bg-warning-soft text-warning"><Boxes className="size-5" /></span>
           <span className="flex flex-col"><span className="text-xs text-muted">محصولات فعال</span><b className="text-lg">{num(ops.activeProducts)} قطعه</b></span>
         </Link>
+        <Link href="/admin/analytics?p=today" className="card flex items-center gap-4 p-4 hover:border-brand">
+          <span className="grid size-11 place-items-center rounded-xl bg-info-soft text-info"><ChartNoAxesCombined className="size-5" /></span>
+          <span className="flex flex-col">
+            <span className="text-xs text-muted">بازدیدکنندگان امروز</span>
+            <b className="text-lg">{num(visits.visitors)} نفر</b>
+            <span className="text-[11px] text-muted">{num(visits.views)} بازدید صفحه</span>
+          </span>
+        </Link>
       </div>
 
-      <div className="mt-5 grid gap-5 xl:grid-cols-[1fr_340px]">
+      <div className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-[1fr_340px]">
         <section className="card overflow-hidden" aria-labelledby="recent">
           <div className="flex items-center justify-between p-5">
             <h2 id="recent" className="text-base font-black">آخرین سفارش‌ها</h2>

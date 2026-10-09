@@ -57,16 +57,24 @@ export function BarList({
   title,
   rows,
   empty = "داده‌ای وجود ندارد.",
+  unit = "تومان",
+  hint,
 }: {
   title: string;
   rows: { key: string; label: string; value: number; secondary?: string }[];
   empty?: string;
+  /** What the values count, e.g. "تومان" or "ورود". */
+  unit?: string;
+  hint?: string;
 }) {
   const max = Math.max(1, ...rows.map((r) => r.value));
   const total = rows.reduce((s, r) => s + r.value, 0);
   return (
     <section className="card flex flex-col gap-3 p-5">
-      <h2 className="text-base font-black">{title}</h2>
+      <div className="flex flex-col gap-1">
+        <h2 className="text-base font-black">{title}</h2>
+        {hint && <p className="text-[11px] text-muted">{hint}</p>}
+      </div>
       {rows.length === 0 ? (
         <p className="py-6 text-center text-sm text-muted">{empty}</p>
       ) : (
@@ -76,7 +84,7 @@ export function BarList({
               <div className="flex items-baseline justify-between gap-3 text-[13px]">
                 <span className="truncate font-bold">{r.label}</span>
                 <span className="shrink-0 text-xs text-muted">
-                  <b className="text-ink">{compactNumber(r.value)}</b> تومان
+                  <b className="text-ink">{compactNumber(r.value)}</b> {unit}
                   {total > 0 && <> · {num(Math.round((r.value / total) * 100))}٪</>}
                 </span>
               </div>

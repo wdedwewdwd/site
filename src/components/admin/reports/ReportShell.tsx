@@ -13,6 +13,9 @@ type Props = {
   granularity: "day" | "week" | "month";
   preset: string | null;
   presets: readonly Preset[];
+  /** Excel (CSV) download for the chosen range; defaults to the sales report. */
+  exportPath?: string;
+  label?: string;
   children: React.ReactNode;
 };
 
@@ -23,7 +26,7 @@ const GRANULARITY = [
 ] as const;
 
 /** Filter row + everything it scopes. While new data loads, the old render stays in place, dimmed. */
-export function ReportShell({ from, to, today, granularity, preset, presets, children }: Props) {
+export function ReportShell({ from, to, today, granularity, preset, presets, exportPath = "/api/admin/reports/sales", label = "گزارش فروش", children }: Props) {
   const router = useRouter();
   const params = useSearchParams();
   const [pending, start] = useTransition();
@@ -37,10 +40,10 @@ export function ReportShell({ from, to, today, granularity, preset, presets, chi
     start(() => router.push(`?${p.toString()}`, { scroll: false }));
   };
 
-  const csvHref = `/api/admin/reports/sales?from=${jKey(from)}&to=${jKey(to)}&g=${granularity}`;
+  const csvHref = `${exportPath}?from=${jKey(from)}&to=${jKey(to)}&g=${granularity}`;
 
   return (
-    <section aria-label="گزارش فروش" className="flex flex-col gap-5">
+    <section aria-label={label} className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center gap-3">
         <JalaliRangePicker
           from={from}

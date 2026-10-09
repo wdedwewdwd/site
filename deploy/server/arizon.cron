@@ -1,0 +1,4 @@
+# Installed as /etc/cron.d/arizon. Daily data backup at 03:30 Tehran time.
+SHELL=/bin/bash
+PATH=/usr/local/bin:/usr/bin:/bin
+30 3 * * * arizon /usr/local/bin/arizon-backup 2>&1 | logger -t arizon-backup

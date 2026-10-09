@@ -83,13 +83,14 @@ build (`APP_URL=https://example.com PAYMENT_PROVIDER=none ALLOW_CONSOLE_SMS=true
 - When testing with data, create clearly tagged throwaway rows and delete them afterwards.
 
 ## Hosting
-Live on a ParsPack cloud server in Tehran (Ubuntu 24.04, IP 45.149.77.216): Nginx → `next start` (systemd
-`arizon`) → local PostgreSQL 16. Layout, commands and rebuild steps: `deploy/server/README.md`. SSH as root with
-the key `~/.ssh/arizon_server` (alias `arizon`); never type the root password. Deploy = `ssh arizon arizon-deploy`
-(the owner double-clicks `update-server.cmd`), so merged work on `main` still has to be deployed. No domain yet:
-APP_URL is `https://45.149.77.216` with a short-lived Let's Encrypt IP certificate (acme.sh renews it). Until
-Kavenegar/Zarinpal are set up the server runs SMS_PROVIDER=console + ALLOW_CONSOLE_SMS (customer codes only in
-`journalctl -u arizon`) and PAYMENT_PROVIDER=none. `liara.json`/`railway.json` are from earlier hosting attempts.
+Live at https://arizonyadak.ir on a ParsPack cloud server in Tehran (Ubuntu 24.04, IP 45.149.77.216): Nginx →
+`next start` (systemd `arizon`) → local PostgreSQL 16. Layout, commands, domain/DNS and rebuild steps:
+`deploy/server/README.md`. SSH as root with the key `~/.ssh/arizon_server` (alias `arizon`, key-only). Deploy =
+`ssh arizon arizon-deploy` (the owner double-clicks `update-server.cmd`), so merged work on `main` still has to be
+deployed. DNS and email stay on the owner's MihanWebHost cPanel hosting (the old WordPress site is there too).
+eNamad is already issued for arizonyadak.ir (id 698970). Until Kavenegar/Zarinpal are set up the server runs
+SMS_PROVIDER=console + ALLOW_CONSOLE_SMS (customer codes only in `journalctl -u arizon`) and PAYMENT_PROVIDER=none.
+`liara.json`/`railway.json` are from earlier hosting attempts.
 
 ## Not built yet (from the Figma design)
 Wallet payment, admin "reports" page beyond the dashboard report, map picker for customer addresses,

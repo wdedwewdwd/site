@@ -1,6 +1,6 @@
 # Production server (ParsPack cloud, Tehran)
 
-Ubuntu 24.04, 2 vCPU / 4 GB RAM (+2 GB swap) / 60 GB, IP `45.149.77.216`. Everything runs on the one
+Site: **https://arizonyadak.ir**. Ubuntu 24.04, 2 vCPU / 4 GB RAM (+2 GB swap) / 60 GB, IP `45.149.77.216`. Everything runs on the one
 machine: Nginx (TLS, reverse proxy) → Next.js (`arizon.service`, 127.0.0.1:3000) → PostgreSQL 16 (localhost).
 SSH is root with the key `~/.ssh/arizon_server` on the owner's laptop (alias `arizon` in `~/.ssh/config`).
 
@@ -32,15 +32,23 @@ ssh arizon "cd /srv/arizon/current && sudo -u arizon npm run admin:set -- 09xxxx
 Deploy = build a new release folder → back up data → `prisma migrate deploy` → switch the symlink →
 restart → health check (`/api/health`), switching back if the new version does not start.
 
-## TLS
+## Domain and TLS
 
-No domain yet, so the certificate is a Let's Encrypt **IP certificate** (`shortlived` profile, ~6.5 days)
-issued by acme.sh (`/root/.acme.sh`, webroot `/var/www/acme`, cron 4× a day, reloads Nginx).
-`APP_URL` must be https in production, which is why this is needed even before a domain.
-When a domain is bought: point its A record to the IP, issue a normal cert for it
-(`acme.sh --issue -d example.ir -d www.example.ir --webroot /var/www/acme --server letsencrypt`,
-then `--install-cert` to the same `/etc/nginx/ssl/arizon.*` paths), set `server_name`, change `APP_URL`
-in `shared/.env` and `systemctl restart arizon`.
+`arizonyadak.ir` and `arizonyadak.com` are registered at MihanWebHost. Their DNS zones live on the owner's
+MihanWebHost cPanel hosting (name servers `ns723/ns724.mihanwebhost.com`, edited in cPanel → Zone Editor), which
+also hosts the domain's email (`mail`/`webmail`/MX still point to 89.39.208.132) and the old WordPress site.
+Only the two apex A records were changed to this server; `www` are CNAMEs. **Cancelling that hosting would take
+DNS and email down** — move the zones elsewhere first.
+
+Nginx serves the app only on `arizonyadak.ir`; `www.*`, `arizonyadak.com`, plain http and the bare IP redirect there.
+Certificates come from acme.sh (`/root/.acme.sh`, webroot `/var/www/acme`, cron 4× a day, reloads Nginx):
+`arizonyadak.ir_ecc` (all four names, 90 days) → `/etc/nginx/ssl/domain.*`, and a short-lived IP certificate
+(`45.149.77.216_ecc`) → `/etc/nginx/ssl/arizon.*` so `https://45.149.77.216` can still redirect.
+
+`arizon-domain-switch.sh` did the move on 2026-10-09: a one-minute systemd timer waited until the names pointed
+here (asking the domain's own name servers), then issued the certificate, wrote the Nginx config, set `APP_URL`
+and rebuilt (prerendered pages such as robots.txt embed `APP_URL`, so changing it always needs
+`arizon-deploy --force`). The timer disabled itself afterwards; reuse the script if the domain ever changes.
 
 ## Rebuilding the server from scratch
 

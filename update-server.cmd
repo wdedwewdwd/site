@@ -1,5 +1,5 @@
 @echo off
-rem Puts the latest version from GitHub (main) on the live server (ParsPack, 45.149.77.216).
+rem Puts the latest version from GitHub (main) on the live site https://arizonyadak.ir (ParsPack server 45.149.77.216).
 rem Double-click this file after a change is merged on GitHub. Takes about 3 minutes.
 rem The site keeps running during the update and switches over only if the new version builds.
 rem Works only on this laptop: it signs in with the key in %USERPROFILE%\.ssh\arizon_server.

@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
+import { Suspense } from "react";
 import { SITE } from "@/lib/shop";
+import { VisitTracker } from "@/components/analytics/VisitTracker";
 import "./globals.css";
 
 const vazirmatn = localFont({
@@ -28,7 +30,13 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fa" dir="rtl" className={vazirmatn.variable}>
-      <body className="min-h-dvh font-sans">{children}</body>
+      <body className="min-h-dvh font-sans">
+        {children}
+        {/* Visit statistics for the admin panel (first-party; staff and the admin panel are not counted). */}
+        <Suspense fallback={null}>
+          <VisitTracker />
+        </Suspense>
+      </body>
     </html>
   );
 }

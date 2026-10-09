@@ -58,6 +58,12 @@ build (`APP_URL=https://example.com PAYMENT_PROVIDER=none ALLOW_CONSOLE_SMS=true
 - Product prices: the form shows "قیمت اصلی" + a discount switch (percent or sale price, `ProductPriceFields`); the DB
   stores `price` (paid) and `compareAtPrice` (struck-through). Car models are one shared list edited from the product
   form ("مدیریت خودروها", `actions/admin/cars.ts`); renaming keeps the slug, deleting removes it from all products.
+- Visit statistics (`/admin/analytics`, menu «آمار بازدید»; dashboard card «بازدیدکنندگان امروز»): first-party, no third-party
+  script. `components/analytics/VisitTracker.tsx` (root layout) posts each storefront page view and its visible time to
+  `/api/visit` → `PageView` (`src/lib/visit-track.ts`: random visitor/session cookies, only their HMACs stored, no IPs;
+  bots, cross-site posts, staff and `/admin` are skipped). Report queries in `src/lib/analytics.ts` reuse the sales
+  report's Jalali buckets, `ReportShell`, `StatTile`, `BarList`, `HourPanel`. `PageView` is deliberately not in backups
+  (it grows); housekeeping deletes rows older than 400 days.
 - Backup/restore: `src/lib/backup-core.ts` (admin: Settings; CLI: `npm run backup:create|backup:restore`).
   New tables go in `TABLES` (and `OPTIONAL_TABLES` so older backups still restore).
 - Live chat: `src/lib/chat.ts` (in-process event bus + DB polling fallback), SSE routes under `src/app/api/chat`

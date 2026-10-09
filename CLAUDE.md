@@ -83,9 +83,13 @@ build (`APP_URL=https://example.com PAYMENT_PROVIDER=none ALLOW_CONSOLE_SMS=true
 - When testing with data, create clearly tagged throwaway rows and delete them afterwards.
 
 ## Hosting
-Target is Liara (Iranian PaaS; payment gateways need an Iranian server): `liara.json` + `liara_pre_start.sh`
-(runs migrations). Production env: SMS_PROVIDER=kavenegar, PAYMENT_PROVIDER=zarinpal (or `none` = COD only),
-UPLOAD_DIR on a persistent disk. Not deployed yet (Liara account needed identity verification and credit).
+Live on a ParsPack cloud server in Tehran (Ubuntu 24.04, IP 45.149.77.216): Nginx → `next start` (systemd
+`arizon`) → local PostgreSQL 16. Layout, commands and rebuild steps: `deploy/server/README.md`. SSH as root with
+the key `~/.ssh/arizon_server` (alias `arizon`); never type the root password. Deploy = `ssh arizon arizon-deploy`
+(the owner double-clicks `update-server.cmd`), so merged work on `main` still has to be deployed. No domain yet:
+APP_URL is `https://45.149.77.216` with a short-lived Let's Encrypt IP certificate (acme.sh renews it). Until
+Kavenegar/Zarinpal are set up the server runs SMS_PROVIDER=console + ALLOW_CONSOLE_SMS (customer codes only in
+`journalctl -u arizon`) and PAYMENT_PROVIDER=none. `liara.json`/`railway.json` are from earlier hosting attempts.
 
 ## Not built yet (from the Figma design)
 Wallet payment, admin "reports" page beyond the dashboard report, map picker for customer addresses,

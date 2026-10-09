@@ -11,11 +11,11 @@ const db = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.
 const categories = [
   { slug: "filters", name: "فیلترجات خودرو", icon: "wind" },
   { slug: "oil", name: "روغن و روانکننده‌ها", icon: "droplet" },
-  { slug: "electrical", name: "سیستم برقی خودرو", icon: "battery" },
-  { slug: "brakes", name: "لوازم ترمز", icon: "disc" },
-  { slug: "suspension", name: "جلوبندی و کمک فنر", icon: "circle-dot" },
-  { slug: "gearbox", name: "گیربکس و کلاچ", icon: "settings" },
-  { slug: "engine", name: "قطعات موتور", icon: "cog" },
+  { slug: "electrical", name: "سیستم برقی خودرو", icon: "spark-plug" },
+  { slug: "brakes", name: "لوازم ترمز", icon: "brake-disc" },
+  { slug: "suspension", name: "جلوبندی و کمک فنر", icon: "shock-absorber" },
+  { slug: "gearbox", name: "گیربکس و کلاچ", icon: "gearbox" },
+  { slug: "engine", name: "قطعات موتور", icon: "engine" },
 ];
 
 const brands = [

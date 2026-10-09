@@ -6,11 +6,13 @@ import { env } from "./env";
 export async function clientIp() {
   const h = await headers();
   if (env.TRUST_PROXY === "true") {
+    // The host's proxy appends the real client address as the LAST forwarded-for entry; anything before it
+    // (and an X-Real-IP header the proxy does not overwrite) could have been sent by the client itself.
+    const xff = h.get("x-forwarded-for");
+    const last = xff?.split(",").pop()?.trim();
+    if (last) return last.slice(0, 64);
     const real = h.get("x-real-ip");
     if (real) return real.trim().slice(0, 64);
-    // Clients can prepend fake entries; the last hop was added by our own proxy.
-    const xff = h.get("x-forwarded-for");
-    if (xff) return (xff.split(",").pop() ?? "").trim().slice(0, 64) || "unknown";
   }
   return "unknown";
 }

@@ -71,7 +71,7 @@ export async function addStaff(_: StaffFormState, formData: FormData): Promise<S
   if (existing?.passwordHash) return { ok: false, message: "این شماره قبلاً در فهرست مدیران است. برای تغییر کد، دکمه «ویرایش» کنار آن را بزنید." };
 
   const passwordHash = await hashPassword(d.code, env.OTP_PEPPER);
-  const data = { firstName: d.firstName, lastName: d.lastName || null, role: d.role, passwordHash, isActive: true };
+  const data = { firstName: d.firstName, lastName: d.lastName || null, role: d.role, passwordHash, weakStaffCode: false, isActive: true };
   const user = existing
     ? // A customer who already has an account keeps their orders and addresses; old sessions end.
       (await db.$transaction([db.user.update({ where: { id: existing.id }, data }), db.session.deleteMany({ where: { userId: existing.id } })]))[0]
@@ -104,7 +104,7 @@ export async function updateStaff(_: StaffFormState, formData: FormData): Promis
         firstName: d.firstName,
         lastName: d.lastName || null,
         role: d.role,
-        ...(codeChanged ? { passwordHash: await hashPassword(d.code, env.OTP_PEPPER) } : {}),
+        ...(codeChanged ? { passwordHash: await hashPassword(d.code, env.OTP_PEPPER), weakStaffCode: false } : {}),
       },
     }),
     // A new code or different access level signs the person out everywhere.

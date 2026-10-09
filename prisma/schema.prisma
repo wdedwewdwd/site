@@ -26,8 +26,10 @@ model User {
   email        String?
   nationalCode String?
   role         Role      @default(CUSTOMER)
-  // Staff only: hash of a fixed 4–6 digit login code used on the normal login form instead of an SMS code.
+  // Staff only: hash of a fixed 6-digit login code (older ones may be 4–5) used on the login form instead of an SMS code.
   passwordHash String?
+  // Set when the staff member last signed in with a code shorter than 6 digits; the panel asks them to change it.
+  weakStaffCode Boolean @default(false)
   isActive     Boolean   @default(true)
   lastLoginAt  DateTime?
   createdAt    DateTime  @default(now())

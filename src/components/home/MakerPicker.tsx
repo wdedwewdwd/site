@@ -124,7 +124,7 @@ function MakerCategories({ maker }: { maker: MakerSection }) {
                 className="group flex h-full flex-col items-center gap-2 rounded-card border border-line bg-white px-2 py-4 text-center transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--mk)] hover:shadow-[0_12px_28px_-18px_var(--mk)]"
               >
                 <span className="grid size-12 place-items-center rounded-full bg-[var(--mk-soft)] text-[var(--mk)] transition-colors group-hover:bg-[var(--mk)] group-hover:text-white md:size-14">
-                  <CategoryIcon name={c.icon} className="size-6" />
+                  <CategoryIcon name={c.icon} className="size-6 md:size-7" />
                 </span>
                 <span className="line-clamp-2 text-xs font-extrabold leading-5 md:text-[13px]">{c.name}</span>
                 <span className="text-[11px] text-muted">{faDigits(c.count)} قطعه</span>

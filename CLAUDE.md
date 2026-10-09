@@ -31,7 +31,8 @@ build (`APP_URL=https://example.com PAYMENT_PROVIDER=none ALLOW_CONSOLE_SMS=true
   and writes admin changes to the audit log. Prices always come from the DB. CSP with nonces in proxy.
 - Auth: everyone signs in with an SMS code at `/login`. Staff accounts have a fixed 4–6 digit code
   (`User.passwordHash`, scrypt + OTP_PEPPER) typed in the same form instead of an SMS code; no SMS is sent to
-  them and the form looks identical. The first admin on a new database is created with `npm run admin:set`; after that
+  them and the form looks identical. New/changed staff codes must be 6 digits and not trivial (`staffCodeSchema`);
+  older shorter codes still work but set `User.weakStaffCode`, which shows a «change your code» banner in the panel. The first admin on a new database is created with `npm run admin:set`; after that
   admins add/edit/remove staff (ADMIN or SUPPORT, phone + name + code) in Settings → «مدیران و پشتیبان‌ها»
   (`actions/admin/staff.ts`, re-enters the acting admin's own code). Removing access turns the person into a customer.
 - Dates/times: Jalali calendar and Asia/Tehran everywhere (`src/lib/jalali.ts`, `src/lib/format.ts`).
@@ -76,6 +77,9 @@ build (`APP_URL=https://example.com PAYMENT_PROVIDER=none ALLOW_CONSOLE_SMS=true
   channels hidden), built from `getContact()` in the shop layout.
 - Shop location: Settings → map picker (Leaflet + OpenStreetMap tiles, keys `shop_lat`/`shop_lng`); the contact page
   shows it and links to Neshan routing (`src/lib/location.ts`).
+- Category icons: names stored in `Category.icon`, whitelist + Persian labels in `src/lib/shop.ts`, renderers in
+  `components/ui/CategoryIcon.tsx`. Auto-part icons (spark-plug, shock-absorber, engine, brake-disc, gearbox) are drawn
+  on Lucide's grid in `components/ui/part-icons.ts` (`createLucideIcon`).
 - Inner pages use `PageBar` (mobile app bar with back button, desktop breadcrumbs + back).
 - Every admin page has a `HelpBox` explaining it in plain Persian; keep adding one for new pages.
 - Migrations: `prisma migrate dev` can fail on the shadow DB; writing the SQL by hand in

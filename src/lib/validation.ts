@@ -43,7 +43,18 @@ export const otpSchema = z
   .pipe(z.string().regex(new RegExp(`^\\d{${MIN_CODE_LENGTH},${OTP_LENGTH}}$`), "کد تأیید معتبر نیست"));
 
 /** A staff member's fixed login code. */
-export const staffCodeSchema = z.string().regex(new RegExp(`^\\d{${MIN_CODE_LENGTH},${OTP_LENGTH}}$`), "کد باید ۴ تا ۶ رقم باشد");
+/** New or changed staff codes must have 6 digits; older 4–5 digit codes still sign in (and get a warning). */
+export const STAFF_CODE_LENGTH = 6;
+/** Codes anyone would try first: one repeated digit or a straight run (123456, 987654). */
+function guessableCode(code: string) {
+  const d = [...code].map(Number);
+  const steps = new Set(d.slice(1).map((n, i) => n - d[i]));
+  return steps.size === 1 && [0, 1, -1].includes([...steps][0]);
+}
+export const staffCodeSchema = z
+  .string()
+  .regex(new RegExp(`^\\d{${STAFF_CODE_LENGTH}}$`), "کد ورود مدیران و پشتیبان‌ها باید ۶ رقم باشد")
+  .refine((c) => !guessableCode(c), "این کد خیلی ساده است (مثل ۱۲۳۴۵۶ یا ۱۱۱۱۱۱)؛ کد دیگری انتخاب کنید");
 
 /** Iranian postal codes are 10 digits. Optional: an empty value becomes null. */
 export const optionalPostalCodeSchema = z

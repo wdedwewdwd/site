@@ -1,12 +1,16 @@
 "use server";
 
+import { rm } from "node:fs/promises";
+import path from "node:path";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireStaff } from "@/lib/auth/session";
 import { audit } from "@/lib/audit";
-import { saveProductImage } from "@/lib/uploads";
+import { productListQuery } from "@/lib/admin-products";
+import { faDigits } from "@/lib/format";
+import { saveProductImage, UPLOAD_DIR } from "@/lib/uploads";
 import { uniqueSlug } from "@/lib/slug";
 import { idSchema, text, toEnDigits } from "@/lib/validation";
 
@@ -143,7 +147,9 @@ export async function saveProduct(_: ProductFormState, formData: FormData): Prom
 
   await audit(admin.id, id ? "product.update" : "product.create", "Product", product.id, { sku: product.sku, price: product.price, stock: product.stock });
   revalidatePath("/", "layout");
-  redirect(`/admin/products?saved=${product.id}`);
+  // Back to the list exactly as it was (filters, page), with the saved product highlighted.
+  const back = productListQuery(new URLSearchParams(String(formData.get("back") ?? "").slice(0, 600)));
+  redirect(`/admin/products?${back ? `${back}&` : ""}saved=${product.id}`);
 }
 
 export async function toggleProductActive(id: string) {
@@ -154,4 +160,82 @@ export async function toggleProductActive(id: string) {
   await db.product.update({ where: { id }, data: { isActive: !p.isActive } });
   await audit(admin.id, p.isActive ? "product.deactivate" : "product.activate", "Product", id);
   revalidatePath("/", "layout");
+}
+
+export type ProductActionResult = { ok: boolean; message: string };
+
+const quickSchema = z.discriminatedUnion("field", [
+  z.object({ id: idSchema, field: z.literal("price"), value: money("قیمت").pipe(z.number().min(1000, "قیمت باید حداقل ۱۰۰۰ تومان باشد")) }),
+  z.object({
+    id: idSchema,
+    field: z.literal("stock"),
+    value: z.string().transform((v) => toEnDigits(v).trim()).pipe(z.string().regex(/^\d{1,6}$/, "موجودی معتبر نیست")).transform(Number),
+  }),
+]);
+
+/** Inline edit of the selling price or stock from the product list. */
+export async function quickUpdateProduct(input: { id: string; field: "price" | "stock"; value: string }): Promise<ProductActionResult> {
+  const admin = await requireStaff(["ADMIN"]);
+  const parsed = quickSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "مقدار معتبر نیست." };
+  const d = parsed.data;
+  const p = await db.product.findUnique({ where: { id: d.id }, select: { sku: true, price: true, stock: true, compareAtPrice: true } });
+  if (!p) return { ok: false, message: "محصول یافت نشد." };
+  if (d.field === "price" && p.compareAtPrice !== null && d.value >= p.compareAtPrice) {
+    return { ok: false, message: "قیمت فروش باید کمتر از قیمت اصلی (خط‌خورده) باشد؛ برای تغییر تخفیف، محصول را باز کنید." };
+  }
+  await db.product.update({ where: { id: d.id }, data: { [d.field]: d.value } });
+  await audit(admin.id, `product.${d.field}`, "Product", d.id, { sku: p.sku, from: p[d.field], to: d.value });
+  revalidatePath("/", "layout");
+  return { ok: true, message: d.field === "price" ? "قیمت ذخیره شد." : "موجودی ذخیره شد." };
+}
+
+const bulkSchema = z.object({
+  ids: z.array(idSchema).min(1, "محصولی انتخاب نشده است.").max(200),
+  action: z.enum(["activate", "deactivate", "move", "delete"]),
+  categoryId: idSchema.optional(),
+});
+
+/** Uploaded product photos no product uses anymore (sample images under /images are never touched). */
+async function removeOrphanImages(urls: string[]) {
+  const names = urls.map((u) => u.match(/^\/media\/products\/([A-Za-z0-9_-]{16,64}\.webp)$/)?.[1]).filter((n): n is string => !!n);
+  if (!names.length) return;
+  const stillUsed = new Set((await db.productImage.findMany({ where: { url: { in: names.map((n) => `/media/products/${n}`) } }, select: { url: true } })).map((i) => i.url));
+  for (const n of names) if (!stillUsed.has(`/media/products/${n}`)) await rm(path.join(UPLOAD_DIR, "products", n), { force: true });
+}
+
+/** Actions on the products ticked in the list (or one product's delete button). */
+export async function bulkProducts(input: { ids: string[]; action: "activate" | "deactivate" | "move" | "delete"; categoryId?: string }): Promise<ProductActionResult> {
+  const admin = await requireStaff(["ADMIN"]);
+  const parsed = bulkSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "درخواست معتبر نیست." };
+  const { action, categoryId } = parsed.data;
+  const ids = [...new Set(parsed.data.ids)];
+  const products = await db.product.findMany({ where: { id: { in: ids } }, select: { id: true, sku: true } });
+  if (!products.length) return { ok: false, message: "محصولی یافت نشد." };
+  const found = products.map((p) => p.id);
+  const meta = { count: found.length, skus: products.slice(0, 50).map((p) => p.sku) };
+  const n = faDigits(found.length);
+
+  let message: string;
+  if (action === "activate" || action === "deactivate") {
+    await db.product.updateMany({ where: { id: { in: found } }, data: { isActive: action === "activate" } });
+    message = action === "activate" ? `${n} محصول فعال شد.` : `${n} محصول غیرفعال شد و در فروشگاه نمایش داده نمی‌شود.`;
+  } else if (action === "move") {
+    const category = categoryId ? await db.category.findUnique({ where: { id: categoryId }, select: { id: true, name: true } }) : null;
+    if (!category) return { ok: false, message: "دسته‌بندی مقصد را انتخاب کنید." };
+    await db.product.updateMany({ where: { id: { in: found } }, data: { categoryId: category.id } });
+    Object.assign(meta, { categoryId: category.id });
+    message = `${n} محصول به دسته «${category.name}» منتقل شد.`;
+  } else {
+    // Orders keep their own copy of the name, code and price, so order history stays intact.
+    const images = await db.productImage.findMany({ where: { productId: { in: found } }, select: { url: true } });
+    await db.product.deleteMany({ where: { id: { in: found } } });
+    await removeOrphanImages(images.map((i) => i.url));
+    message = `${n} محصول برای همیشه حذف شد.`;
+  }
+
+  await audit(admin.id, `product.bulk.${action}`, "Product", found.length === 1 ? found[0] : undefined, meta);
+  revalidatePath("/", "layout");
+  return { ok: true, message };
 }

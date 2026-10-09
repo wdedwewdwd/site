@@ -16,7 +16,7 @@ type Product = {
   images: { id: string; url: string }[]; fitments: { carModelId: string }[];
 };
 
-export function ProductForm({ product, categories, brands, cars }: { product?: Product; categories: Opt[]; brands: Opt[]; cars: CarRow[] }) {
+export function ProductForm({ product, categories, brands, cars, back = "" }: { product?: Product; categories: Opt[]; brands: Opt[]; cars: CarRow[]; back?: string }) {
   const [state, action, pending] = useActionState<ProductFormState, FormData>(saveProduct, null);
   const [, start] = useTransition();
   // Submitting through onSubmit (not the form action) keeps everything typed when the server reports an error.
@@ -32,6 +32,7 @@ export function ProductForm({ product, categories, brands, cars }: { product?: P
   return (
     <form onSubmit={onSubmit} className="grid gap-6 xl:grid-cols-[1fr_340px]" noValidate>
       <input type="hidden" name="id" value={product?.id ?? ""} />
+      <input type="hidden" name="back" value={back} />
       <div className="flex flex-col gap-6">
         <section className="card grid gap-5 p-5 md:grid-cols-2">
           <div className="md:col-span-2">

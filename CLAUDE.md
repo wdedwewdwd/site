@@ -51,6 +51,10 @@ build (`APP_URL=https://example.com PAYMENT_PROVIDER=none ALLOW_CONSOLE_SMS=true
   `shipping_config` JSON; defaults, schema and `quoteShipping` in `src/lib/shipping-shared.ts`, `getShippingConfig()`).
   Pricing: fixed (+ optional free-over amount), collect «پس‌کرایه» (`Order.shippingCollect`, cost 0) or free. Prices are
   always recomputed on the server in `placeOrder`.
+- Admin product list (`/admin/products`): filters, tabs (فعال، ناموجود، بدون عکس…) and sorts live in `src/lib/admin-products.ts`;
+  50 per page, default order is creation date so edits never reorder rows. Price/stock edit inline (`quickUpdateProduct`),
+  ticked products are activated/deactivated/moved/deleted together (`bulkProducts`, deletes unused uploaded photos).
+  Links to the edit page carry `?back=<list query>` so saving returns to the same filters and page (`?saved=` highlights it).
 - Product prices: the form shows "قیمت اصلی" + a discount switch (percent or sale price, `ProductPriceFields`); the DB
   stores `price` (paid) and `compareAtPrice` (struck-through). Car models are one shared list edited from the product
   form ("مدیریت خودروها", `actions/admin/cars.ts`); renaming keeps the slug, deleting removes it from all products.

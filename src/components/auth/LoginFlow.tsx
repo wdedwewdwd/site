@@ -21,10 +21,10 @@ export function LoginFlow({ next, reauth }: { next: string; reauth: boolean }) {
   return (
     <div className="w-full max-w-[400px] rounded-3xl border border-line bg-white p-6 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.12)] md:p-8">
       <div className="mb-6 flex flex-col items-center gap-2 text-center">
-        <Link href="/" aria-label="صفحه اصلی">
+        <Link href="/" aria-label="آریزون یدک — صفحه اصلی" className="flex flex-col items-center gap-2">
           <LogoMark className="h-12 w-[82px]" />
+          <span className="text-xl font-black">آریزون یدک</span>
         </Link>
-        <p className="text-xl font-black">آریزون یدک</p>
         <p className="text-[11px] text-muted">بازار آنلاین قطعات خودرو • ARIZON YADAK</p>
       </div>
 

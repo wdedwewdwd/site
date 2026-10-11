@@ -20,8 +20,13 @@ const nextConfig: NextConfig = {
     formats: ["image/avif", "image/webp"],
     // Only local images are optimized; no remote hosts are allowed.
     remotePatterns: [],
+    // Uploaded photos get a new random name whenever they change, so browsers can keep them for 30 days.
+    minimumCacheTTL: 30 * 24 * 60 * 60,
   },
   experimental: {
+    // Revisiting a page within 30 seconds (e.g. product → list → same product) is instant; any change made
+    // through the site (cart, orders…) still refreshes immediately.
+    staleTimes: { dynamic: 30 },
     // Room for two 4 MB images in one form (e.g. a banner with its phone version).
     serverActions: { bodySizeLimit: "9mb" },
   },

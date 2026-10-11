@@ -42,10 +42,10 @@ export async function SiteFooter() {
       <div className="container-page flex flex-col gap-12">
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-[360px_1fr_1fr_auto] lg:justify-between">
           <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-3">
+            <Link href="/" className="flex w-fit items-center gap-3" aria-label={`${SITE.name} — صفحه اصلی`}>
               <span className="text-lg font-black text-white">{SITE.name}</span>
               <LogoMark className="h-9 w-[61px]" />
-            </div>
+            </Link>
             <p className="text-[13px] leading-[1.9]">{SITE.description}</p>
             <address className="text-[13px] not-italic leading-[1.9] text-subtle">
               نشانی: {contact.addressLine}

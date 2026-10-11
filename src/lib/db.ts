@@ -6,12 +6,19 @@ import { env, isProd } from "./env";
 function create() {
   const adapter = new PrismaPg({
     connectionString: env.DATABASE_URL,
-    max: 10,
+    // A 40-customer test (sign-in, cart, checkout at once) exhausted 10 connections; PostgreSQL allows 100.
+    max: 20,
     // Recycle idle sockets so connections dropped by the server/proxy are not reused.
     idleTimeoutMillis: 30_000,
     connectionTimeoutMillis: 10_000,
   });
-  return new PrismaClient({ adapter, log: isProd ? ["error"] : ["error", "warn"] });
+  return new PrismaClient({
+    adapter,
+    log: isProd ? ["error"] : ["error", "warn"],
+    // Under a rush, a transaction (checkout, sign-in) waits for a free connection instead of failing after
+    // Prisma's default 2 s; it still has its own time limit once started.
+    transactionOptions: { maxWait: 10_000, timeout: 15_000 },
+  });
 }
 
 // Development: reuse one client per generated-client class across hot reloads. Keying by

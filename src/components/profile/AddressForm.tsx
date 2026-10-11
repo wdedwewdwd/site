@@ -5,6 +5,7 @@ import { LoaderCircle } from "lucide-react";
 import { saveAddress, type FormState } from "@/app/actions/profile";
 import { Field } from "@/components/ui/Field";
 import { PROVINCES } from "@/lib/iran";
+import { keepValuesOnSubmit } from "@/components/ui/keepValuesOnSubmit";
 
 type Address = {
   id: string;
@@ -22,7 +23,7 @@ export function AddressForm({ address, next, defaultName, defaultPhone }: { addr
   const [state, action, pending] = useActionState<FormState, FormData>(saveAddress, null);
   const e = state?.errors ?? {};
   return (
-    <form action={action} className="grid gap-5 md:grid-cols-2" noValidate>
+    <form onSubmit={keepValuesOnSubmit(action)} className="grid gap-5 md:grid-cols-2" noValidate>
       <input type="hidden" name="id" value={address?.id ?? ""} />
       {next && <input type="hidden" name="next" value={next} />}
       <Field label="نام و نام خانوادگی گیرنده" name="receiverName" placeholder="نام کامل را وارد کنید" defaultValue={address?.receiverName ?? defaultName} error={e.receiverName} required maxLength={80} autoComplete="name" />

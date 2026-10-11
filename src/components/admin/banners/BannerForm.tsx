@@ -6,6 +6,7 @@ import { saveBanner } from "@/app/actions/admin/banners";
 import type { AdminFormState } from "@/app/actions/admin/misc";
 import { BannerTile } from "@/components/home/BannerTile";
 import type { BannerDTO } from "@/lib/banners-shared";
+import { keepValuesOnSubmit } from "@/components/ui/keepValuesOnSubmit";
 
 export type LinkOption = { label: string; href: string };
 export type SizeHint = { name: string; desktop: string; mobile?: string };
@@ -83,7 +84,7 @@ export function BannerForm({
   const small = variant === "small";
 
   return (
-    <form action={action} className="flex flex-col gap-5">
+    <form onSubmit={keepValuesOnSubmit(action)} className="flex flex-col gap-5">
       <input type="hidden" name="id" value={banner?.id ?? ""} />
 
       {/* Live preview of this banner in its place */}

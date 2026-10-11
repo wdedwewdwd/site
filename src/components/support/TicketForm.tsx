@@ -5,12 +5,13 @@ import { LoaderCircle } from "lucide-react";
 import { createTicket, type TicketState } from "@/app/actions/support";
 import { Field } from "@/components/ui/Field";
 import { TICKET_CATEGORIES } from "@/lib/shop";
+import { keepValuesOnSubmit } from "@/components/ui/keepValuesOnSubmit";
 
 export function TicketForm({ orderRef }: { orderRef?: string }) {
   const [state, action, pending] = useActionState<TicketState, FormData>(createTicket, null);
   const e = state?.errors ?? {};
   return (
-    <form action={action} className="grid gap-5 md:grid-cols-2" noValidate>
+    <form onSubmit={keepValuesOnSubmit(action)} className="grid gap-5 md:grid-cols-2" noValidate>
       <Field label="موضوع" name="subject" required maxLength={100} error={e.subject} className="md:col-span-2" />
       <div>
         <label htmlFor="f-category" className="label">دسته‌بندی درخواست</label>

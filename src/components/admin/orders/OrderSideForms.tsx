@@ -6,6 +6,7 @@ import { saveAdminNote, updateShippingInfo, type OrderActionState } from "@/app/
 import { Modal } from "@/components/ui/Modal";
 import { toast } from "@/components/ui/Toaster";
 import { PROVINCES } from "@/lib/iran";
+import { keepValuesOnSubmit } from "@/components/ui/keepValuesOnSubmit";
 
 type Shipping = { receiverName: string; receiverPhone: string; province: string; city: string; postalCode: string | null; fullAddress: string };
 
@@ -37,7 +38,7 @@ function ShippingForm({ orderId, shipping, onDone }: { orderId: string; shipping
   }, [state]);
 
   return (
-    <form action={action} className="grid gap-4 sm:grid-cols-2">
+    <form onSubmit={keepValuesOnSubmit(action)} className="grid gap-4 sm:grid-cols-2">
       <input type="hidden" name="orderId" value={orderId} />
       <label className="flex flex-col gap-1.5 text-xs font-bold">نام گیرنده<input name="receiverName" defaultValue={shipping.receiverName} required className="input" /></label>
       <label className="flex flex-col gap-1.5 text-xs font-bold">موبایل گیرنده<input name="receiverPhone" defaultValue={shipping.receiverPhone} dir="ltr" required className="input" /></label>
@@ -61,7 +62,7 @@ function ShippingForm({ orderId, shipping, onDone }: { orderId: string; shipping
 export function AdminNoteForm({ orderId, note }: { orderId: string; note: string | null }) {
   const [state, action, pending] = useActionState<OrderActionState, FormData>(saveAdminNote, null);
   return (
-    <form action={action} className="flex flex-col gap-2">
+    <form onSubmit={keepValuesOnSubmit(action)} className="flex flex-col gap-2">
       <input type="hidden" name="orderId" value={orderId} />
       <textarea
         name="adminNote"

@@ -6,6 +6,7 @@ import { saveShopLocation, type AdminFormState } from "@/app/actions/admin/misc"
 import { LeafletMap } from "@/components/map/LeafletMap";
 import { DEFAULT_CENTER, inIran, neshanRouteUrl, parseLatLng, roundCoord, type LatLng } from "@/lib/location";
 import { toEnDigits } from "@/lib/validation";
+import { keepValuesOnSubmit } from "@/components/ui/keepValuesOnSubmit";
 
 /** Admin picker for the shop pin: click/drag on the map, use the phone's GPS, or paste a Neshan/Google link. */
 export function ShopLocationForm({ saved }: { saved: LatLng | null }) {
@@ -58,7 +59,7 @@ export function ShopLocationForm({ saved }: { saved: LatLng | null }) {
 
   const valid = inIran(point);
   return (
-    <form action={action} className="flex flex-col gap-4">
+    <form onSubmit={keepValuesOnSubmit(action)} className="flex flex-col gap-4">
       <LeafletMap center={point} editable onChange={set} className="h-80 w-full overflow-hidden rounded-xl border border-line md:h-96" label="نقشه برای انتخاب موقعیت فروشگاه" />
 
       <div className="flex flex-wrap gap-2">

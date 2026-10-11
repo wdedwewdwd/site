@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef } from "react";
 import { LoaderCircle, Send } from "lucide-react";
 import type { TicketState } from "@/app/actions/support";
+import { keepValuesOnSubmit } from "@/components/ui/keepValuesOnSubmit";
 
 export function ReplyForm({ ticketId, action }: { ticketId: string; action: (s: TicketState, fd: FormData) => Promise<TicketState> }) {
   const [state, formAction, pending] = useActionState<TicketState, FormData>(action, null);
@@ -12,7 +13,7 @@ export function ReplyForm({ ticketId, action }: { ticketId: string; action: (s: 
   }, [state]);
 
   return (
-    <form ref={ref} action={formAction} className="flex flex-col gap-3">
+    <form ref={ref} onSubmit={keepValuesOnSubmit(formAction)} className="flex flex-col gap-3">
       <input type="hidden" name="ticketId" value={ticketId} />
       <label htmlFor="reply" className="sr-only">پاسخ</label>
       <textarea id="reply" name="body" rows={3} maxLength={3000} required placeholder="پیام خود را بنویسید..." className="input resize-y" />

@@ -3,6 +3,7 @@
 import { useActionState, useTransition } from "react";
 import { TicketPercent, X } from "lucide-react";
 import { applyDiscount, removeDiscount } from "@/app/actions/cart";
+import { keepValuesOnSubmit } from "@/components/ui/keepValuesOnSubmit";
 
 export function DiscountForm({ applied, error }: { applied: string | null; error: string | null }) {
   const [state, action, pending] = useActionState(applyDiscount, null);
@@ -23,7 +24,7 @@ export function DiscountForm({ applied, error }: { applied: string | null; error
   }
 
   return (
-    <form action={action} className="card flex flex-col gap-2 p-3">
+    <form onSubmit={keepValuesOnSubmit(action)} className="card flex flex-col gap-2 p-3">
       <div className="flex items-center gap-2">
         <TicketPercent className="size-5 shrink-0 text-muted" aria-hidden />
         <label htmlFor="discount" className="sr-only">کد تخفیف</label>

@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef } from "react";
 import { LoaderCircle } from "lucide-react";
 import { changeOwnPassword, type ChangePasswordState } from "@/app/actions/admin-auth";
+import { keepValuesOnSubmit } from "@/components/ui/keepValuesOnSubmit";
 
 export function ChangePasswordForm() {
   const [state, action, pending] = useActionState<ChangePasswordState, FormData>(changeOwnPassword, null);
@@ -12,7 +13,7 @@ export function ChangePasswordForm() {
   }, [state]);
 
   return (
-    <form ref={ref} action={action} className="flex flex-col gap-4">
+    <form ref={ref} onSubmit={keepValuesOnSubmit(action)} className="flex flex-col gap-4">
       <div className="grid gap-4 sm:grid-cols-3">
         <label className="flex flex-col gap-1 text-xs font-bold">کد فعلی<input name="current" type="password" inputMode="numeric" maxLength={6} autoComplete="current-password" required dir="ltr" className="input py-2" /></label>
         <label className="flex flex-col gap-1 text-xs font-bold">کد جدید<input name="next" type="password" inputMode="numeric" maxLength={6} autoComplete="new-password" required dir="ltr" className="input py-2" /></label>

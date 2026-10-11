@@ -88,8 +88,11 @@ export function AdminNav({ name, role, badges: serverBadges }: { name: string; r
         <button type="button" onClick={() => setOpen(true)} aria-label="باز کردن منو" aria-expanded={open} className="grid size-9 place-items-center rounded-lg hover:bg-white/10">
           <Menu className="size-6" />
         </button>
-        <span className="text-sm font-black">پنل مدیریت آریزون</span>
-        <LogoMark className="h-6 w-[40px]" />
+        {/* Logo and name lead to the shop's home page, like everywhere else on the site. */}
+        <Link href="/" className="flex items-center gap-2" title="رفتن به صفحه اصلی فروشگاه">
+          <span className="text-sm font-black">پنل مدیریت آریزون</span>
+          <LogoMark className="h-6 w-[40px]" />
+        </Link>
       </div>
       {open && (
         <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="منوی پنل مدیریت">
@@ -128,13 +131,17 @@ function NavContent({
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="flex shrink-0 items-center justify-between gap-3 px-5 pb-4 pt-5">
-        <span className="text-base font-black">پنل مدیریت آریزون</span>
+        <Link href="/" onClick={onNavigate} className="text-base font-black hover:text-white/80" title="رفتن به صفحه اصلی فروشگاه">
+          پنل مدیریت آریزون
+        </Link>
         {onClose ? (
           <button type="button" onClick={onClose} className="grid size-9 place-items-center rounded-lg text-white/70 hover:bg-white/10 hover:text-white" aria-label="بستن منو">
             <X className="size-5" />
           </button>
         ) : (
-          <LogoMark className="h-8 w-[54px]" />
+          <Link href="/" aria-label="صفحه اصلی فروشگاه" title="رفتن به صفحه اصلی فروشگاه">
+            <LogoMark className="h-8 w-[54px]" />
+          </Link>
         )}
       </div>
 

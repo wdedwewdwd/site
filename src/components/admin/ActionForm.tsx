@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef } from "react";
 import { LoaderCircle } from "lucide-react";
 import type { AdminFormState } from "@/app/actions/admin/misc";
+import { keepValuesOnSubmit } from "@/components/ui/keepValuesOnSubmit";
 
 /** Small wrapper for admin forms: pending state, result message, reset on success. */
 export function ActionForm({
@@ -25,7 +26,7 @@ export function ActionForm({
   }, [state, resetOnSuccess]);
 
   return (
-    <form ref={ref} action={formAction} className={className}>
+    <form ref={ref} onSubmit={keepValuesOnSubmit(formAction)} className={className}>
       {children}
       <div className="flex flex-wrap items-center gap-3">
         <button type="submit" disabled={pending} className="btn-primary py-2.5">

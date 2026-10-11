@@ -5,6 +5,7 @@ import { BadgeCheck, LoaderCircle } from "lucide-react";
 import { updateAccount, type FormState } from "@/app/actions/profile";
 import { Field } from "@/components/ui/Field";
 import { faDigits } from "@/lib/format";
+import { keepValuesOnSubmit } from "@/components/ui/keepValuesOnSubmit";
 
 type Props = {
   phone: string;
@@ -16,7 +17,7 @@ export function AccountForm({ phone, defaults, next }: Props) {
   const [state, action, pending] = useActionState<FormState, FormData>(updateAccount, null);
   const e = state?.errors ?? {};
   return (
-    <form action={action} className="grid gap-5 md:grid-cols-2" noValidate>
+    <form onSubmit={keepValuesOnSubmit(action)} className="grid gap-5 md:grid-cols-2" noValidate>
       {next && <input type="hidden" name="next" value={next} />}
       <Field label="نام" name="firstName" defaultValue={defaults.firstName} error={e.firstName} required maxLength={50} autoComplete="given-name" />
       <Field label="نام خانوادگی" name="lastName" defaultValue={defaults.lastName} error={e.lastName} required maxLength={50} autoComplete="family-name" />

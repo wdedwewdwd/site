@@ -22,6 +22,7 @@ import {
 } from "@/lib/contact-shared";
 import { SupportChannels } from "@/components/support/SupportChannels";
 import { ChannelIcon, type Channel } from "@/components/support/ChannelIcon";
+import { keepValuesOnSubmit } from "@/components/ui/keepValuesOnSubmit";
 
 type Values = Record<ContactKey, string>;
 
@@ -150,7 +151,7 @@ export function ContactForm({ initial }: { initial: Values }) {
   );
 
   return (
-    <form action={action} className="grid gap-6 xl:grid-cols-[1fr_340px]">
+    <form onSubmit={keepValuesOnSubmit(action)} className="grid gap-6 xl:grid-cols-[1fr_340px]">
       <div className="flex flex-col gap-6">
         <section className="card flex flex-col gap-4 p-5">
           <h2 className="text-base font-black">شماره‌های تماس</h2>

@@ -26,6 +26,11 @@ Checks before committing: `npx tsc --noEmit`, `npx eslint src scripts`, and for 
 build (`APP_URL=https://example.com PAYMENT_PROVIDER=none ALLOW_CONSOLE_SMS=true npx next build`).
 
 ## Conventions and decisions
+- Forms backed by a server action use `onSubmit={keepValuesOnSubmit(action)}` (`components/ui/keepValuesOnSubmit.ts`), never
+  `<form action={…}>`: React resets an action form after every submit, so a server-side validation error used to wipe
+  everything the person typed. Forms that should clear after success call `form.reset()` when the state is `ok`.
+- DB pool: 20 connections, transactions wait up to 10 s for one (`src/lib/db.ts`); a 40-customer browser test
+  (sign-in, cart, simultaneous checkout of the last units) passed with no errors and no overselling.
 - Security first: every server action/route validates with Zod, re-checks auth (`requireUser` /
   `requireStaff` in `src/lib/auth/session.ts`), scopes queries by `userId`, rate-limits (`src/lib/rate-limit.ts`)
   and writes admin changes to the audit log. Prices always come from the DB. CSP with nonces in proxy.

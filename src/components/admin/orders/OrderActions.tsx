@@ -7,6 +7,7 @@ import { Modal } from "@/components/ui/Modal";
 import { toast } from "@/components/ui/Toaster";
 import { actionsFor, CANCEL_REASONS, CARRIERS, CARRIERS_WITHOUT_TRACKING, REFUND_REASONS, type OrderAction } from "@/lib/order-flow";
 import type { OrderStatus } from "@/generated/prisma/client";
+import { keepValuesOnSubmit } from "@/components/ui/keepValuesOnSubmit";
 
 type Props = {
   orderId: string;
@@ -104,7 +105,7 @@ function ActionForm({ action, orderId, carrier, trackingCode, paymentMethod, has
   const offerCod = action.to === "DELIVERED" && paymentMethod === "COD" && !hasPayment;
 
   return (
-    <form action={formAction} className="flex flex-col gap-4">
+    <form onSubmit={keepValuesOnSubmit(formAction)} className="flex flex-col gap-4">
       <input type="hidden" name="orderId" value={orderId} />
       <input type="hidden" name="to" value={action.to} />
 
@@ -176,7 +177,7 @@ function CodForm({ orderId, total, onDone }: { orderId: string; total: string; o
   const [state, formAction, pending] = useActionState<OrderActionState, FormData>(recordCodPayment, null);
   useSuccess(state, onDone);
   return (
-    <form action={formAction} className="flex flex-col gap-4">
+    <form onSubmit={keepValuesOnSubmit(formAction)} className="flex flex-col gap-4">
       <input type="hidden" name="orderId" value={orderId} />
       <p className="text-sm">مبلغ دریافتی: <b>{total} تومان</b></p>
       <div>

@@ -9,6 +9,7 @@ import { toast } from "@/components/ui/Toaster";
 import { CategoryIcon } from "@/components/ui/CategoryIcon";
 import { faDigits } from "@/lib/format";
 import { CATEGORY_ICON_LABELS, CATEGORY_ICON_NAMES } from "@/lib/shop";
+import { keepValuesOnSubmit } from "@/components/ui/keepValuesOnSubmit";
 
 export type CategoryRow = {
   id: string;
@@ -262,7 +263,7 @@ function CategoryForm({ editing, mains, onDone }: { editing: Editing; mains: Cat
   useOnSuccess(state, onDone);
 
   return (
-    <form action={action} className="flex flex-col gap-5">
+    <form onSubmit={keepValuesOnSubmit(action)} className="flex flex-col gap-5">
       <input type="hidden" name="id" value={c?.id ?? ""} />
 
       <div>
@@ -336,7 +337,7 @@ function DeleteForm({ category, all, onDone }: { category: CategoryRow; all: Cat
   useOnSuccess(state, onDone);
 
   return (
-    <form action={action} className="flex flex-col gap-5">
+    <form onSubmit={keepValuesOnSubmit(action)} className="flex flex-col gap-5">
       <input type="hidden" name="id" value={category.id} />
       <div className="flex items-start gap-3 rounded-xl bg-brand-soft p-4 text-sm leading-7 text-brand">
         <Trash2 className="mt-1 size-5 shrink-0" />

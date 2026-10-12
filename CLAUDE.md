@@ -60,6 +60,11 @@ build (`APP_URL=https://example.com PAYMENT_PROVIDER=none ALLOW_CONSOLE_SMS=true
   50 per page, default order is creation date so edits never reorder rows. Price/stock edit inline (`quickUpdateProduct`),
   ticked products are activated/deactivated/moved/deleted together (`bulkProducts`, deletes unused uploaded photos).
   Links to the edit page carry `?back=<list query>` so saving returns to the same filters and page (`?saved=` highlights it).
+  «دریافت خروجی» (`ExportMenu`) exports the filtered list, all pages, in list order (photo, name, SKU, current price,
+  empty «قیمت جدید»): Excel from `/api/admin/products/export` (hand-written XLSX in `src/lib/xlsx.ts` with fflate, no
+  library; webp photos become JPEG thumbnails that move and size with their cell, so Excel sorting/filtering keeps them;
+  checked by opening in real Excel) and PDF via the print page `/admin/print/products` (`?auto=1` opens the print
+  dialog once photos load; named `@page price-list` in globals.css adds «صفحه x از y»; the owner picks «Save as PDF»).
 - Product prices: the form shows "قیمت اصلی" + a discount switch (percent or sale price, `ProductPriceFields`); the DB
   stores `price` (paid) and `compareAtPrice` (struck-through). Car models are one shared list edited from the product
   form ("مدیریت خودروها", `actions/admin/cars.ts`); renaming keeps the slug, deleting removes it from all products.

@@ -113,3 +113,19 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Printed price list (/admin/print/products): A4 with page numbers at the bottom. Named page, so other printouts
+   (invoices) keep the browser's default page settings. */
+@page price-list {
+  size: A4 portrait;
+  margin: 12mm 10mm 14mm;
+  @bottom-center {
+    content: "صفحه " counter(page, persian) " از " counter(pages, persian);
+    font-family: var(--font-vazirmatn), Tahoma, sans-serif;
+    font-size: 8pt;
+    color: #5f666d;
+  }
+}
+.print-price-list {
+  page: price-list;
+}

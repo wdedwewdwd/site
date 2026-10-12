@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, Download, FileSpreadsheet, FileText, LoaderCircle } from "lucide-react";
+import Link from "next/link";
+import { ChevronDown, Download, FileSpreadsheet, FileText, LoaderCircle, Upload } from "lucide-react";
 import { faDigits } from "@/lib/format";
 
 /** File name from a Content-Disposition header (prefers the UTF-8 form). */
@@ -107,6 +108,14 @@ export function ExportMenu({ query, count }: { query: string; count: number }) {
               <span className="block text-[11px] text-muted">در پنجره‌ی چاپ «<bdi>Save as PDF</bdi>» را بزنید</span>
             </span>
           </a>
+          <div className="my-1 border-t border-line" />
+          <Link role="menuitem" href="/admin/products/prices" onClick={() => setOpen(false)} className={item}>
+            <Upload className="mt-0.5 size-5 shrink-0 text-info" aria-hidden />
+            <span>
+              <span className="block text-sm font-bold">بارگذاری قیمت‌های جدید</span>
+              <span className="block text-[11px] text-muted">فایل اکسلی که ستون «قیمت جدید» آن را پر کرده‌اید</span>
+            </span>
+          </Link>
         </div>
       )}
       {error && (

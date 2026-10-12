@@ -65,6 +65,12 @@ build (`APP_URL=https://example.com PAYMENT_PROVIDER=none ALLOW_CONSOLE_SMS=true
   library; webp photos become JPEG thumbnails that move and size with their cell, so Excel sorting/filtering keeps them;
   checked by opening in real Excel) and PDF via the print page `/admin/print/products` (`?auto=1` opens the print
   dialog once photos load; named `@page price-list` in globals.css adds «صفحه x از y»; the owner picks «Save as PDF»).
+  The filled-in file comes back at `/admin/products/prices` (menu item «بارگذاری قیمت‌های جدید»): `src/lib/xlsx-read.ts`
+  reads the first sheet (Excel re-saves use shared strings), `planPriceImport` (`src/lib/price-import.ts`) finds the
+  «کد کالا»/«قیمت جدید» columns by title, accepts Persian/Arabic digits and separators, skips empty cells and reports bad
+  rows (not a number, < 1000, decimals, unknown or conflicting SKU, discounted product priced ≥ its struck price). Preview
+  first; «اعمال» re-reads the same file and writes only if the change list's digest still matches and each price is
+  unchanged (one transaction), then logs `product.price_import` with every from/to.
 - Product prices: the form shows "قیمت اصلی" + a discount switch (percent or sale price, `ProductPriceFields`); the DB
   stores `price` (paid) and `compareAtPrice` (struck-through). Car models are one shared list edited from the product
   form ("مدیریت خودروها", `actions/admin/cars.ts`); renaming keeps the slug, deleting removes it from all products.

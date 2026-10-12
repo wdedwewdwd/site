@@ -20,6 +20,7 @@ import { PageHeader } from "@/components/admin/PageHeader";
 import { HelpBox } from "@/components/admin/HelpBox";
 import { ProductsToolbar } from "@/components/admin/products/ProductsToolbar";
 import { ProductList, type ProductRow } from "@/components/admin/products/ProductList";
+import { ExportMenu } from "@/components/admin/products/ExportMenu";
 
 export const metadata = { title: "محصولات" };
 
@@ -52,6 +53,9 @@ export default async function AdminProductsPage({ searchParams }: PageProps<"/ad
   const back = productListQuery(sp);
   const savedId = typeof sp.saved === "string" && idSchema.safeParse(sp.saved).success ? sp.saved : undefined;
   const filtered = !!(f.q || f.category || f.brand || f.sort !== DEFAULT_PRODUCT_SORT);
+  // Exports cover every page of the current list, so they take the filters without the page number.
+  const exportQuery = new URLSearchParams(back);
+  exportQuery.delete("page");
 
   const qs = (patch: Record<string, string | null>) => {
     const p = new URLSearchParams(back);
@@ -84,6 +88,7 @@ export default async function AdminProductsPage({ searchParams }: PageProps<"/ad
   return (
     <>
       <PageHeader title="محصولات">
+        <ExportMenu query={exportQuery.toString()} count={total} />
         <Link href="/admin/products/new" className="btn-primary py-2.5"><Plus className="size-4" /> افزودن محصول</Link>
       </PageHeader>
       <HelpBox
@@ -93,6 +98,7 @@ export default async function AdminProductsPage({ searchParams }: PageProps<"/ad
           "با کادر جستجو بر اساس نام، کد کالا، کد فنی (OEM) یا برند پیدا کنید؛ چند کلمه هم می‌شود («لنت ۲۰۶ بوش»). دسته، برند و ترتیب نمایش را هم می‌توانید انتخاب کنید.",
           "برای تغییر سریع قیمت یا موجودی، روی عدد آن در جدول بزنید، عدد جدید را بنویسید و Enter بزنید. برای بقیه اطلاعات (عکس، توضیحات، تخفیف، خودروها) روی نام محصول یا آیکون مداد بزنید؛ بعد از ذخیره به همین صفحه و همین فیلترها برمی‌گردید.",
           "برای کار گروهی، محصولات را تیک بزنید؛ نواری پایین صفحه باز می‌شود برای فعال یا غیرفعال کردن، تغییر دسته یا حذف همه آن‌ها با هم.",
+          "با «دریافت خروجی» فهرست همه محصولات را (همه صفحه‌ها، با همان فیلتر و ترتیبی که انتخاب کرده‌اید) به صورت فایل اکسل یا PDF بگیرید: عکس، نام، کد کالا، قیمت فعلی و یک ستون خالی «قیمت جدید» برای نوشتن قیمت‌های تازه. برای PDF، در پنجره‌ی چاپ «Save as PDF» را انتخاب کنید.",
           "«غیرفعال» محصول را بدون حذف از فروشگاه پنهان می‌کند. «حذف» برای همیشه است؛ سفارش‌های قبلی با نام و قیمت کالا سر جایشان می‌مانند.",
         ]}
       />

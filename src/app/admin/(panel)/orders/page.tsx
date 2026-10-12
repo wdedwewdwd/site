@@ -148,7 +148,7 @@ export default async function AdminOrdersPage({ searchParams }: PageProps<"/admi
       </ul>
 
       {/* Tablets and desktops: table */}
-      <div className="card hidden overflow-x-auto md:block">
+      <div className="card relative hidden overflow-x-auto md:block">
         <table className="w-full min-w-[1000px] text-[13px]">
           <thead className="bg-canvas text-muted">
             <tr>

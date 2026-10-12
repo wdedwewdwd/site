@@ -126,7 +126,7 @@ export function ProductList({ rows, categories, back, savedId }: { rows: Product
       </ul>
 
       {/* Tablets and desktops: table */}
-      <div className="card hidden overflow-x-auto md:block">
+      <div className="card relative hidden overflow-x-auto md:block">
         <table className="w-full min-w-[960px] text-[13px]">
           <thead className="bg-canvas text-muted">
             <tr>

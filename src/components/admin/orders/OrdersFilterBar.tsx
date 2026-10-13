@@ -14,7 +14,6 @@ type Props = {
   preset: string | null;
   presets: readonly { key: string; label: string }[];
   q: string;
-  pay: string;
   noPostal: boolean;
   exportHref: string;
   filtered: boolean;
@@ -58,11 +57,6 @@ export function OrdersFilterBar(props: Props) {
         onPreset={(key) => go({ p: key === "all" ? null : key, from: null, to: null })}
         onRange={(f, t) => go({ p: null, from: jKey(f), to: jKey(t) })}
       />
-      <select value={props.pay} onChange={(e) => go({ pay: e.target.value })} aria-label="روش پرداخت" className="h-11 rounded-xl border border-line bg-white px-3 text-sm">
-        <option value="">همه روش‌های پرداخت</option>
-        <option value="ONLINE">درگاه آنلاین</option>
-        <option value="COD">پرداخت در محل</option>
-      </select>
       <label className="flex h-11 cursor-pointer items-center gap-2 rounded-xl border border-line bg-white px-3 text-sm">
         <input type="checkbox" checked={props.noPostal} onChange={(e) => go({ nopostal: e.target.checked ? "1" : null })} className="size-4 accent-brand" />
         فقط بدون کد پستی

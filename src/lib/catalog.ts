@@ -152,3 +152,9 @@ export async function carRows() {
   });
   return cars.map(({ _count, ...c }) => ({ ...c, products: _count.fitments }));
 }
+
+/** Shared brand list for the product form, with how many products use each brand. */
+export async function brandRows() {
+  const brands = await db.brand.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, latin: true, _count: { select: { products: true } } } });
+  return brands.map(({ _count, ...b }) => ({ ...b, products: _count.products }));
+}

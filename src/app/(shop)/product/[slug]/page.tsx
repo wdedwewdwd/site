@@ -107,7 +107,8 @@ export default async function ProductPage({ params }: PageProps<"/product/[slug]
             <div className="flex flex-wrap items-center gap-2">
               {product.brand && (
                 <span className="text-xs font-bold text-brand">
-                  {product.brand.name} | {product.brand.latin}
+                  {product.brand.name}
+                  {product.brand.latin && <> | <bdi dir="ltr">{product.brand.latin}</bdi></>}
                 </span>
               )}
               <span className="flex items-center gap-1 rounded-md bg-success-soft px-2 py-1 text-[11px] font-bold text-success">

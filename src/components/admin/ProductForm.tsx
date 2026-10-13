@@ -5,6 +5,7 @@ import { useActionState, useTransition } from "react";
 import { LoaderCircle } from "lucide-react";
 import { saveProduct, type ProductFormState } from "@/app/actions/admin/products";
 import { Field } from "@/components/ui/Field";
+import { BrandManager, type BrandRow } from "./BrandManager";
 import { CarModelManager, type CarRow } from "./CarModelManager";
 import { ProductPriceFields } from "./ProductPriceFields";
 
@@ -16,7 +17,7 @@ type Product = {
   images: { id: string; url: string }[]; fitments: { carModelId: string }[];
 };
 
-export function ProductForm({ product, categories, brands, cars, back = "" }: { product?: Product; categories: Opt[]; brands: Opt[]; cars: CarRow[]; back?: string }) {
+export function ProductForm({ product, categories, brands, cars, back = "" }: { product?: Product; categories: Opt[]; brands: BrandRow[]; cars: CarRow[]; back?: string }) {
   const [state, action, pending] = useActionState<ProductFormState, FormData>(saveProduct, null);
   const [, start] = useTransition();
   // Submitting through onSubmit (not the form action) keeps everything typed when the server reports an error.
@@ -73,10 +74,13 @@ export function ProductForm({ product, categories, brands, cars, back = "" }: { 
             <p className="mt-1.5 text-xs text-muted">دسته جدید را از منوی «دسته‌بندی‌ها» بسازید.</p>
           </div>
           <div>
-            <label htmlFor="f-brand" className="label">برند</label>
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <label htmlFor="f-brand" className="label mb-0">برند</label>
+              <BrandManager brands={brands} />
+            </div>
             <select id="f-brand" name="brandId" defaultValue={product?.brandId ?? ""} className="input">
               <option value="">بدون برند</option>
-              {brands.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+              {brands.map((b) => <option key={b.id} value={b.id}>{b.latin ? `${b.name} (${b.latin})` : b.name}</option>)}
             </select>
             <p className="mt-1.5 text-xs text-muted">برند سازنده قطعه؛ در فیلتر برندها نمایش داده می‌شود.</p>
           </div>

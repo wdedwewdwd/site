@@ -17,11 +17,11 @@ import { idSchema } from "@/lib/validation";
 
 type Result = { ok: false; error: string };
 
+// Payment is always online: cash on delivery was removed (older orders may still say COD).
 const placeSchema = z.object({
   // Not needed for «تحویل حضوری».
   addressId: z.union([z.literal(""), idSchema]).optional(),
   shipping: z.enum(SHIPPING_METHODS),
-  payment: z.enum(["ONLINE", "COD"]),
 });
 
 class CheckoutError extends Error {}
@@ -30,8 +30,8 @@ export async function placeOrder(input: z.input<typeof placeSchema>): Promise<Re
   const user = await requireUser("/checkout");
   const parsed = placeSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "اطلاعات سفارش نامعتبر است." };
-  const { addressId, shipping, payment } = parsed.data;
-  if (payment === "ONLINE" && !onlinePaymentEnabled()) return { ok: false, error: "پرداخت آنلاین در حال حاضر فعال نیست." };
+  const { addressId, shipping } = parsed.data;
+  if (!onlinePaymentEnabled()) return { ok: false, error: "پرداخت آنلاین هنوز فعال نشده است؛ برای ثبت سفارش با پشتیبانی تماس بگیرید." };
 
   const rl = await rateLimit(`checkout:${user.id}`, 10, 600);
   if (!rl.ok) return { ok: false, error: "تعداد درخواست‌ها زیاد است. چند دقیقه دیگر تلاش کنید." };
@@ -88,9 +88,8 @@ export async function placeOrder(input: z.input<typeof placeSchema>): Promise<Re
         // Atomic stock reservation: fails if someone else bought the last units.
         const reserved = await tx.product.updateMany({
           where: { id: p.id, stock: { gte: item.quantity } },
-          // Cash-on-delivery orders are confirmed right away, so they count as sold now;
-          // online orders count once the payment is verified.
-          data: { stock: { decrement: item.quantity }, ...(payment === "COD" ? { soldCount: { increment: item.quantity } } : {}) },
+          // Counts as sold once the payment is verified.
+          data: { stock: { decrement: item.quantity } },
         });
         if (reserved.count === 0) throw new CheckoutError(`موجودی «${p.name}» کافی نیست.`);
         subtotal += p.price * item.quantity;
@@ -115,13 +114,12 @@ export async function placeOrder(input: z.input<typeof placeSchema>): Promise<Re
       const quote = quoteShipping(method, subtotal - discount);
       const shippingCost = quote.cost;
       const total = subtotal - discount + shippingCost;
-      const initialStatus = payment === "COD" ? "PROCESSING" : "PENDING_PAYMENT";
 
       const created = await tx.order.create({
         data: {
           userId: user.id,
-          status: initialStatus,
-          paymentMethod: payment,
+          status: "PENDING_PAYMENT",
+          paymentMethod: "ONLINE",
           shippingMethod: shipping,
           subtotal,
           discount,
@@ -136,7 +134,7 @@ export async function placeOrder(input: z.input<typeof placeSchema>): Promise<Re
               return { productId: p.id, name: p.name, sku: p.sku, unitPrice: p.price, quantity: i.quantity };
             }),
           },
-          events: { create: { status: initialStatus, note: payment === "COD" ? "ثبت سفارش با پرداخت در محل" : "ثبت سفارش" } },
+          events: { create: { status: "PENDING_PAYMENT", note: "ثبت سفارش" } },
         },
         select: { id: true, number: true, total: true },
       });
@@ -153,13 +151,6 @@ export async function placeOrder(input: z.input<typeof placeSchema>): Promise<Re
     data: { actorId: user.id, action: "order.create", entity: "Order", entityId: order.id, ip: await clientIp() },
   });
   revalidatePath("/", "layout");
-
-  if (payment === "COD") {
-    await db.notification.create({
-      data: { userId: user.id, title: `سفارش #${order.number} ثبت شد`, body: "سفارش شما ثبت شد و در حال آماده‌سازی است.", href: `/profile/orders/${order.number}` },
-    });
-    redirect(`/checkout/result/${order.number}`);
-  }
 
   const pay = await beginOnlinePayment(order, user.phone);
   if (!pay.ok) redirect(`/profile/orders/${order.number}?pay=failed`);

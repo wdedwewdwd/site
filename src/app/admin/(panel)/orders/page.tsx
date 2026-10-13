@@ -74,7 +74,7 @@ export default async function AdminOrdersPage({ searchParams }: PageProps<"/admi
       <PageHeader title="سفارش‌ها" />
       <HelpBox
         items={[
-          "کارهای روزانه در تب «نیاز به اقدام» است: سفارش‌های پرداخت‌شده و سفارش‌های در حال آماده‌سازی (از جمله سفارش‌های پرداخت در محل)، قدیمی‌ترین بالا. عدد قرمز منو همین تعداد است.",
+          "کارهای روزانه در تب «نیاز به اقدام» است: سفارش‌های پرداخت‌شده و سفارش‌های در حال آماده‌سازی، قدیمی‌ترین بالا. عدد قرمز منو همین تعداد است.",
           "زیر هر سفارش منتظر، مدت انتظار نوشته شده؛ اگر بیش از یک روز شده باشد قرمز می‌شود.",
           "با کادر جستجو شماره سفارش، موبایل، نام مشتری یا گیرنده، کد رهگیری یا نام و کد کالا را پیدا کنید. بازه تاریخ شمسی و به وقت تهران است.",
           "«فقط بدون کد پستی» سفارش‌هایی را نشان می‌دهد که باید برای گرفتن کد پستی با مشتری تماس بگیرید.",
@@ -88,7 +88,6 @@ export default async function AdminOrdersPage({ searchParams }: PageProps<"/admi
         preset={f.preset ?? null}
         presets={ORDER_PRESETS}
         q={f.q ?? ""}
-        pay={f.pay ?? ""}
         noPostal={!!f.noPostal}
         exportHref={`/api/admin/orders/export?${exportParams.toString()}`}
         filtered={filtered}

@@ -2,33 +2,43 @@ import Link from "next/link";
 import { Instagram, Telegram, WhatsApp } from "@/components/icons/Social";
 import { LogoMark } from "@/components/brand/Logo";
 import { SITE } from "@/lib/shop";
+import { db } from "@/lib/db";
 import { getContact, getSettings } from "@/lib/settings";
 
-const COLUMNS = [
-  {
-    title: "دسته‌بندی‌های محبوب",
-    links: [
-      { href: "/categories", label: "قطعات موتور" },
-      { href: "/categories", label: "سیستم ترمز و لنت" },
-      { href: "/categories", label: "تعلیق و جلوبندی" },
-      { href: "/categories", label: "فیلتر هوا و روغن" },
-    ],
-  },
-  {
-    title: "راهنمای خرید",
-    links: [
-      { href: "/how-to-order", label: "نحوه ثبت سفارش" },
-      { href: "/shipping", label: "رویه ارسال سفارش" },
-      { href: "/payment-methods", label: "شیوه‌های پرداخت" },
-      { href: "/returns", label: "رویه بازگرداندن کالا" },
-      { href: "/terms", label: "قوانین و مقررات" },
-      { href: "/privacy", label: "حریم خصوصی" },
-    ],
-  },
+// Footer shortcuts to the main categories, found by slug (it never changes when a category is renamed).
+// A hidden or deleted category falls back to the full category list.
+const FOOTER_CATEGORIES = [
+  { slug: "engine", label: "قطعات موتور" },
+  { slug: "electrical", label: "قطعات برقی" },
+  { slug: "suspension", label: "قطعات جلوبندی" },
 ];
 
+const GUIDE = {
+  title: "راهنمای خرید",
+  links: [
+    { href: "/how-to-order", label: "نحوه ثبت سفارش" },
+    { href: "/shipping", label: "رویه ارسال سفارش" },
+    { href: "/payment-methods", label: "شیوه‌های پرداخت" },
+    { href: "/returns", label: "رویه بازگرداندن کالا" },
+    { href: "/terms", label: "قوانین و مقررات" },
+    { href: "/privacy", label: "حریم خصوصی" },
+  ],
+};
+
 export async function SiteFooter() {
-  const [settings, contact] = await Promise.all([getSettings(), getContact()]);
+  const [settings, contact, liveCategories] = await Promise.all([
+    getSettings(),
+    getContact(),
+    db.category.findMany({ where: { slug: { in: FOOTER_CATEGORIES.map((c) => c.slug) }, isActive: true }, select: { slug: true } }),
+  ]);
+  const live = new Set(liveCategories.map((c) => c.slug));
+  const columns = [
+    {
+      title: "دسته‌بندی‌های محبوب",
+      links: FOOTER_CATEGORIES.map((c) => ({ href: live.has(c.slug) ? `/category/${c.slug}` : "/categories", label: c.label })),
+    },
+    GUIDE,
+  ];
   const socials = [
     { url: contact.instagramUrl, label: "اینستاگرام", Icon: Instagram },
     { url: contact.telegramUrl, label: "تلگرام", Icon: Telegram },
@@ -60,7 +70,7 @@ export async function SiteFooter() {
             </address>
           </div>
 
-          {COLUMNS.map((col) => (
+          {columns.map((col) => (
             <div key={col.title} className="flex flex-col gap-3">
               <p className="text-[15px] font-extrabold text-white">{col.title}</p>
               <ul className="flex flex-col gap-3">

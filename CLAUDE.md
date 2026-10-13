@@ -51,6 +51,12 @@ build (`APP_URL=https://example.com PAYMENT_PROVIDER=none ALLOW_CONSOLE_SMS=true
   `Product.soldCount` follows `countsAsSold` (COD counts at checkout, online on payment; cancel/refund takes it back).
   `OrderEvent.actorId` = staff member who made the change (shown in the order history). Invoices share
   `components/admin/orders/InvoiceSheet.tsx`; ticked orders print together at `/admin/invoice/batch?n=..&n=..`.
+- Payment is online only (owner's decision, 2026-10-13): cash on delivery was removed from checkout, the info pages and
+  the FAQ (migration `20261013120000_online_payment_only`). While PAYMENT_PROVIDER=none the payment step explains that
+  online payment is coming and disables «ثبت سفارش». `PaymentMethod.COD` and the admin COD tools stay only for old orders.
+  Returns policy: return shipping both ways is paid by the customer in every case (`/returns`, `/terms`).
+- Footer «دسته‌بندی‌های محبوب» links the main categories by slug (`FOOTER_CATEGORIES` in `SiteFooter.tsx`: engine,
+  electrical, suspension); a hidden or missing one falls back to `/categories`.
 - Shipping: methods POST, TIPAX, EXPRESS (پیک, Tehran-only by default), FREIGHT (باربری), PICKUP (تحویل حضوری, no address;
   the order stores the shop address). Owner edits title/description/price/on-off/order at `/admin/shipping` (Setting
   `shipping_config` JSON; defaults, schema and `quoteShipping` in `src/lib/shipping-shared.ts`, `getShippingConfig()`).
@@ -74,6 +80,8 @@ build (`APP_URL=https://example.com PAYMENT_PROVIDER=none ALLOW_CONSOLE_SMS=true
 - Product prices: the form shows "قیمت اصلی" + a discount switch (percent or sale price, `ProductPriceFields`); the DB
   stores `price` (paid) and `compareAtPrice` (struck-through). Car models are one shared list edited from the product
   form ("مدیریت خودروها", `actions/admin/cars.ts`); renaming keeps the slug, deleting removes it from all products.
+  Brands work the same way ("مدیریت برندها" next to the brand select, `BrandManager`, `actions/admin/brands.ts`): Persian name
+  + optional Latin name, shown in the shop filter as «بوش (BOSCH)»; deleting a brand leaves its products without a brand.
 - Visit statistics (`/admin/analytics`, menu «آمار بازدید»; dashboard card «بازدیدکنندگان امروز»): first-party, no third-party
   script. `components/analytics/VisitTracker.tsx` (root layout) posts each storefront page view and its visible time to
   `/api/visit` → `PageView` (`src/lib/visit-track.ts`: random visitor/session cookies, only their HMACs stored, no IPs;

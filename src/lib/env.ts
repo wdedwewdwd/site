@@ -10,13 +10,16 @@ const schema = z
     SESSION_SECRET: z.string().min(32),
     OTP_PEPPER: z.string().min(32),
 
+    // Login codes when Faraz SMS is not switched on at /admin/sms (that setting takes precedence).
     SMS_PROVIDER: z.enum(["console", "kavenegar"]).default("console"),
     // Temporary pre-launch escape hatch: print login codes to the server log in production.
     ALLOW_CONSOLE_SMS: z.enum(["true", "false"]).default("false"),
     KAVENEGAR_API_KEY: z.string().optional(),
     KAVENEGAR_OTP_TEMPLATE: z.string().optional(),
+    // Only for local tests against a stand-in server; the real Faraz SMS / Iran Payamak API is the default.
+    IRANPAYAMAK_BASE_URL: z.url().optional(),
 
-    // "none" = online payment disabled (cash on delivery only), e.g. before the gateway is approved.
+    // "none" = online payment disabled (no orders can be placed), e.g. before the gateway is approved.
     PAYMENT_PROVIDER: z.enum(["mock", "zarinpal", "none"]).default("mock"),
     ZARINPAL_MERCHANT_ID: z.string().optional(),
     ZARINPAL_SANDBOX: z.enum(["true", "false"]).default("false"),

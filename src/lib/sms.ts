@@ -1,8 +1,18 @@
 import "server-only";
 import { env, isProd } from "./env";
+import { sendPattern } from "./iranpayamak";
+import { getSmsConfig } from "./sms-settings";
 
 /** Sends a one-time login code. Throws if the provider rejects the request. */
 export async function sendOtpSms(phone: string, code: string) {
+  // Faraz SMS / Iran Payamak, once the owner has tested and switched it on at /admin/sms.
+  const sms = await getSmsConfig();
+  if (sms.active && sms.apiKey) {
+    const res = await sendPattern(sms.apiKey, { pattern: sms.pattern, variable: sms.variable, value: code, line: sms.line, phone });
+    if (!res.ok) throw new Error(`Iran Payamak: ${res.error}`);
+    return;
+  }
+
   if (env.SMS_PROVIDER === "console") {
     if (isProd && env.ALLOW_CONSOLE_SMS !== "true") throw new Error("console SMS provider is disabled in production");
     console.info(`[dev-sms] OTP for ${phone}: ${code}`);

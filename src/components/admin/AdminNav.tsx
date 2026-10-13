@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Boxes, ChartNoAxesCombined, Contact, FolderTree, GalleryHorizontalEnd, Headset, LayoutDashboard, LogOut, Menu, MessageSquareText, MessagesSquare, Percent, Settings, ShoppingBag, Store, Truck, Users, X } from "lucide-react";
+import { Boxes, ChartNoAxesCombined, Contact, FolderTree, GalleryHorizontalEnd, Headset, LayoutDashboard, LogOut, Menu, MessageSquareText, MessagesSquare, Percent, Settings, ShoppingBag, Smartphone, Store, Truck, Users, X } from "lucide-react";
 import { logoutAction } from "@/app/actions/auth";
 import { LogoMark } from "@/components/brand/Logo";
 import { faDigits } from "@/lib/format";
@@ -49,6 +49,7 @@ const GROUPS: { title?: string; items: Item[] }[] = [
     items: [
       { href: "/admin/shipping", label: "روش‌های ارسال", Icon: Truck },
       { href: "/admin/contact", label: "اطلاعات تماس و شبکه‌ها", Icon: Contact },
+      { href: "/admin/sms", label: "سامانه پیامک", Icon: Smartphone },
       { href: "/admin/settings", label: "تنظیمات", Icon: Settings },
     ],
   },

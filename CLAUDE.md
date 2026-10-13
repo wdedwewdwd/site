@@ -40,6 +40,12 @@ build (`APP_URL=https://example.com PAYMENT_PROVIDER=none ALLOW_CONSOLE_SMS=true
   older shorter codes still work but set `User.weakStaffCode`, which shows a «change your code» banner in the panel. The first admin on a new database is created with `npm run admin:set`; after that
   admins add/edit/remove staff (ADMIN or SUPPORT, phone + name + code) in Settings → «مدیران و پشتیبان‌ها»
   (`actions/admin/staff.ts`, re-enters the acting admin's own code). Removing access turns the person into a customer.
+- Login SMS: the owner connects Faraz SMS / Iran Payamak at `/admin/sms` (menu «سامانه پیامک»): API key (stored sealed with
+  AES-GCM, key derived from OTP_PEPPER in `src/lib/secret-box.ts`; never sent back to the page), pattern code, variable
+  name (default `code`) and line number in Settings `sms_*` (`src/lib/sms-settings.ts`, kept out of `getSettings`). A test
+  message must succeed with the exact settings (fingerprint in `sms_tested`) before «ورود با پیامک» can be switched on;
+  any change switches it off. While on, `sendOtpSms` uses `src/lib/iranpayamak.ts` (POST /ws/v1/sms/pattern, header
+  `Api-Key`); while off, the env provider (console/Kavenegar) is used. `IRANPAYAMAK_BASE_URL` exists only for local tests.
 - Dates/times: Jalali calendar and Asia/Tehran everywhere (`src/lib/jalali.ts`, `src/lib/format.ts`).
 - Product search: `src/lib/search.ts` (pure engine: Persian normalization, every word must match name/brand/
   category/cars/codes in any order, suffixes, Latin car names, typo only as a flagged fallback, relevance ranking)

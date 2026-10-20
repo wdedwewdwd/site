@@ -7,6 +7,7 @@ import { deleteCategory, moveCategory, saveCategory, toggleCategory, type Catego
 import { Modal } from "@/components/ui/Modal";
 import { toast } from "@/components/ui/Toaster";
 import { CategoryIcon } from "@/components/ui/CategoryIcon";
+import { CategoryCover } from "@/components/ui/CategoryCover";
 import { faDigits } from "@/lib/format";
 import { CATEGORY_ICON_LABELS, CATEGORY_ICON_NAMES } from "@/lib/shop";
 import { keepValuesOnSubmit } from "@/components/ui/keepValuesOnSubmit";
@@ -16,6 +17,10 @@ export type CategoryRow = {
   name: string;
   slug: string;
   icon: string | null;
+  /** Its own photo (uploaded or built in); null = it shows `cover`, the first product's photo. */
+  image: string | null;
+  /** What the shop shows: `image`, else the first product's photo, else the icon. */
+  cover: string | null;
   description: string | null;
   isActive: boolean;
   parentId: string | null;
@@ -189,8 +194,8 @@ function Row(props: {
       {/* Name */}
       <div className={`flex min-w-0 items-center gap-3 ${isChild ? "md:pr-8" : ""}`}>
         {isChild && <CornerDownLeft className="hidden size-4 shrink-0 text-subtle md:block" aria-hidden />}
-        <span className={`grid shrink-0 place-items-center rounded-xl ${isChild ? "size-9 bg-white text-muted" : "size-11 bg-brand-soft text-brand"}`}>
-          <CategoryIcon name={c.icon} className={isChild ? "size-4" : "size-5"} />
+        <span className={`relative shrink-0 overflow-hidden rounded-xl border border-line bg-surface ${isChild ? "size-10" : "size-12"}`}>
+          <CategoryCover image={c.cover} icon={c.icon} sizes="48px" iconClassName={isChild ? "size-4" : "size-5"} />
         </span>
         <span className="flex min-w-0 flex-col gap-0.5">
           <span className="flex items-center gap-2 truncate text-sm font-extrabold">
@@ -287,8 +292,10 @@ function CategoryForm({ editing, mains, onDone }: { editing: Editing; mains: Cat
         </p>
       </div>
 
+      <CoverField current={c?.image ?? null} fallback={c?.cover ?? null} />
+
       <fieldset>
-        <legend className="label">آیکون</legend>
+        <legend className="label">آیکون (وقتی دسته عکس ندارد)</legend>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {CATEGORY_ICON_NAMES.map((icon) => (
             <label key={icon} className="cursor-pointer">
@@ -326,6 +333,65 @@ function CategoryForm({ editing, mains, onDone }: { editing: Editing; mains: Cat
         <button type="button" onClick={onDone} className="btn-ghost">انصراف</button>
       </div>
     </form>
+  );
+}
+
+const MAX_BYTES = 4 * 1024 * 1024;
+
+/** Cover photo picker: shows the chosen file at once, the current photo, or what the shop shows without one. */
+function CoverField({ current, fallback }: { current: string | null; fallback: string | null }) {
+  const [picked, setPicked] = useState<string | null>(null);
+  const [remove, setRemove] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => () => void (picked && URL.revokeObjectURL(picked)), [picked]);
+  const shown = picked ?? (remove ? null : current);
+
+  return (
+    <div>
+      <span className="label">عکس دسته</span>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+        <span className="relative aspect-[4/3] w-full shrink-0 overflow-hidden rounded-xl border border-line bg-surface sm:w-48">
+          {shown || fallback ? (
+            // eslint-disable-next-line @next/next/no-img-element -- local preview (blob: URL) before upload
+            <img src={shown ?? fallback ?? ""} alt="" className={`size-full object-cover ${shown ? "" : "opacity-70"}`} />
+          ) : (
+            <span className="grid size-full place-items-center text-xs text-muted">بدون عکس</span>
+          )}
+          {!shown && fallback && <span className="absolute inset-x-0 bottom-0 bg-black/55 px-2 py-1 text-center text-[10px] text-white">عکس اولین محصول دسته</span>}
+        </span>
+        <div className="flex flex-col gap-2 text-xs leading-6 text-muted">
+          <label className="btn-ghost w-fit cursor-pointer py-2 text-xs">
+            {current || picked ? "انتخاب عکس دیگر" : "انتخاب عکس"}
+            <input
+              name="image"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="sr-only"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                if (!/^image\/(jpeg|png|webp)$/.test(file.type) || file.size > MAX_BYTES) {
+                  setError("فقط تصویر JPG، PNG یا WEBP تا ۴ مگابایت");
+                  e.target.value = "";
+                  return;
+                }
+                setError(null);
+                setRemove(false);
+                setPicked(URL.createObjectURL(file));
+              }}
+            />
+          </label>
+          {error && <span className="field-error">{error}</span>}
+          <span>عکس افقی (بهتر است ۴ به ۳، مثلاً ۱۲۰۰ در ۹۰۰) روی کارت دسته در صفحه اول و صفحه دسته‌بندی‌ها نمایش داده می‌شود. بدون عکس، عکس اولین محصول این دسته نمایش داده می‌شود.</span>
+          {current && !picked && (
+            <label className="flex w-fit cursor-pointer items-center gap-2 font-bold text-ink">
+              <input type="checkbox" name="removeImage" checked={remove} onChange={(e) => setRemove(e.target.checked)} className="size-4 accent-brand" />
+              حذف عکس فعلی
+            </label>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 

@@ -23,6 +23,8 @@ export type ProductCardData = Prisma.ProductGetPayload<{ select: typeof productC
 export const SORTS = {
   // Only offered on search results; ranks by how well each product matches the query.
   relevance: { label: "مرتبط‌ترین", orderBy: { soldCount: "desc" } },
+  // The order of the owner's price list (Product.position); new products come last.
+  default: { label: "پیش‌فرض", orderBy: { position: "asc" } },
   newest: { label: "جدیدترین", orderBy: { createdAt: "desc" } },
   bestselling: { label: "پرفروش‌ترین‌ها", orderBy: { soldCount: "desc" } },
   cheapest: { label: "ارزان‌ترین", orderBy: { price: "asc" } },
@@ -44,8 +46,8 @@ export type ProductFilters = {
   page?: number;
 };
 
-/** The sort in effect: search results default to relevance, other listings to newest. */
-export const activeSort = (f: ProductFilters): SortKey => (f.sort === "relevance" && !f.q ? "newest" : (f.sort ?? (f.q ? "relevance" : "newest")));
+/** The sort in effect: search results default to relevance, other listings to the price-list order. */
+export const activeSort = (f: ProductFilters): SortKey => (f.sort === "relevance" && !f.q ? "default" : (f.sort ?? (f.q ? "relevance" : "default")));
 
 /** Ids of the shared car list's models built by this maker. */
 export async function makerCarIds(maker: MakerKey) {

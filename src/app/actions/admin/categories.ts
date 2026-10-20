@@ -1,5 +1,7 @@
 "use server";
 
+import { rm } from "node:fs/promises";
+import path from "node:path";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "@/lib/db";
@@ -7,6 +9,7 @@ import { requireStaff } from "@/lib/auth/session";
 import { audit } from "@/lib/audit";
 import { CATEGORY_ICON_NAMES } from "@/lib/shop";
 import { uniqueSlug } from "@/lib/slug";
+import { UPLOAD_DIR, UPLOADED_CATEGORY_URL, saveCategoryImage } from "@/lib/uploads";
 import { idSchema, text } from "@/lib/validation";
 
 export type CategoryActionState = { ok: boolean; message: string } | null;
@@ -14,6 +17,12 @@ export type CategoryActionState = { ok: boolean; message: string } | null;
 function refresh() {
   revalidatePath("/", "layout");
   revalidatePath("/admin/categories");
+}
+
+/** Deletes an uploaded category photo; built-in photos (/categories/*.webp) are never touched. */
+async function removeUploaded(url: string | null | undefined) {
+  const name = url?.match(UPLOADED_CATEGORY_URL)?.[1];
+  if (name) await rm(path.join(UPLOAD_DIR, "categories", name), { force: true });
 }
 
 async function nextSortOrder(parentId: string | null) {
@@ -54,14 +63,26 @@ export async function saveCategory(_: CategoryActionState, formData: FormData): 
   const duplicate = await db.category.findFirst({ where: { name, NOT: id ? { id } : undefined }, select: { id: true } });
   if (duplicate) return { ok: false, message: "دسته‌بندی دیگری با همین نام وجود دارد." };
 
-  const data = { name, icon, parentId, description: description || null, isActive: isActive === "on" };
+  // Cover photo: a new upload replaces the old one; «حذف عکس» goes back to the first product's photo.
+  const file = formData.get("image");
+  let image: string | null | undefined;
+  if (file instanceof File && file.size > 0) {
+    const saved = await saveCategoryImage(file);
+    if (!saved.ok) return { ok: false, message: saved.error };
+    image = saved.url;
+  } else if (formData.get("removeImage") === "on") {
+    image = null;
+  }
+
+  const data = { name, icon, parentId, description: description || null, isActive: isActive === "on", ...(image !== undefined ? { image } : {}) };
   if (current) {
     const moved = current.parentId !== parentId;
     await db.category.update({
       where: { id: current.id },
       data: { ...data, ...(moved ? { sortOrder: await nextSortOrder(parentId) } : {}) },
     });
-    await audit(admin.id, "category.update", "Category", current.id, { name });
+    if (image !== undefined && current.image !== image) await removeUploaded(current.image);
+    await audit(admin.id, "category.update", "Category", current.id, { name, ...(image !== undefined ? { image } : {}) });
   } else {
     // The URL slug is generated once from the name and never changes, so links keep working.
     const created = await db.category.create({
@@ -144,6 +165,7 @@ export async function deleteCategory(_: CategoryActionState, formData: FormData)
     await tx.category.delete({ where: { id } });
   });
 
+  await removeUploaded(category.image);
   await audit(admin.id, "category.delete", "Category", id, { name: category.name, movedProducts: productCount, moveTo: moveTo || undefined });
   refresh();
   return { ok: true, message: `دسته «${category.name}» حذف شد.` };

@@ -43,7 +43,16 @@ export async function saveBannerImage(file: File): Promise<{ ok: true; url: stri
 /** Uploaded banner URLs look like this; anything else (e.g. built-in /banners/*.jpg) is never deleted. */
 export const UPLOADED_BANNER_URL = /^\/media\/banners\/([A-Za-z0-9_-]{16,64}\.webp)$/;
 
-async function saveImage(file: File, folder: "products" | "chat" | "banners", maxSide = 1600): Promise<{ ok: true; name: string } | { ok: false; error: string }> {
+/** Category cover photos (shown 4:3 on the category cards). Returns the public URL. */
+export async function saveCategoryImage(file: File): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
+  const saved = await saveImage(file, "categories");
+  return saved.ok ? { ok: true, url: `/media/categories/${saved.name}` } : saved;
+}
+
+/** Uploaded category photo URLs; built-in ones (/categories/*.webp) are never deleted. */
+export const UPLOADED_CATEGORY_URL = /^\/media\/categories\/([A-Za-z0-9_-]{16,64}\.webp)$/;
+
+async function saveImage(file: File, folder: "products" | "chat" | "banners" | "categories", maxSide = 1600): Promise<{ ok: true; name: string } | { ok: false; error: string }> {
   if (file.size === 0) return { ok: false, error: "فایل خالی است." };
   if (file.size > MAX_BYTES) return { ok: false, error: "حجم تصویر باید کمتر از ۴ مگابایت باشد." };
   const buf = Buffer.from(await file.arrayBuffer());

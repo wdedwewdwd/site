@@ -17,6 +17,7 @@ export const PRODUCT_VIEWS = {
 export type ProductView = keyof typeof PRODUCT_VIEWS;
 
 export const PRODUCT_SORTS = {
+  list: { label: "ترتیب لیست قیمت", orderBy: { position: "asc" } },
   newest: { label: "جدیدترین", orderBy: { createdAt: "desc" } },
   updated: { label: "آخرین ویرایش", orderBy: { updatedAt: "desc" } },
   name: { label: "نام (الف تا ی)", orderBy: { name: "asc" } },
@@ -27,8 +28,11 @@ export const PRODUCT_SORTS = {
   sold: { label: "پرفروش‌ترین", orderBy: { soldCount: "desc" } },
 } satisfies Record<string, { label: string; orderBy: Prisma.ProductOrderByWithRelationInput }>;
 export type ProductSort = keyof typeof PRODUCT_SORTS;
-/** Default order never changes when a product is edited, so rows don't jump while working through the list. */
-export const DEFAULT_PRODUCT_SORT: ProductSort = "newest";
+/**
+ * Default order = the owner's price list (same as the shop). It never changes when a product is edited, so rows
+ * don't jump while working through the list, and exports come out in price-list order.
+ */
+export const DEFAULT_PRODUCT_SORT: ProductSort = "list";
 
 export type ProductFilters = {
   q?: string;

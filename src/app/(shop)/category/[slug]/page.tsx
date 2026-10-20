@@ -4,7 +4,8 @@ import { notFound } from "next/navigation";
 import { cache } from "react";
 import { db } from "@/lib/db";
 import { ProductListing } from "@/components/catalog/ProductListing";
-import { CategoryIcon } from "@/components/ui/CategoryIcon";
+import { categoryCovers } from "@/lib/category-covers";
+import { CategoryCover } from "@/components/ui/CategoryCover";
 import { parseFilters } from "@/lib/catalog";
 
 const getCategory = cache((slug: string) =>
@@ -13,7 +14,7 @@ const getCategory = cache((slug: string) =>
         where: { slug, isActive: true },
         include: {
           parent: { select: { name: true, slug: true, isActive: true } },
-          children: { where: { isActive: true }, orderBy: { sortOrder: "asc" }, select: { name: true, slug: true, icon: true } },
+          children: { where: { isActive: true }, orderBy: { sortOrder: "asc" }, select: { id: true, name: true, slug: true, icon: true, image: true } },
         },
       })
     : null,
@@ -32,6 +33,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps<"
   const filters = { ...parseFilters(sp), category: slug };
   // Subcategory links keep the carmaker chosen on the home page.
   const keep = filters.maker ? `?maker=${filters.maker}` : "";
+  const covers = await categoryCovers(category.children);
 
   const crumbs = [
     { href: "/categories", label: "دسته‌بندی‌ها" },
@@ -57,8 +59,10 @@ export default async function CategoryPage({ params, searchParams }: PageProps<"
               <ul className="flex flex-wrap gap-2">
                 {category.children.map((c) => (
                   <li key={c.slug}>
-                    <Link href={`/category/${c.slug}${keep}`} className="flex items-center gap-2 rounded-full border border-line bg-white px-4 py-2 text-xs font-bold transition-colors hover:border-brand hover:text-brand">
-                      <CategoryIcon name={c.icon} className="size-4" />
+                    <Link href={`/category/${c.slug}${keep}`} className="flex items-center gap-2 rounded-full border border-line bg-white py-1 ps-1 pe-4 text-xs font-bold transition-colors hover:border-brand hover:text-brand">
+                      <span className="relative size-8 shrink-0 overflow-hidden rounded-full bg-surface">
+                        <CategoryCover image={covers.get(c.id)} icon={c.icon} sizes="32px" iconClassName="size-4" />
+                      </span>
                       {c.name}
                     </Link>
                   </li>

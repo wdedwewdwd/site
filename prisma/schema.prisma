@@ -105,7 +105,8 @@ model Category {
   name        String
   slug        String     @unique
   description String? // optional intro shown at the top of the category page
-  icon        String? // lucide icon name
+  icon        String? // lucide icon name (fallback when there is no photo)
+  image       String? // cover photo: /media/categories/<upload>.webp or a built-in /categories/*.webp
   sortOrder   Int        @default(0)
   isActive    Boolean    @default(true)
   parentId    String?
@@ -152,6 +153,8 @@ model Product {
   ratingAvg      Float    @default(0)
   ratingCount    Int      @default(0)
   soldCount      Int      @default(0)
+  // Place in the owner's price list (PDF); the shop's default order. New products go to the end.
+  position       Int      @default(0)
   categoryId     String
   category       Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   brandId        String?
@@ -169,6 +172,7 @@ model Product {
   @@index([categoryId])
   @@index([brandId])
   @@index([isActive, soldCount])
+  @@index([position])
 }
 
 model ProductImage {

@@ -11,7 +11,8 @@ export default async function HomePage() {
   const [hero, makers, bestSellers, offers] = await Promise.all([
     getHomeBanners(),
     getMakerSections(),
-    db.product.findMany({ where: { isActive: true }, orderBy: { soldCount: "desc" }, take: 4, select: productCardSelect }),
+    // Shop window: only products with a photo; equal sales fall back to the price-list order.
+    db.product.findMany({ where: { isActive: true, images: { some: {} } }, orderBy: [{ soldCount: "desc" }, { position: "asc" }], take: 4, select: productCardSelect }),
     db.product.findMany({
       where: { isActive: true, compareAtPrice: { not: null }, stock: { gt: 0 } },
       orderBy: { updatedAt: "desc" },

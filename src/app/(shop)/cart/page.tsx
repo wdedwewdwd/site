@@ -39,7 +39,7 @@ export default async function CartPage() {
   return (
     <div className="container-page flex flex-col gap-6 py-6 md:py-8">
     <PageBar title="سبد خرید" backHref="/" />
-    <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
       <section className="flex flex-col gap-4" aria-labelledby="cart-title">
         <div className="flex items-center justify-between">
           <h1 id="cart-title" className="text-lg font-black md:text-xl">سبد خرید شما ({faDigits(cart.count)} کالا)</h1>
@@ -85,16 +85,38 @@ export default async function CartPage() {
             </p>
           )}
           {cart.allAvailable ? (
-            <Link href="/checkout" className="btn-primary w-full py-3.5 text-base shadow-[0_8px_20px_-8px_rgba(213,34,34,0.6)]">
+            <Link href="/checkout" className="btn-primary hidden w-full py-3.5 text-base shadow-[0_8px_20px_-8px_rgba(213,34,34,0.6)] md:flex">
               ادامه فرآیند خرید
             </Link>
           ) : (
-            <span className="btn-primary w-full cursor-not-allowed py-3.5 text-base opacity-50" aria-disabled>ادامه فرآیند خرید</span>
+            <span className="btn-primary hidden w-full cursor-not-allowed py-3.5 text-base opacity-50 md:flex" aria-disabled>ادامه فرآیند خرید</span>
           )}
           <p className="text-center text-[11px] text-muted">مبلغ نهایی {toman(payable)} تومان بدون احتساب هزینه ارسال</p>
         </div>
         <DiscountForm applied={cart.discountCode} error={cart.discountError} />
       </aside>
+    </div>
+
+    {/* Phones: total and the next step stay in reach above the bottom navigation. */}
+    <div className="h-14 md:hidden" aria-hidden />
+    <div
+      data-mobile-buybar
+      className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 border-t border-line bg-white/95 px-4 py-2.5 shadow-[0_-8px_24px_-14px_rgba(0,0,0,0.25)] backdrop-blur md:hidden"
+    >
+      <div className="flex items-center gap-3">
+        <div className="flex shrink-0 flex-col">
+          <span className="text-[11px] text-muted">مبلغ قابل پرداخت</span>
+          <p className="flex items-baseline gap-1">
+            <span className="text-lg font-black">{toman(payable)}</span>
+            <span className="text-[11px] text-muted">تومان</span>
+          </p>
+        </div>
+        {cart.allAvailable ? (
+          <Link href="/checkout" className="btn-primary flex-1 px-3">ادامه فرآیند خرید</Link>
+        ) : (
+          <span className="btn-primary flex-1 cursor-not-allowed px-3 opacity-50" aria-disabled>ادامه فرآیند خرید</span>
+        )}
+      </div>
     </div>
     </div>
   );

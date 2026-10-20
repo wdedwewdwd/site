@@ -12,9 +12,10 @@ type Props = {
   variant?: "icon" | "pill" | "full";
   buyNow?: boolean;
   label?: string;
+  className?: string;
 };
 
-export function AddToCartButton({ productId, disabled, variant = "icon", buyNow, label }: Props) {
+export function AddToCartButton({ productId, disabled, variant = "icon", buyNow, label, className = "" }: Props) {
   const [pending, start] = useTransition();
   const router = useRouter();
 
@@ -40,15 +41,16 @@ export function AddToCartButton({ productId, disabled, variant = "icon", buyNow,
     );
   }
   if (variant === "pill") {
+    const soldOut = disabled && !pending;
     return (
       <button
         type="button"
         onClick={onClick}
         disabled={disabled || pending}
-        className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-brand-soft py-2.5 text-xs font-extrabold text-brand disabled:opacity-60"
+        className={`flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-extrabold ${soldOut ? "bg-surface text-muted" : "bg-brand-soft text-brand active:bg-brand active:text-white"}`}
       >
-        {pending ? <LoaderCircle className="size-4 animate-spin" /> : <Plus className="size-4" />}
-        افزودن
+        {pending ? <LoaderCircle className="size-4 animate-spin" /> : !soldOut && <Plus className="size-4" />}
+        {soldOut ? "ناموجود" : "افزودن"}
       </button>
     );
   }
@@ -57,7 +59,7 @@ export function AddToCartButton({ productId, disabled, variant = "icon", buyNow,
       type="button"
       onClick={onClick}
       disabled={disabled || pending}
-      className={buyNow ? "btn-outline min-w-32" : "btn-primary min-w-40"}
+      className={`${buyNow ? "btn-outline min-w-32" : "btn-primary min-w-40"} ${className}`}
     >
       {pending && <LoaderCircle className="size-4 animate-spin" />}
       {label ?? (buyNow ? "خرید فوری" : "افزودن به سبد خرید")}

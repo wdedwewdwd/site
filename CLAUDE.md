@@ -121,6 +121,22 @@ build (`APP_URL=https://example.com PAYMENT_PROVIDER=none ALLOW_CONSOLE_SMS=true
   `components/ui/CategoryIcon.tsx`. Auto-part icons (spark-plug, shock-absorber, engine, brake-disc, gearbox) are drawn
   on Lucide's grid in `components/ui/part-icons.ts` (`createLucideIcon`).
 - Inner pages use `PageBar` (mobile app bar with back button, desktop breadcrumbs + back).
+- Older iPhones: `browserslist` in package.json (Safari/iOS 14+). Next 16 targets Safari 16.4 by default and emitted class
+  static blocks, so on iOS 15 (iPhone 6s/7) no page hydrated and no button worked (2026-10-20). Check changes that touch
+  the build with an iOS-15-era WebKit (playwright-core 1.20 `webkit`) against a production build; avoid APIs newer than
+  iOS 15 in client code (e.g. `form.requestSubmit()`, which needs iOS 16).
+- Sign-up = SMS code + name: a customer without first/last name is sent to `/welcome` (route group `(onboarding)`, form
+  `components/auth/WelcomeForm.tsx`, saves through `updateAccount`). Routing only: cookie `ay_complete_profile`
+  (`lib/auth/profile-gate.ts`, set at login, cleared when the name is saved or on logout) makes the proxy send page loads
+  to `/welcome?next=…` (not /terms, /privacy, /login, /admin, files or actions); `/api/auth/profile-gate` drops a stale one.
+- Phones: form fields are 16px on phones (iOS zooms into smaller fields; unlayered rule in globals.css); the bottom nav
+  is `h-16` + safe area; an element with `data-mobile-buybar` (product page buy bar, cart total bar) lifts the support
+  button (`.support-fab`) and toasts (`.toaster-stack`) above it via `body:has()`; sideways rows use the `no-scrollbar`
+  utility; page grids use `grid-cols-[minmax(0,1fr)…]` so a wide scrolling row can't stretch the page. The phone header
+  has the account button (initial of the name, red dot for unread notifications) instead of the notifications bell; the
+  profile home page shows the account card and profile menu at the top on phones.
+- Site icons (tab, iPhone home screen, Android) come from the logo emblem: `src/app/favicon.ico`, `icon.png`,
+  `apple-icon.png`, `manifest.ts` + `public/icons/`.
 - Every admin page has a `HelpBox` explaining it in plain Persian; keep adding one for new pages.
 - Migrations: `prisma migrate dev` can fail on the shadow DB; writing the SQL by hand in
   `prisma/migrations/<timestamp>_<name>/migration.sql` and running `prisma migrate deploy` works.

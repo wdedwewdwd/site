@@ -37,7 +37,7 @@ export default async function CategoriesPage() {
           return (
             <li key={c.id} className="card group flex flex-col overflow-hidden transition-colors hover:border-brand">
               <Link href={`/category/${c.slug}`} className="flex flex-col">
-                <span className="relative aspect-[4/3] overflow-hidden bg-surface">
+                <span className="relative aspect-[16/10] overflow-hidden bg-surface sm:aspect-[4/3]">
                   <CategoryCover
                     image={covers.get(c.id)}
                     icon={c.icon}

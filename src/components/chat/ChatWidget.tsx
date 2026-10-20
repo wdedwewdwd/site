@@ -232,7 +232,7 @@ export function ChatWidget({ support }: { support: SupportContact }) {
   return (
     <>
       {!open && (
-        <div ref={menuRoot} className="fixed bottom-20 left-4 z-40 flex flex-col items-start gap-2 md:bottom-6 md:left-6">
+        <div ref={menuRoot} className="support-fab fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] left-4 z-40 flex flex-col items-start gap-2 md:bottom-6 md:left-6">
           {menuOpen && (
             <div
               id="support-menu"

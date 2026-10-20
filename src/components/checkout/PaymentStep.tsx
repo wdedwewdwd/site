@@ -23,7 +23,7 @@ export function PaymentStep({ addressId, shipping, total, onlineEnabled, summary
     });
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
       <section className="card flex flex-col gap-4 p-5" aria-labelledby="pay">
         <h2 id="pay" className="text-base font-black">روش پرداخت</h2>
         <RadioCard name="payment" value="ONLINE" checked={onlineEnabled} disabled={!onlineEnabled} onChange={() => {}} aside={<CreditCard className="size-6 text-muted" />}>

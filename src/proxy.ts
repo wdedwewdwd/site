@@ -2,6 +2,10 @@ import { NextResponse, type NextRequest } from "next/server";
 
 const isDev = process.env.NODE_ENV === "development";
 const SESSION_COOKIE = isDev ? "ay_session" : "__Host-ay_session";
+// Same name as PROFILE_GATE_COOKIE in lib/auth/profile-gate.ts: a signed-in customer who has not entered a name yet.
+const PROFILE_GATE_COOKIE = "ay_complete_profile";
+// Pages a customer can open before finishing sign-up.
+const OPEN_BEFORE_PROFILE = /^\/(welcome|login|terms|privacy)(\/|$)/;
 
 function buildCsp(nonce: string) {
   return [
@@ -29,10 +33,25 @@ export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
   // Optimistic gate only — every protected page and action re-checks the session in the database.
-  const needsAuth = pathname.startsWith("/admin") || pathname.startsWith("/profile") || pathname.startsWith("/checkout");
+  const needsAuth = pathname.startsWith("/admin") || pathname.startsWith("/profile") || pathname.startsWith("/checkout") || pathname === "/welcome";
   if (needsAuth && !request.cookies.has(SESSION_COOKIE)) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
+    url.search = `?next=${encodeURIComponent(pathname + search)}`;
+    return NextResponse.redirect(url);
+  }
+
+  // Sign-up not finished (no name yet): every page leads to the last sign-up step. Page loads only, never actions.
+  if (
+    (request.method === "GET" || request.method === "HEAD") &&
+    request.cookies.has(PROFILE_GATE_COOKIE) &&
+    request.cookies.has(SESSION_COOKIE) &&
+    !OPEN_BEFORE_PROFILE.test(pathname) &&
+    !pathname.startsWith("/admin") &&
+    !/\.[a-zA-Z0-9]+$/.test(pathname) // files (icons, photos, manifest) are never pages
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/welcome";
     url.search = `?next=${encodeURIComponent(pathname + search)}`;
     return NextResponse.redirect(url);
   }
@@ -46,7 +65,7 @@ export function proxy(request: NextRequest) {
 
   const response = NextResponse.next({ request: { headers: requestHeaders } });
   response.headers.set("Content-Security-Policy", csp);
-  if (pathname.startsWith("/admin") || pathname.startsWith("/profile") || pathname.startsWith("/checkout")) {
+  if (pathname.startsWith("/admin") || pathname.startsWith("/profile") || pathname.startsWith("/checkout") || pathname === "/welcome") {
     response.headers.set("Cache-Control", "no-store");
     response.headers.set("X-Robots-Tag", "noindex, nofollow");
   }

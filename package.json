@@ -54,5 +54,13 @@
   "overrides": {
     "deepmerge-ts": "^8.0.0",
     "mysql2": "^3.23.1"
-  }
+  },
+  "browserslist": [
+    "chrome >= 87",
+    "edge >= 88",
+    "firefox >= 78",
+    "safari >= 14",
+    "ios_saf >= 14",
+    "samsung >= 14"
+  ]
 }

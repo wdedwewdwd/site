@@ -32,7 +32,7 @@ export default async function OrdersPage({ searchParams }: PageProps<"/profile/o
       <PageBar title="سفارش‌های من" backHref="/profile" crumbs={[{ href: "/profile", label: "حساب کاربری" }]} />
     <div className="card flex flex-col gap-5 p-5">
       <h1 className="sr-only text-lg font-black md:not-sr-only">تاریخچه سفارش‌ها</h1>
-      <nav aria-label="فیلتر وضعیت" className="-mx-5 overflow-x-auto border-b border-line px-5">
+      <nav aria-label="فیلتر وضعیت" className="no-scrollbar -mx-5 overflow-x-auto border-b border-line px-5">
         <ul className="flex gap-6 text-sm">
           {TABS.map((t) => (
             <li key={t.key}>

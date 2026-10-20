@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { Bell, LayoutDashboard, ShoppingCart, User } from "lucide-react";
+import { LayoutDashboard, ShoppingCart, User, UserRound } from "lucide-react";
 import { getUser } from "@/lib/auth/session";
+import { db } from "@/lib/db";
 import { getCartCount } from "@/lib/cart";
 import { faDigits } from "@/lib/format";
 import { SITE } from "@/lib/shop";
@@ -13,6 +14,9 @@ import { OnlyOnPaths } from "./navigation";
 
 export async function SiteHeader() {
   const [user, cartCount, contact] = await Promise.all([getUser(), getCartCount(), getContact()]);
+  const unread = user ? await db.notification.count({ where: { userId: user.id, readAt: null } }) : 0;
+  // First letter of the name for the phone header's account button.
+  const initial = user?.firstName?.trim().charAt(0) ?? "";
   const displayName = user ? [user.firstName, user.lastName].filter(Boolean).join(" ") || "حساب کاربری" : null;
   const isStaff = user?.role === "ADMIN" || user?.role === "SUPPORT";
 
@@ -72,17 +76,26 @@ export async function SiteHeader() {
       <OnlyOnPaths paths={["/"]}>
       <div className="rounded-b-[24px] bg-night pb-4 md:hidden">
         <div className="flex items-center justify-between px-4 py-2">
-          <MobileMenu isStaff={isStaff} />
+          <MobileMenu
+            isStaff={isStaff}
+            account={user ? { name: displayName && displayName !== "حساب کاربری" ? displayName : null } : null}
+            support={{ phone: contact.phone, phoneDisplay: contact.phoneDisplay, hours: contact.hours }}
+          />
           <Link href="/" className="flex items-center gap-2" aria-label={`${SITE.name} — صفحه اصلی`}>
             <LogoMark className="h-8 w-[54px]" />
             <span className="text-lg font-black text-white">{SITE.name}</span>
           </Link>
           <Link
-            href={user ? "/profile/notifications" : "/login"}
-            className="grid size-10 place-items-center rounded-full border border-white/15 bg-white/[0.06] text-white transition-colors hover:bg-white/[0.12]"
-            aria-label="اعلان‌ها"
+            href={user ? "/profile" : "/login"}
+            className="relative grid size-10 place-items-center rounded-full border border-white/15 bg-white/[0.06] text-white transition-colors hover:bg-white/[0.12]"
+            aria-label={user ? `حساب کاربری${unread ? ` — ${faDigits(unread)} اعلان خوانده‌نشده` : ""}` : "ورود / ثبت‌نام"}
           >
-            <Bell className="size-5" />
+            {user ? (
+              initial ? <span className="text-base font-black">{initial}</span> : <UserRound className="size-5" aria-hidden />
+            ) : (
+              <User className="size-5" aria-hidden />
+            )}
+            {unread > 0 && <span className="absolute -top-0.5 -right-0.5 size-3 rounded-full border-2 border-night bg-brand" aria-hidden />}
           </Link>
         </div>
         <div className="flex items-stretch gap-2 px-4 pt-2">

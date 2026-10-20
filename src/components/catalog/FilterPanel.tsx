@@ -1,9 +1,8 @@
 "use client";
 
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { useTransition } from "react";
-import { SlidersHorizontal, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState, useTransition } from "react";
+import { LoaderCircle, SlidersHorizontal, X } from "lucide-react";
 
 type Option = { slug: string; label: string };
 
@@ -33,6 +32,20 @@ export function FilterPanel({ brands, cars }: { brands: Option[]; cars: Option[]
     });
 
   const inStock = params.get("stock") === "1";
+  const active = selected("brand").size + selected("car").size + (inStock ? 1 : 0);
+
+  // The phone sheet covers the page: keep the page behind it from scrolling, close it with Escape.
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
 
   const panel = (
     <div className={`flex flex-col gap-5 ${pending ? "opacity-60" : ""}`}>
@@ -79,12 +92,30 @@ export function FilterPanel({ brands, cars }: { brands: Option[]; cars: Option[]
     <>
       <button type="button" onClick={() => setOpen(true)} className="btn-ghost w-full py-2.5 md:hidden">
         <SlidersHorizontal className="size-4" /> فیلترها
+        {active > 0 && <span className="grid min-w-5 place-items-center rounded-full bg-brand px-1.5 text-[11px] font-black text-white">{active.toLocaleString("fa-IR")}</span>}
       </button>
       <aside className="card hidden h-fit p-5 md:block">{panel}</aside>
       {open && (
         <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true" aria-label="فیلترها">
           <button type="button" className="absolute inset-0 bg-black/40" aria-label="بستن" onClick={() => setOpen(false)} />
-          <div className="absolute inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto rounded-t-3xl bg-white p-5 pb-8">{panel}</div>
+          <div className="absolute inset-x-0 bottom-0 flex max-h-[85vh] flex-col overflow-hidden rounded-t-3xl bg-white animate-fade-up">
+            <div className="overflow-y-auto overscroll-contain p-5">{panel}</div>
+            <div className="flex gap-3 border-t border-line bg-white p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+              <button type="button" onClick={() => setOpen(false)} className="btn-primary flex-1">
+                {pending && <LoaderCircle className="size-4 animate-spin" />}
+                مشاهده نتایج
+              </button>
+              {active > 0 && (
+                <button
+                  type="button"
+                  onClick={() => update((p) => ["brand", "car", "stock"].forEach((k) => p.delete(k)))}
+                  className="btn-ghost"
+                >
+                  حذف فیلترها
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </>

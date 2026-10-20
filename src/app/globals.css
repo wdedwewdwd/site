@@ -39,6 +39,20 @@
     }
   }
 
+  --animate-fade-in: fade-in 200ms ease-out both;
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+
+  --animate-slide-in-right: slide-in-right 260ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  @keyframes slide-in-right {
+    from {
+      transform: translateX(100%);
+    }
+  }
+
   --animate-pop-in: pop-in 160ms ease-out;
   @keyframes pop-in {
     from {
@@ -66,6 +80,11 @@
   :focus-visible {
     @apply outline-2 outline-offset-2 outline-brand;
   }
+  /* Older iOS Safari draws its own white rounded box around search fields. */
+  input[type="search"] {
+    -webkit-appearance: none;
+    appearance: none;
+  }
   input[type="number"]::-webkit-inner-spin-button,
   input[type="number"]::-webkit-outer-spin-button {
     -webkit-appearance: none;
@@ -75,6 +94,13 @@
 
 @utility btn {
   @apply inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-extrabold transition-colors disabled:cursor-not-allowed disabled:opacity-60;
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 @layer components {
@@ -103,6 +129,33 @@
   .field-error {
     @apply mt-1.5 text-xs font-medium text-brand;
   }
+}
+
+/* Phones: iOS zooms the whole page into any field whose text is smaller than 16px and does not zoom back out.
+   Unlayered on purpose, so it wins over the text-sm/text-xs utilities on fields. */
+@media (max-width: 767px) {
+  :where(input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"]), select, textarea):not(.text-lg, .text-xl, .text-2xl) {
+    font-size: 16px;
+  }
+}
+
+/* Phones: a page with a fixed buy bar above the bottom navigation (product page) lifts the support button and the
+   messages above it. */
+@media (max-width: 767px) {
+  body:has([data-mobile-buybar]) .support-fab {
+    bottom: calc(9.25rem + env(safe-area-inset-bottom));
+  }
+  body:has([data-mobile-buybar]) .toaster-stack {
+    bottom: calc(10rem + env(safe-area-inset-bottom));
+  }
+}
+
+/* Taps act at once (no double-tap-to-zoom wait) on buttons and links. */
+a,
+button,
+label,
+[role="button"] {
+  touch-action: manipulation;
 }
 
 @media (prefers-reduced-motion: reduce) {

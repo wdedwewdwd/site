@@ -24,7 +24,7 @@ export function BottomNav({ cartCount }: { cartCount: number }) {
             <Link
               href={href}
               aria-current={active ? "page" : undefined}
-              className={`relative flex flex-col items-center gap-1 py-2.5 text-[11px] font-bold ${active ? "text-brand" : "text-muted"}`}
+              className={`relative flex h-16 flex-col items-center justify-center gap-1 text-[11px] font-bold ${active ? "text-brand" : "text-muted"}`}
             >
               <span className="relative">
                 <Icon className="size-6" aria-hidden />

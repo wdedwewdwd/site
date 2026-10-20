@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { needsProfile, setProfileGate } from "@/lib/auth/profile-gate";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
@@ -79,11 +80,15 @@ export async function verifyOtpAction(_: AuthState, formData: FormData): Promise
     data: { actorId: user.id, action: isStaffLogin ? "admin.login" : existing ? "auth.login" : "auth.register", ip },
   });
 
-  if (!existing) redirect(`/profile/account?welcome=1&next=${encodeURIComponent(safeNext(next))}`);
+  // Sign-up is complete only with a name: until then every shop page leads to /welcome.
+  const incomplete = needsProfile(user);
+  await setProfileGate(incomplete);
+  if (incomplete) redirect(`/welcome?next=${encodeURIComponent(safeNext(next))}`);
   redirect(safeNext(next));
 }
 
 export async function logoutAction() {
   await destroySession();
+  await setProfileGate(false);
   redirect("/");
 }

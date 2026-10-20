@@ -110,11 +110,20 @@ build (`APP_URL=https://example.com PAYMENT_PROVIDER=none ALLOW_CONSOLE_SMS=true
   (logos in `public/brand/makers`), then that maker's categories with counts (`src/lib/home-makers.ts`); choice kept
   in `/?maker=`. Cars belong to a maker automatically by «سازنده»/model words (`carMaker` in `src/lib/makers.ts`).
   Listings accept `?maker=` = parts ticked for that maker's cars + general parts with no car ticked (chip to remove it).
+- Home page order: banners, `FeatureStrip`, maker picker, `PopularParts` (subcategories with the most parts, round
+  photos), «منتخب قطعات» (real best sellers once ≥ 4 have sold, else `getMixedPicks`: a daily-shuffled mix), then one
+  sideways `ProductRail` per main category (`getCategoryRails`: one product per subcategory in turn), offers, `HelpCta`.
+  Data in `src/lib/home-sections.ts`.
+- Footer: logo before the name, one line per contact detail with an icon, directions buttons, social icons centred.
 - Homepage banners: `/admin/banners` (`src/lib/banners*.ts`, `components/home/HeroBanners.tsx`). Layouts: single,
   split (big + small), grid4, slider; active banners fill the layout's places in list order. Built with container
   queries (`@container/hero`) so the admin preview renders the phone and desktop versions exactly.
-- Floating "پشتیبانی" button (`ChatWidget`): menu of call, live chat, Instagram, WhatsApp (in that order; empty
-  channels hidden), built from `getContact()` in the shop layout.
+- Floating "پشتیبانی" button (`ChatWidget`): menu of call, live chat, WhatsApp, Telegram, Bale (بله), Rubika (روبیکا),
+  Instagram and «مسیریابی» (Neshan / Google Maps buttons), in `SUPPORT_CHANNELS` order, each switchable at /admin/contact
+  and hidden while its ID/link is empty; built from `getContact()` in the shop layout. The panel scrolls inside
+  (`.support-menu-panel` max height). Map links (`map_neshan`, `map_google`: pasted share links, host-checked in
+  `contact-shared.ts`; share text around the link is fine) fall back to routing to the Settings map pin (`getContact`);
+  they show in the footer, on the contact page and in the menu.
 - Shop location: Settings → map picker (Leaflet + OpenStreetMap tiles, keys `shop_lat`/`shop_lng`); the contact page
   shows it and links to Neshan routing (`src/lib/location.ts`).
 - Category icons: names stored in `Category.icon`, whitelist + Persian labels in `src/lib/shop.ts`, renderers in

@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Instagram, Telegram, WhatsApp } from "@/components/icons/Social";
+import { Mail, MapPin, Navigation, Phone, Smartphone, Mailbox } from "lucide-react";
+import { Bale, Instagram, Rubika, Telegram, WhatsApp } from "@/components/icons/Social";
 import { LogoMark } from "@/components/brand/Logo";
 import { SITE } from "@/lib/shop";
 import { db } from "@/lib/db";
@@ -43,31 +44,76 @@ export async function SiteFooter() {
     { url: contact.instagramUrl, label: "اینستاگرام", Icon: Instagram },
     { url: contact.telegramUrl, label: "تلگرام", Icon: Telegram },
     { url: contact.whatsappUrl, label: "واتساپ", Icon: WhatsApp },
+    { url: contact.baleUrl, label: "بله", Icon: Bale },
+    { url: contact.rubikaUrl, label: "روبیکا", Icon: Rubika },
   ].filter((s): s is typeof s & { url: string } => !!s.url);
   const enamadId = settings.enamad_id;
   const enamadCode = settings.enamad_code;
 
   return (
-    <footer className="mt-16 bg-night pb-24 pt-14 text-line md:pb-10">
+    <footer className="mt-16 bg-night pb-40 pt-14 text-line md:pb-10">
       <div className="container-page flex flex-col gap-12">
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-[360px_1fr_1fr_auto] lg:justify-between">
           <div className="flex flex-col gap-4">
             <Link href="/" className="flex w-fit items-center gap-3" aria-label={`${SITE.name} — صفحه اصلی`}>
-              <span className="text-lg font-black text-white">{SITE.name}</span>
               <LogoMark className="h-9 w-[61px]" />
+              <span className="text-lg font-black text-white">{SITE.name}</span>
             </Link>
             <p className="text-[13px] leading-[1.9]">{SITE.description}</p>
-            <address className="text-[13px] not-italic leading-[1.9] text-subtle">
-              نشانی: {contact.addressLine}
-              <br />
-              تلفن: <a href={`tel:${contact.phone}`} dir="ltr" className="hover:text-white">{contact.phoneDisplay}</a>
-              {contact.mobile && (
-                <>
-                  {" "}— موبایل: <a href={`tel:${contact.mobile}`} dir="ltr" className="hover:text-white">{contact.mobileDisplay}</a>
-                </>
-              )}
-              {contact.email && <> — ایمیل: <span dir="ltr">{contact.email}</span></>}
+            {/* One line per contact detail, each with its icon. */}
+            <address className="not-italic">
+              <ul className="flex flex-col gap-2.5 text-[13px] leading-6 text-subtle">
+                <li className="flex items-start gap-2.5">
+                  <MapPin className="mt-1 size-4 shrink-0 text-white/40" aria-hidden />
+                  <span>نشانی: {contact.address}</span>
+                </li>
+                {contact.postalCode && (
+                  <li className="flex items-start gap-2.5">
+                    <Mailbox className="mt-1 size-4 shrink-0 text-white/40" aria-hidden />
+                    <span>کد پستی: {contact.postalCode}</span>
+                  </li>
+                )}
+                <li className="flex items-start gap-2.5">
+                  <Phone className="mt-1 size-4 shrink-0 text-white/40" aria-hidden />
+                  <span>
+                    تلفن: <a href={`tel:${contact.phone}`} dir="ltr" className="hover:text-white">{contact.phoneDisplay}</a>
+                  </span>
+                </li>
+                {contact.mobile && (
+                  <li className="flex items-start gap-2.5">
+                    <Smartphone className="mt-1 size-4 shrink-0 text-white/40" aria-hidden />
+                    <span>
+                      موبایل: <a href={`tel:${contact.mobile}`} dir="ltr" className="hover:text-white">{contact.mobileDisplay}</a>
+                    </span>
+                  </li>
+                )}
+                {contact.email && (
+                  <li className="flex items-start gap-2.5">
+                    <Mail className="mt-1 size-4 shrink-0 text-white/40" aria-hidden />
+                    <span className="min-w-0 break-all">
+                      ایمیل: <a href={`mailto:${contact.email}`} dir="ltr" className="hover:text-white">{contact.email}</a>
+                    </span>
+                  </li>
+                )}
+              </ul>
             </address>
+            {(contact.neshanUrl || contact.googleMapsUrl) && (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="flex items-center gap-1.5 text-xs font-bold text-white">
+                  <Navigation className="size-4 text-brand" aria-hidden /> مسیریابی تا فروشگاه:
+                </span>
+                {contact.neshanUrl && (
+                  <a href={contact.neshanUrl} target="_blank" rel="noopener noreferrer" className="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-white/20">
+                    نشان
+                  </a>
+                )}
+                {contact.googleMapsUrl && (
+                  <a href={contact.googleMapsUrl} target="_blank" rel="noopener noreferrer" className="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-white/20">
+                    گوگل مپ
+                  </a>
+                )}
+              </div>
+            )}
           </div>
 
           {columns.map((col) => (
@@ -118,10 +164,11 @@ export async function SiteFooter() {
 
         <hr className="border-white/10" />
 
-        <div className="flex flex-col-reverse items-center justify-between gap-4 md:flex-row">
-          <p className="text-xs text-subtle">کلیه حقوق مادی و معنوی این وب‌سایت متعلق به {SITE.name} می‌باشد.</p>
+        {/* Copyright on the start side, social links centred (clear of the floating support button). */}
+        <div className="grid items-center gap-5 md:grid-cols-[1fr_auto_1fr]">
+          <p className="order-2 text-center text-xs text-subtle md:order-none md:text-right">کلیه حقوق مادی و معنوی این وب‌سایت متعلق به {SITE.name} می‌باشد.</p>
           {socials.length > 0 && (
-            <div className="flex gap-3 text-line">
+            <div className="order-1 flex flex-wrap justify-center gap-3 text-line md:order-none">
               {socials.map(({ url, label, Icon }) => (
                 <a key={label} href={url} target="_blank" rel="noopener noreferrer" aria-label={label} title={label} className="grid size-9 place-items-center rounded-full bg-white/5 transition-colors hover:bg-white/15 hover:text-white">
                   <Icon className="size-5" />
@@ -129,6 +176,7 @@ export async function SiteFooter() {
               ))}
             </div>
           )}
+          <span className="hidden md:block" aria-hidden />
         </div>
       </div>
     </footer>

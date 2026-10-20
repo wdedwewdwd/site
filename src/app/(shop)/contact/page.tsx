@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronLeft, Clock, Mail, MapPin, MessageCircleMore, Phone, Smartphone } from "lucide-react";
+import { ChevronLeft, Clock, Mail, MapPin, MessageCircleMore, Navigation, Phone, Smartphone } from "lucide-react";
 import { getContact, getShopLocation } from "@/lib/settings";
 import { PageBar } from "@/components/layout/PageBar";
 import { OpenChatButton } from "@/components/chat/OpenChatButton";
@@ -22,6 +22,8 @@ export default async function ContactPage() {
     ...(contact.instagramUrl ? [{ channel: "instagram" as const, label: "اینستاگرام", handle: `@${contact.instagram}`, url: contact.instagramUrl }] : []),
     ...(contact.telegramUrl ? [{ channel: "telegram" as const, label: "تلگرام", handle: `@${contact.telegram}`, url: contact.telegramUrl }] : []),
     ...(contact.whatsappUrl ? [{ channel: "whatsapp" as const, label: "واتساپ", handle: contact.whatsappDisplay!, url: contact.whatsappUrl }] : []),
+    ...(contact.baleUrl ? [{ channel: "bale" as const, label: "بله", handle: `@${contact.bale}`, url: contact.baleUrl }] : []),
+    ...(contact.rubikaUrl ? [{ channel: "rubika" as const, label: "روبیکا", handle: `@${contact.rubika}`, url: contact.rubikaUrl }] : []),
   ];
 
   return (
@@ -81,12 +83,36 @@ export default async function ContactPage() {
           </section>
         )}
 
-        {location && (
+        {location && contact.neshanUrl && contact.googleMapsUrl ? (
           <section className="mt-8" aria-labelledby="map-title">
             <h2 id="map-title" className="mb-1 text-base font-black">موقعیت فروشگاه روی نقشه</h2>
             <p className="mb-4 text-xs leading-6 text-muted">{contact.address}</p>
-            <ShopMap location={location} address={contact.address} />
+            <ShopMap location={location} address={contact.address} neshanUrl={contact.neshanUrl} googleMapsUrl={contact.googleMapsUrl} />
           </section>
+        ) : (
+          (contact.neshanUrl || contact.googleMapsUrl) && (
+            <section className="mt-8 flex flex-col gap-4 rounded-card border border-line p-5 sm:flex-row sm:items-center" aria-labelledby="route-title">
+              <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-info-soft text-info">
+                <Navigation className="size-6" aria-hidden />
+              </span>
+              <span className="flex flex-1 flex-col gap-1">
+                <h2 id="route-title" className="text-base font-black">مسیریابی تا فروشگاه</h2>
+                <span className="text-xs leading-6 text-muted">{contact.address}</span>
+              </span>
+              <span className="flex flex-wrap gap-2">
+                {contact.neshanUrl && (
+                  <a href={contact.neshanUrl} target="_blank" rel="noopener noreferrer" className="btn-primary px-4">
+                    <Navigation className="size-4" aria-hidden /> مسیریابی با نشان
+                  </a>
+                )}
+                {contact.googleMapsUrl && (
+                  <a href={contact.googleMapsUrl} target="_blank" rel="noopener noreferrer" className="btn-ghost px-4">
+                    مسیریابی با گوگل مپ
+                  </a>
+                )}
+              </span>
+            </section>
+          )
         )}
 
         <div className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-card bg-canvas p-5">

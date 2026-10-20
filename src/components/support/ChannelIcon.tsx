@@ -1,7 +1,7 @@
-import { MessageCircleMore, Phone } from "lucide-react";
-import { Instagram, Telegram, WhatsApp } from "@/components/icons/Social";
+import { MessageCircleMore, Navigation, Phone } from "lucide-react";
+import { Bale, Instagram, Rubika, Telegram, WhatsApp } from "@/components/icons/Social";
 
-export type Channel = "phone" | "chat" | "instagram" | "telegram" | "whatsapp";
+export type Channel = "phone" | "chat" | "instagram" | "telegram" | "whatsapp" | "bale" | "rubika" | "route";
 
 // Each channel in its familiar brand colour, so customers recognise it at a glance.
 const STYLE: Record<Channel, { bg: string; Icon: React.ComponentType<{ className?: string }> }> = {
@@ -10,6 +10,9 @@ const STYLE: Record<Channel, { bg: string; Icon: React.ComponentType<{ className
   instagram: { bg: "bg-[linear-gradient(45deg,#f9ce34_0%,#ee2a7b_50%,#6228d7_100%)]", Icon: Instagram },
   telegram: { bg: "bg-[#229ED9]", Icon: Telegram },
   whatsapp: { bg: "bg-[#25D366]", Icon: WhatsApp },
+  bale: { bg: "bg-[#1FB5A7]", Icon: Bale },
+  rubika: { bg: "bg-[linear-gradient(135deg,#ff2d55_0%,#ff9500_35%,#34c759_65%,#007aff_100%)]", Icon: Rubika },
+  route: { bg: "bg-[#2563EB]", Icon: Navigation },
 };
 
 /** White channel glyph on its brand-coloured circle. */

@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { categoryCovers } from "@/lib/category-covers";
 import { requireStaff } from "@/lib/auth/session";
 import { HelpBox } from "@/components/admin/HelpBox";
 import { CategoryManager, type CategoryRow } from "@/components/admin/categories/CategoryManager";
@@ -12,11 +13,14 @@ export default async function CategoriesPage() {
     include: { _count: { select: { products: true, children: true } } },
   });
 
+  const covers = await categoryCovers(rows);
   const categories: CategoryRow[] = rows.map((c) => ({
     id: c.id,
     name: c.name,
     slug: c.slug,
     icon: c.icon,
+    image: c.image,
+    cover: covers.get(c.id) ?? null,
     description: c.description,
     isActive: c.isActive,
     parentId: c.parentId,
@@ -32,6 +36,7 @@ export default async function CategoriesPage() {
           items={[
             "دسته‌بندی‌ها گروه‌های قطعات هستند (مثل «لوازم ترمز»). دسته‌های اصلی در صفحه اول سایت، منو و فیلترها نمایش داده می‌شوند.",
             "افزودن: دکمه «افزودن دسته‌بندی» را بزنید، نام فارسی را بنویسید و یک آیکون انتخاب کنید. آدرس صفحه خودکار ساخته می‌شود.",
+            "عکس دسته: با «ویرایش» یک عکس افقی (بهتر است ۴ به ۳، مثلاً ۱۲۰۰ در ۹۰۰) بگذارید؛ روی کارت دسته در صفحه اول و صفحه دسته‌بندی‌ها نمایش داده می‌شود. اگر عکسی نگذارید، عکس اولین محصول همان دسته (به ترتیب لیست قیمت) نمایش داده می‌شود.",
             "زیردسته: با دکمه «افزودن زیردسته» (آیکون پوشه) کنار هر دسته اصلی، دسته‌های جزئی‌تر بسازید؛ مثل «لنت ترمز» زیر «لوازم ترمز».",
             "ترتیب: با فلش‌های بالا و پایین، جای دسته‌ها را در سایت عوض کنید.",
             "پنهان کردن: کلید «نمایش در سایت» را خاموش کنید؛ دسته از منو حذف می‌شود ولی محصولاتش پاک نمی‌شوند.",

@@ -8,6 +8,7 @@ const LINKS = [
   { href: "/categories", label: "دسته‌بندی قطعات", match: (p: string) => p.startsWith("/categor") || p.startsWith("/product") },
   { href: "/products?sort=bestselling", label: "محصولات پرفروش", match: () => false },
   { href: "/offers", label: "تخفیف‌ها و پیشنهادها", match: (p: string) => p.startsWith("/offers") },
+  { href: "/profile/orders", label: "پیگیری سفارش", match: (p: string) => p.startsWith("/profile/orders") },
   { href: "/about", label: "درباره ما", match: (p: string) => p.startsWith("/about") },
   { href: "/contact", label: "تماس با ما", match: (p: string) => p.startsWith("/contact") },
 ];

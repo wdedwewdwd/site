@@ -1,6 +1,6 @@
 /**
  * Full-site backup and restore: every database table (except throwaway security state)
- * plus uploaded product, chat and banner images, in one ZIP file.
+ * plus uploaded product, chat, banner and category images, in one ZIP file.
  *
  * Used by the admin panel routes and by scripts/backup.ts, so it must not import "server-only".
  */
@@ -27,8 +27,8 @@ type Table = (typeof TABLES)[number];
 const OPTIONAL_TABLES = new Set<Table>(["ChatConversation", "ChatMessage", "Banner"]);
 
 /** Upload folders included in backups, and the table whose rows point at their files. */
-const UPLOAD_FOLDERS = ["products", "chat", "banners"] as const;
-const FOLDER_TABLE: Record<(typeof UPLOAD_FOLDERS)[number], Table> = { products: "ProductImage", chat: "ChatMessage", banners: "Banner" };
+const UPLOAD_FOLDERS = ["products", "chat", "banners", "categories"] as const;
+const FOLDER_TABLE: Record<(typeof UPLOAD_FOLDERS)[number], Table> = { products: "ProductImage", chat: "ChatMessage", banners: "Banner", categories: "Category" };
 
 /** Short-lived security state: never backed up, always cleared on restore (everyone signs in again). */
 const TRANSIENT = ["Session", "OtpCode", "RateLimit"] as const;
@@ -39,7 +39,7 @@ const JSON_COLUMNS: Partial<Record<Table, string[]>> = { Product: ["specs"], Aud
 const MAX_ZIP_BYTES = 500 * 1024 * 1024;
 const MAX_UNZIPPED_BYTES = 1024 * 1024 * 1024;
 const MAX_ENTRIES = 20_000;
-const UPLOAD_ENTRY = /^uploads\/(products|chat|banners)\/[A-Za-z0-9_-]{16,64}\.webp$/;
+const UPLOAD_ENTRY = /^uploads\/(products|chat|banners|categories)\/[A-Za-z0-9_-]{16,64}\.webp$/;
 
 type Manifest = {
   app: string;

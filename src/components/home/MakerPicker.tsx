@@ -6,7 +6,7 @@ import { type CSSProperties } from "react";
 import { useSearchParams } from "next/navigation";
 import { ArrowRight, ChevronLeft, LayoutGrid } from "lucide-react";
 import { faDigits } from "@/lib/format";
-import { CategoryIcon } from "@/components/ui/CategoryIcon";
+import { CategoryCover } from "@/components/ui/CategoryCover";
 import type { MakerSection } from "@/lib/home-makers";
 
 /** Each maker's accent colour, used by the card border, glow and accents. */
@@ -116,18 +116,25 @@ function MakerCategories({ maker }: { maker: MakerSection }) {
           <Link href="/categories" className="btn-ghost">مشاهده همه دسته‌بندی‌ها</Link>
         </div>
       ) : (
-        <ul className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:gap-4 lg:grid-cols-6">
+        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4">
           {maker.categories.map((c, i) => (
             <li key={c.slug} className="animate-fade-up" style={{ animationDelay: `${i * 40}ms` }}>
               <Link
                 href={`/category/${c.slug}?${q}`}
-                className="group flex h-full flex-col items-center gap-2 rounded-card border border-line bg-white px-2 py-4 text-center transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--mk)] hover:shadow-[0_12px_28px_-18px_var(--mk)]"
+                className="group flex h-full flex-col overflow-hidden rounded-card border border-line bg-white text-center transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--mk)] hover:shadow-[0_12px_28px_-18px_var(--mk)]"
               >
-                <span className="grid size-12 place-items-center rounded-full bg-[var(--mk-soft)] text-[var(--mk)] transition-colors group-hover:bg-[var(--mk)] group-hover:text-white md:size-14">
-                  <CategoryIcon name={c.icon} className="size-6 md:size-7" />
+                <span className="relative aspect-[4/3] overflow-hidden bg-surface">
+                  <CategoryCover
+                    image={c.image}
+                    icon={c.icon}
+                    sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+                    className="transition-transform duration-300 group-hover:scale-[1.04]"
+                  />
                 </span>
-                <span className="line-clamp-2 text-xs font-extrabold leading-5 md:text-[13px]">{c.name}</span>
-                <span className="text-[11px] text-muted">{faDigits(c.count)} قطعه</span>
+                <span className="flex flex-col items-center gap-0.5 px-2 py-2.5">
+                  <span className="line-clamp-2 text-xs font-extrabold leading-5 md:text-sm">{c.name}</span>
+                  <span className="text-[11px] text-muted">{faDigits(c.count)} قطعه</span>
+                </span>
               </Link>
             </li>
           ))}

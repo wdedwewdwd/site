@@ -133,7 +133,9 @@ export async function saveProduct(_: ProductFormState, formData: FormData): Prom
 
 
   const product = await db.$transaction(async (tx) => {
-    const p = id ? await tx.product.update({ where: { id }, data }) : await tx.product.create({ data });
+    // A new product goes to the end of the price-list order.
+    const position = id ? undefined : ((await tx.product.aggregate({ _max: { position: true } }))._max.position ?? 0) + 1;
+    const p = id ? await tx.product.update({ where: { id }, data }) : await tx.product.create({ data: { ...data, position } });
     if (removeImages.length) await tx.productImage.deleteMany({ where: { id: { in: removeImages }, productId: p.id } });
     if (uploaded.length) {
       const last = await tx.productImage.aggregate({ where: { productId: p.id }, _max: { sortOrder: true } });

@@ -96,7 +96,7 @@ export default async function OrderDetailPage({ params }: PageProps<"/profile/or
         )}
       </section>
 
-      <div className="grid gap-5 xl:grid-cols-[1fr_320px]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
         <section className="card flex flex-col p-5" aria-labelledby="items">
           <h2 id="items" className="mb-3 text-base font-black">اقلام سفارش</h2>
           <ul className="divide-y divide-line">

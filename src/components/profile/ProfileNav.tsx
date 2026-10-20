@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, CircleUserRound, Headset, Heart, LayoutDashboard, LogOut, MapPin, ShoppingBag } from "lucide-react";
+import { Bell, ChevronLeft, CircleUserRound, Headset, Heart, LayoutDashboard, LogOut, MapPin, ShoppingBag } from "lucide-react";
 import { logoutAction } from "@/app/actions/auth";
 import { faDigits } from "@/lib/format";
 
@@ -24,7 +24,8 @@ export function ProfileNav({ openOrders, unread }: { openOrders: number; unread:
         {items.map(({ href, label, Icon, badge, exact }) => {
           const active = exact ? pathname === href : pathname.startsWith(href);
           return (
-            <li key={href}>
+            // Phones show this menu on the overview page itself, so its own entry is left out there.
+            <li key={href} className={exact ? "hidden lg:list-item" : undefined}>
               <Link
                 href={href}
                 aria-current={active ? "page" : undefined}
@@ -35,6 +36,7 @@ export function ProfileNav({ openOrders, unread }: { openOrders: number; unread:
                 <Icon className="size-5" aria-hidden />
                 <span className="flex-1">{label}</span>
                 {!!badge && <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-black text-brand">{faDigits(badge)}</span>}
+                <ChevronLeft className="size-4 text-subtle lg:hidden" aria-hidden />
               </Link>
             </li>
           );

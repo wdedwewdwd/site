@@ -100,7 +100,7 @@ export default async function ProductPage({ params }: PageProps<"/product/[slug]
         actions={<ShareButton title={product.name} />}
       />
 
-      <div className="grid gap-8 lg:grid-cols-[1fr_480px] lg:gap-10">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,1fr)_480px] lg:gap-10">
         {/* Info column (right in RTL) */}
         <div className="flex flex-col gap-6 lg:col-start-1 lg:row-start-1">
           <div className="flex flex-col gap-4 border-b border-line pb-5">
@@ -143,7 +143,7 @@ export default async function ProductPage({ params }: PageProps<"/product/[slug]
               </p>
             </div>
             {inStock ? (
-              <div className="flex flex-wrap gap-3">
+              <div className="hidden flex-wrap gap-3 md:flex">
                 <AddToCartButton productId={product.id} variant="full" />
                 <AddToCartButton productId={product.id} variant="full" buyNow />
               </div>
@@ -214,6 +214,30 @@ export default async function ProductPage({ params }: PageProps<"/product/[slug]
             ))}
           </div>
         </section>
+      )}
+
+      {/* Phones: price and buy buttons stay in reach above the bottom navigation. */}
+      {inStock && (
+        <>
+          <div className="h-16 md:hidden" aria-hidden />
+          <div
+            data-mobile-buybar
+            className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 border-t border-line bg-white/95 px-4 py-2.5 shadow-[0_-8px_24px_-14px_rgba(0,0,0,0.25)] backdrop-blur md:hidden"
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex shrink-0 flex-col">
+                {product.compareAtPrice && product.compareAtPrice > product.price && (
+                  <del className="text-[11px] text-muted">{toman(product.compareAtPrice)}</del>
+                )}
+                <p className="flex items-baseline gap-1">
+                  <span className="text-lg font-black text-brand">{toman(product.price)}</span>
+                  <span className="text-[11px] text-muted">تومان</span>
+                </p>
+              </div>
+              <AddToCartButton productId={product.id} variant="full" className="!min-w-0 flex-1 px-3" />
+            </div>
+          </div>
+        </>
       )}
     </div>
   );

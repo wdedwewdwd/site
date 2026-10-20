@@ -96,7 +96,7 @@ function MakerCategories({ maker }: { maker: MakerSection }) {
   return (
     <div className="flex flex-col gap-4" style={accent(maker)}>
       {maker.cars.length > 0 && (
-        <nav aria-label={`خودروهای ${maker.name}`} className="-mx-4 flex animate-fade-up items-center gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:px-0">
+        <nav aria-label={`خودروهای ${maker.name}`} className="no-scrollbar -mx-4 flex animate-fade-up items-center gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:px-0">
           <span className="shrink-0 text-xs font-bold text-muted">خودروی شما:</span>
           {maker.cars.map((c) => (
             <Link

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useEffect, useRef, useState } from "react";
+import { startTransition, useActionState, useEffect, useRef, useState } from "react";
 import { LoaderCircle, Phone } from "lucide-react";
 import { requestOtpAction, verifyOtpAction, type AuthState } from "@/app/actions/auth";
 import { LogoMark } from "@/components/brand/Logo";
@@ -19,7 +19,7 @@ export function LoginFlow({ next, reauth }: { next: string; reauth: boolean }) {
   const onCodeStep = !editing && sendState?.ok && sendState.step === "code" && !!phone && verifyState?.step !== "phone";
 
   return (
-    <div className="w-full max-w-[400px] rounded-3xl border border-line bg-white p-6 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.12)] md:p-8">
+    <div className="w-full max-w-[400px] rounded-3xl border border-line bg-white p-5 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.12)] sm:p-6 md:p-8">
       <div className="mb-6 flex flex-col items-center gap-2 text-center">
         <Link href="/" aria-label="آریزون یدک — صفحه اصلی" className="flex flex-col items-center gap-2">
           <LogoMark className="h-12 w-[82px]" />
@@ -41,7 +41,9 @@ export function LoginFlow({ next, reauth }: { next: string; reauth: boolean }) {
           resending={sending}
         />
       ) : (
-        <form action={(fd) => { setEditing(false); sendAction(fd); }} className="flex flex-col gap-4" noValidate>
+        // The server action itself is the form action, so sending the code also works while the page's
+        // scripts are still loading (or on a phone whose browser can't run them).
+        <form action={sendAction} onSubmit={() => setEditing(false)} className="flex flex-col gap-4" noValidate>
           <div className="flex flex-col gap-1.5">
             <h1 className="text-lg font-black">{reauth ? "ورود مجدد" : "ورود به حساب کاربری"}</h1>
             <p className="text-[13px] text-muted">
@@ -63,7 +65,7 @@ export function LoginFlow({ next, reauth }: { next: string; reauth: boolean }) {
                 defaultValue={phone ?? ""}
                 placeholder="۰۹۱۲۳۴۵۶۷۸۹"
                 dir="ltr"
-                className="w-full bg-transparent py-3 text-left text-sm tracking-wider focus:outline-none"
+                className="w-full bg-transparent py-3 text-left text-base tracking-wider focus:outline-none"
                 aria-invalid={!!(sendState?.error || verifyState?.step === "phone")}
                 aria-describedby="phone-error"
                 autoFocus
@@ -111,7 +113,9 @@ function CodeStep(props: {
 
   const code = digits.join("");
   useEffect(() => {
-    if (code.length === OTP_LENGTH && !props.pending) formRef.current?.requestSubmit();
+    const form = formRef.current;
+    // Send as soon as the whole code is in. Calls the action directly: form.requestSubmit() needs iOS 16+.
+    if (form && code.length === OTP_LENGTH && !props.pending) startTransition(() => props.action(new FormData(form)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [code]);
 
@@ -143,7 +147,7 @@ function CodeStep(props: {
         <button type="button" onClick={props.onEdit} className="text-xs font-bold text-brand hover:underline">ویرایش شماره</button>
       </div>
 
-      <fieldset className="flex justify-center gap-2" dir="ltr">
+      <fieldset className="mx-auto grid w-full max-w-[336px] grid-cols-6 gap-1.5 sm:gap-2" dir="ltr">
         <legend className="sr-only">کد تأیید</legend>
         {digits.map((d, i) => (
           <input
@@ -157,7 +161,7 @@ function CodeStep(props: {
             inputMode="numeric"
             autoComplete={i === 0 ? "one-time-code" : "off"}
             aria-label={`رقم ${i + 1}`}
-            className={`size-12 rounded-xl border-2 bg-canvas text-center text-lg font-black focus:bg-white focus:outline-none ${
+            className={`h-12 w-full min-w-0 rounded-xl border-2 bg-canvas p-0 text-center text-lg font-black focus:bg-white focus:outline-none ${
               props.error ? "border-brand" : d ? "border-ink/30" : "border-line focus:border-brand"
             }`}
           />

@@ -1,15 +1,16 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronLeft, LayoutDashboard } from "lucide-react";
+import { ChevronLeft, LayoutDashboard, UserRound } from "lucide-react";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/auth/session";
 import { faDate, faDateTime, faDigits, toman } from "@/lib/format";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { PageBar } from "@/components/layout/PageBar";
+import { ProfileNav } from "@/components/profile/ProfileNav";
 
 export default async function ProfileDashboard() {
   const user = await requireUser("/profile");
-  const [total, shipping, delivered, wishlist, recent, me] = await Promise.all([
+  const [total, shipping, delivered, wishlist, recent, me, unread] = await Promise.all([
     db.order.count({ where: { userId: user.id, status: { not: "PENDING_PAYMENT" } } }),
     db.order.count({ where: { userId: user.id, status: { in: ["PAID", "PROCESSING", "SHIPPED"] } } }),
     db.order.count({ where: { userId: user.id, status: "DELIVERED" } }),
@@ -21,6 +22,7 @@ export default async function ProfileDashboard() {
       include: { items: { take: 1, include: { product: { select: { images: { take: 1, orderBy: { sortOrder: "asc" } } } } } } },
     }),
     db.user.findUnique({ where: { id: user.id }, select: { lastLoginAt: true } }),
+    db.notification.count({ where: { userId: user.id, readAt: null } }),
   ]);
   const name = [user.firstName, user.lastName].filter(Boolean).join(" ");
 
@@ -47,7 +49,21 @@ export default async function ProfileDashboard() {
           <ChevronLeft className="size-5 text-white/60" aria-hidden />
         </Link>
       )}
-      <section className="card flex flex-wrap items-center justify-between gap-4 p-6">
+      {/* Phones: the account card and the profile menu come first (desktop has them in the side column). */}
+      <div className="flex flex-col gap-3 lg:hidden">
+        <Link href="/profile/account" className="card flex items-center gap-3 p-4">
+          <span className="grid size-12 shrink-0 place-items-center rounded-full bg-brand-soft text-lg font-black text-brand">
+            {user.firstName?.trim() ? user.firstName.trim().charAt(0) : <UserRound className="size-6" aria-hidden />}
+          </span>
+          <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <span className="truncate text-sm font-black">{name || "کاربر آریزون یدک"}</span>
+            <span className="self-start text-xs text-muted" dir="ltr">{faDigits(user.phone)}</span>
+          </span>
+          <span className="shrink-0 text-xs font-bold text-brand">ویرایش</span>
+        </Link>
+        <ProfileNav openOrders={shipping} unread={unread} />
+      </div>
+      <section className="card hidden flex-wrap items-center justify-between gap-4 p-6 lg:flex">
         <div className="flex flex-col gap-1.5">
           <h1 className="text-lg font-black">سلام {name || "دوست"} عزیز!</h1>
           <p className="text-[13px] text-muted">به پنل کاربری خود خوش آمدید. از این بخش می‌توانید سفارشات و مشخصات خود را مدیریت کنید.</p>
@@ -57,9 +73,9 @@ export default async function ProfileDashboard() {
         )}
       </section>
 
-      <section className="grid grid-cols-2 gap-4 xl:grid-cols-4" aria-label="آمار">
+      <section className="grid grid-cols-2 gap-3 md:gap-4 xl:grid-cols-4" aria-label="آمار">
         {stats.map((s) => (
-          <div key={s.label} className="card flex flex-col gap-3 p-5">
+          <div key={s.label} className="card flex flex-col gap-2 p-4 md:gap-3 md:p-5">
             <span className="text-xs text-muted">{s.label}</span>
             <span className={`text-xl font-black ${s.color}`}>{s.value}</span>
           </div>
@@ -67,9 +83,9 @@ export default async function ProfileDashboard() {
       </section>
 
       <section className="card flex flex-col gap-2 p-5" aria-labelledby="recent">
-        <div className="mb-2 flex items-center justify-between">
-          <h2 id="recent" className="text-base font-black">آخرین سفارش‌های ثبت شده</h2>
-          <Link href="/profile/orders" className="text-xs font-bold text-brand hover:underline">مشاهده همه سفارش‌ها</Link>
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <h2 id="recent" className="text-base font-black">آخرین سفارش‌ها</h2>
+          <Link href="/profile/orders" className="shrink-0 text-xs font-bold text-brand hover:underline">مشاهده همه</Link>
         </div>
         {recent.length === 0 ? (
           <p className="py-6 text-center text-sm text-muted">هنوز سفارشی ثبت نکرده‌اید.</p>

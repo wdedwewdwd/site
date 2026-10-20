@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireUser, safeNext } from "@/lib/auth/session";
+import { setProfileGate } from "@/lib/auth/profile-gate";
 import { PROVINCES, isValidNationalCode } from "@/lib/iran";
 import { idSchema, optionalPostalCodeSchema, phoneSchema, text, toEnDigits } from "@/lib/validation";
 
@@ -41,6 +42,8 @@ export async function updateAccount(_: FormState, formData: FormData): Promise<F
     where: { id: user.id },
     data: { firstName, lastName, email: email || null, nationalCode: nationalCode || null },
   });
+  // Name entered: sign-up is complete.
+  await setProfileGate(false);
   revalidatePath("/", "layout");
 
   const next = formData.get("next");

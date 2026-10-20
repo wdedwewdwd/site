@@ -56,10 +56,11 @@ export default async function CategoryPage({ params, searchParams }: PageProps<"
           </div>
           {category.children.length > 0 && (
             <nav aria-label="زیردسته‌ها">
-              <ul className="flex flex-wrap gap-2">
+              {/* Phones: one row that scrolls sideways, so the products are not pushed below the fold. */}
+              <ul className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:overflow-visible md:px-0 md:pb-0">
                 {category.children.map((c) => (
-                  <li key={c.slug}>
-                    <Link href={`/category/${c.slug}${keep}`} className="flex items-center gap-2 rounded-full border border-line bg-white py-1 ps-1 pe-4 text-xs font-bold transition-colors hover:border-brand hover:text-brand">
+                  <li key={c.slug} className="shrink-0">
+                    <Link href={`/category/${c.slug}${keep}`} className="flex items-center gap-2 whitespace-nowrap rounded-full border border-line bg-white py-1 ps-1 pe-4 text-xs font-bold transition-colors hover:border-brand hover:text-brand">
                       <span className="relative size-8 shrink-0 overflow-hidden rounded-full bg-surface">
                         <CategoryCover image={covers.get(c.id)} icon={c.icon} sizes="32px" iconClassName="size-4" />
                       </span>

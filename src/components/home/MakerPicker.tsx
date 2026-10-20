@@ -28,7 +28,7 @@ export function MakerPicker({ makers }: { makers: MakerSection[] }) {
 
   return (
     <section className="flex flex-col gap-4" aria-labelledby="cat-title">
-      <div className="flex min-h-9 items-center justify-between gap-3">
+      <div className="flex min-h-9 flex-wrap items-center justify-between gap-x-3 gap-y-1">
         {chosen ? (
           <h2 id="cat-title" className="flex items-center gap-2.5 text-base font-black md:text-lg" style={accent(chosen)}>
             <span className="grid size-9 place-items-center rounded-xl bg-[var(--mk-soft)]">
@@ -47,7 +47,7 @@ export function MakerPicker({ makers }: { makers: MakerSection[] }) {
             <ArrowRight className="size-4" aria-hidden /> تغییر خودروساز
           </button>
         ) : (
-          <Link href="/categories" className="shrink-0 text-[13px] font-bold text-brand hover:underline">همه دسته‌بندی‌ها</Link>
+          <Link href="/categories" className="shrink-0 text-[13px] font-bold text-brand hover:underline">دسته‌بندی قطعه‌های محصول</Link>
         )}
       </div>
 

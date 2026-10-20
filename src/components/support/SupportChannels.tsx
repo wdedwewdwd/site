@@ -6,14 +6,40 @@ import { ChannelIcon, type Channel } from "./ChannelIcon";
 /** The contact details the support menu needs (all public). */
 export type SupportContact = Pick<
   ContactInfo,
-  "phone" | "phoneDisplay" | "hours" | "instagram" | "instagramUrl" | "telegram" | "telegramUrl" | "whatsappUrl" | "whatsappDisplay" | "supportChannels"
+  | "phone"
+  | "phoneDisplay"
+  | "hours"
+  | "instagram"
+  | "instagramUrl"
+  | "telegram"
+  | "telegramUrl"
+  | "whatsappUrl"
+  | "whatsappDisplay"
+  | "bale"
+  | "baleUrl"
+  | "rubika"
+  | "rubikaUrl"
+  | "neshanUrl"
+  | "googleMapsUrl"
+  | "address"
+  | "supportChannels"
 >;
 
-type Row = { channel: Channel; title: string; sub: React.ReactNode; href?: string; external?: boolean; onClick?: () => void; badge?: number };
+type Row = {
+  channel: Channel;
+  title: string;
+  sub: React.ReactNode;
+  href?: string;
+  external?: boolean;
+  onClick?: () => void;
+  badge?: number;
+  /** Several direct actions on one row (directions: Neshan / Google Maps). */
+  links?: { label: string; href: string }[];
+};
 
 /**
- * Ways to reach support: phone, live chat, WhatsApp, Telegram, Instagram — the ones switched on in the admin
- * panel ("اطلاعات تماس و شبکه‌ها"). A social option without its ID/number is left out.
+ * Ways to reach support: phone, live chat, WhatsApp, Telegram, Bale, Rubika, Instagram and directions to the shop —
+ * the ones switched on in the admin panel ("اطلاعات تماس و شبکه‌ها"). An option without its ID/number/link is left out.
  */
 export function SupportChannels({
   contact,
@@ -51,9 +77,25 @@ export function SupportChannels({
     telegram: contact.telegramUrl
       ? { channel: "telegram", title: "تلگرام", sub: <span dir="ltr">@{contact.telegram}</span>, href: contact.telegramUrl, external: true }
       : null,
+    bale: contact.baleUrl ? { channel: "bale", title: "بله", sub: <span dir="ltr">@{contact.bale}</span>, href: contact.baleUrl, external: true } : null,
+    rubika: contact.rubikaUrl
+      ? { channel: "rubika", title: "روبیکا", sub: <span dir="ltr">@{contact.rubika}</span>, href: contact.rubikaUrl, external: true }
+      : null,
     instagram: contact.instagramUrl
       ? { channel: "instagram", title: "اینستاگرام", sub: <span dir="ltr">@{contact.instagram}</span>, href: contact.instagramUrl, external: true }
       : null,
+    route:
+      contact.neshanUrl || contact.googleMapsUrl
+        ? {
+            channel: "route",
+            title: "مسیریابی",
+            sub: contact.address,
+            links: [
+              ...(contact.neshanUrl ? [{ label: "نشان", href: contact.neshanUrl }] : []),
+              ...(contact.googleMapsUrl ? [{ label: "گوگل مپ", href: contact.googleMapsUrl }] : []),
+            ],
+          }
+        : null,
   };
   const rows = contact.supportChannels.map((c) => all[c]).filter((r): r is Row => r !== null);
 
@@ -72,6 +114,30 @@ export function SupportChannels({
           </>
         );
         const cls = "group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 transition-colors hover:bg-canvas focus-visible:bg-canvas";
+        if (r.links)
+          return (
+            <li key={r.channel} className="flex items-center gap-3 rounded-xl px-3 py-2.5">
+              <ChannelIcon channel={r.channel} />
+              <span className="flex min-w-0 flex-1 flex-col text-right">
+                <span className="text-sm font-extrabold text-ink">{r.title}</span>
+                <span className="truncate text-xs text-muted">{r.sub}</span>
+              </span>
+              <span className="flex shrink-0 gap-1.5">
+                {r.links.map((l) => (
+                  <a
+                    key={l.label}
+                    href={l.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={onPick}
+                    className="rounded-lg bg-info-soft px-2.5 py-1.5 text-[11px] font-extrabold text-info transition-colors hover:bg-info hover:text-white"
+                  >
+                    {l.label}
+                  </a>
+                ))}
+              </span>
+            </li>
+          );
         return (
           <li key={r.channel}>
             {r.href ? (

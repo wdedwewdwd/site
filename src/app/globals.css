@@ -150,6 +150,18 @@
   }
 }
 
+/* The support menu opens upwards from its button; it never grows past the top of the screen. */
+.support-menu-panel {
+  max-height: calc(100vh - 14rem);
+  max-height: calc(100dvh - 14rem);
+}
+@media (min-width: 768px) {
+  .support-menu-panel {
+    max-height: calc(100vh - 7rem);
+    max-height: calc(100dvh - 7rem);
+  }
+}
+
 /* Taps act at once (no double-tap-to-zoom wait) on buttons and links. */
 a,
 button,

@@ -6,7 +6,19 @@ import { db } from "@/lib/db";
 import { requireStaff } from "@/lib/auth/session";
 import { audit } from "@/lib/audit";
 import { text, toEnDigits } from "@/lib/validation";
-import { CONTACT_KEYS, parseChannels, parseInstagram, parsePhone, parseTelegram, parseWhatsapp, type ContactKey } from "@/lib/contact-shared";
+import {
+  CONTACT_KEYS,
+  parseBale,
+  parseChannels,
+  parseGoogleMapsLink,
+  parseInstagram,
+  parseNeshanLink,
+  parsePhone,
+  parseRubika,
+  parseTelegram,
+  parseWhatsapp,
+  type ContactKey,
+} from "@/lib/contact-shared";
 import type { AdminFormState } from "./misc";
 
 type Field = { key: ContactKey; label: string; required?: boolean; emptyError?: string; parse: (v: string) => string | null; error: string };
@@ -26,6 +38,10 @@ const FIELDS: Field[] = [
   { key: "social_instagram", label: "اینستاگرام", parse: parseInstagram, error: "آیدی یا لینک اینستاگرام معتبر نیست (مثلاً arizonyadak@)" },
   { key: "social_telegram", label: "تلگرام", parse: parseTelegram, error: "آیدی یا لینک تلگرام معتبر نیست (مثلاً arizonyadak@)" },
   { key: "social_whatsapp", label: "واتساپ", parse: parseWhatsapp, error: "شماره واتساپ معتبر نیست (شماره موبایل یا لینک wa.me)" },
+  { key: "social_bale", label: "بله", parse: parseBale, error: "آیدی یا لینک بله معتبر نیست (مثلاً arizonyadak@ یا ble.ir/arizonyadak)" },
+  { key: "social_rubika", label: "روبیکا", parse: parseRubika, error: "آیدی یا لینک روبیکا معتبر نیست (مثلاً arizonyadak@ یا rubika.ir/arizonyadak)" },
+  { key: "map_neshan", label: "لینک نشان", parse: parseNeshanLink, error: "لینک نشان معتبر نیست؛ در برنامه نشان «اشتراک‌گذاری» را بزنید و لینک را کپی کنید (مثلاً nshn.ir/…)" },
+  { key: "map_google", label: "لینک گوگل مپ", parse: parseGoogleMapsLink, error: "لینک گوگل مپ معتبر نیست؛ در گوگل مپ «Share» را بزنید و لینک را کپی کنید (مثلاً maps.app.goo.gl/…)" },
   {
     key: "support_channels",
     label: "منوی پشتیبانی",
@@ -41,7 +57,7 @@ export async function saveContact(_: AdminFormState, formData: FormData): Promis
   const admin = await requireStaff(["ADMIN"]);
   const values = {} as Record<ContactKey, string>;
   for (const f of FIELDS) {
-    const raw = String(formData.get(f.key) ?? "").trim().slice(0, 300);
+    const raw = String(formData.get(f.key) ?? "").trim().slice(0, f.key.startsWith("map_") ? 1000 : 300);
     if (!raw) {
       if (f.required) return { ok: false, error: f.emptyError ?? `${f.label} را وارد کنید.` };
       values[f.key] = "";

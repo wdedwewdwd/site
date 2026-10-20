@@ -20,6 +20,13 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
     whatsappDisplay: contact.whatsappDisplay,
     telegram: contact.telegram,
     telegramUrl: contact.telegramUrl,
+    bale: contact.bale,
+    baleUrl: contact.baleUrl,
+    rubika: contact.rubika,
+    rubikaUrl: contact.rubikaUrl,
+    neshanUrl: contact.neshanUrl,
+    googleMapsUrl: contact.googleMapsUrl,
+    address: contact.address,
     supportChannels: contact.supportChannels,
   };
   return (

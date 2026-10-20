@@ -6,7 +6,7 @@ import { faDigits } from "./format";
 import { normalizePhone, toEnDigits } from "./validation";
 
 /** Options of the floating support menu, in the order they are listed. */
-export const SUPPORT_CHANNELS = ["phone", "chat", "whatsapp", "telegram", "instagram"] as const;
+export const SUPPORT_CHANNELS = ["phone", "chat", "whatsapp", "telegram", "bale", "rubika", "instagram", "route"] as const;
 export type SupportChannel = (typeof SUPPORT_CHANNELS)[number];
 
 /** Settings keys, and the values used until the admin changes them. "" means intentionally empty. */
@@ -20,6 +20,11 @@ export const CONTACT_DEFAULTS = {
   social_instagram: "",
   social_telegram: "",
   social_whatsapp: "",
+  social_bale: "",
+  social_rubika: "",
+  // Directions to the shop: links copied from Neshan and Google Maps (share → copy link).
+  map_neshan: "",
+  map_google: "",
   // Which options the support menu may show (comma list). A social option also needs its link above.
   support_channels: SUPPORT_CHANNELS.join(","),
 } as const;
@@ -50,6 +55,45 @@ export function parseTelegram(input: string) {
   return /^[A-Za-z][A-Za-z0-9_]{3,31}$/.test(v) ? v : null;
 }
 
+/** Bale (بله) username from "@name", "name" or a ble.ir link. */
+export function parseBale(input: string) {
+  const v = input.trim().replace(/^https?:\/\/(www\.)?(ble\.ir|bale\.ai)\//i, "").replace(/^@/, "").split(/[/?#]/)[0];
+  return /^[A-Za-z][A-Za-z0-9_]{2,31}$/.test(v) ? v : null;
+}
+
+/** Rubika (روبیکا) username from "@name", "name" or a rubika.ir link. */
+export function parseRubika(input: string) {
+  const v = input.trim().replace(/^https?:\/\/(www\.)?rubika\.ir\//i, "").replace(/^@/, "").split(/[/?#]/)[0];
+  return /^[A-Za-z][A-Za-z0-9_.]{2,31}$/.test(v) ? v : null;
+}
+
+/**
+ * A pasted map link, kept only when it really is a link of that map service (https, at most 500 characters).
+ * The apps' «share» text may carry words around the link; the first link in it is used.
+ */
+function parseMapLink(input: string, host: RegExp, path?: RegExp) {
+  const found = input.match(/https?:\/\/[^\s"'<>]+/i);
+  if (!found) return null;
+  try {
+    const u = new URL(found[0]);
+    if (!/^https?:$/.test(u.protocol) || !host.test(u.hostname) || (path && !path.test(u.pathname))) return null;
+    u.protocol = "https:";
+    const out = u.toString();
+    return out.length <= 500 ? out : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Neshan place or route link (neshan.org/maps/… or the short nshn.ir/… link from «اشتراک‌گذاری»). */
+export const parseNeshanLink = (input: string) => parseMapLink(input, /^(www\.)?(neshan\.org|nshn\.ir)$/i);
+
+/** Google Maps link (google.com/maps/…, maps.app.goo.gl/… or goo.gl/maps/…). */
+export const parseGoogleMapsLink = (input: string) =>
+  parseMapLink(input, /^maps\.app\.goo\.gl$/i) ??
+  parseMapLink(input, /^goo\.gl$/i, /^\/maps/) ??
+  parseMapLink(input, /^((www|maps)\.)?google\.[a-z.]{2,6}$/i, /^\/maps|^\/?$/);
+
 /** WhatsApp number in international form (989121234567) from a mobile number or a wa.me link. */
 export function parseWhatsapp(input: string) {
   const text = toEnDigits(input.trim());
@@ -77,6 +121,8 @@ export const formatPhone = (digits: string) => faDigits(digits.startsWith("09") 
 export const instagramUrl = (u: string) => `https://instagram.com/${u}`;
 export const telegramUrl = (u: string) => `https://t.me/${u}`;
 export const whatsappUrl = (n: string) => `https://wa.me/${n}?text=${encodeURIComponent(WHATSAPP_GREETING)}`;
+export const baleUrl = (u: string) => `https://ble.ir/${u}`;
+export const rubikaUrl = (u: string) => `https://rubika.ir/${u}`;
 const whatsappDisplay = (n: string) => (n.startsWith("98") ? formatPhone("0" + n.slice(2)) : faDigits("+" + n));
 
 export type ContactInfo = {
@@ -97,6 +143,13 @@ export type ContactInfo = {
   whatsapp: string | null;
   whatsappUrl: string | null;
   whatsappDisplay: string | null;
+  bale: string | null;
+  baleUrl: string | null;
+  rubika: string | null;
+  rubikaUrl: string | null;
+  /** Directions to the shop in the Neshan / Google Maps apps (the server falls back to the map pin's coordinates). */
+  neshanUrl: string | null;
+  googleMapsUrl: string | null;
   /** Options switched on for the support menu (a social one still needs its link). */
   supportChannels: SupportChannel[];
 };
@@ -111,6 +164,8 @@ export function resolveContact(raw: Partial<Record<string, string>>): ContactInf
   const instagram = get("social_instagram") ? parseInstagram(get("social_instagram")) : null;
   const telegram = get("social_telegram") ? parseTelegram(get("social_telegram")) : null;
   const whatsapp = get("social_whatsapp") ? parseWhatsapp(get("social_whatsapp")) : null;
+  const bale = get("social_bale") ? parseBale(get("social_bale")) : null;
+  const rubika = get("social_rubika") ? parseRubika(get("social_rubika")) : null;
   return {
     phone,
     phoneDisplay: formatPhone(phone),
@@ -128,6 +183,12 @@ export function resolveContact(raw: Partial<Record<string, string>>): ContactInf
     whatsapp,
     whatsappUrl: whatsapp ? whatsappUrl(whatsapp) : null,
     whatsappDisplay: whatsapp ? whatsappDisplay(whatsapp) : null,
+    bale,
+    baleUrl: bale ? baleUrl(bale) : null,
+    rubika,
+    rubikaUrl: rubika ? rubikaUrl(rubika) : null,
+    neshanUrl: get("map_neshan") ? parseNeshanLink(get("map_neshan")) : null,
+    googleMapsUrl: get("map_google") ? parseGoogleMapsLink(get("map_google")) : null,
     supportChannels: (parseChannels(get("support_channels")) ?? CONTACT_DEFAULTS.support_channels).split(",") as SupportChannel[],
   };
 }

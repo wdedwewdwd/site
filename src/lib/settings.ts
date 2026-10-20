@@ -1,7 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { db } from "./db";
-import type { LatLng } from "./location";
+import { googleMapsRouteUrl, neshanRouteUrl, type LatLng } from "./location";
 import { CONTACT_KEYS, resolveContact } from "./contact-shared";
 import { parseShippingConfig } from "./shipping-shared";
 
@@ -33,8 +33,19 @@ export async function getShopLocation(): Promise<LatLng | null> {
   return s.shop_lat && s.shop_lng && Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null;
 }
 
-/** Shop phone numbers, address, hours and social links, as edited in the admin panel. */
-export const getContact = cache(async () => resolveContact(await getSettings()));
+/**
+ * Shop phone numbers, address, hours and social links, as edited in the admin panel. Directions use the Neshan /
+ * Google Maps links pasted there, else routing to the map pin set in Settings.
+ */
+export const getContact = cache(async () => {
+  const contact = resolveContact(await getSettings());
+  const pin = await getShopLocation();
+  return {
+    ...contact,
+    neshanUrl: contact.neshanUrl ?? (pin ? neshanRouteUrl(pin) : null),
+    googleMapsUrl: contact.googleMapsUrl ?? (pin ? googleMapsRouteUrl(pin) : null),
+  };
+});
 
 /** Shipping methods as configured at /admin/shipping (defaults until the owner saves them). */
 export const getShippingConfig = cache(async () => parseShippingConfig((await getSettings()).shipping_config));

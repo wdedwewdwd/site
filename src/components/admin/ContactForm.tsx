@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { CircleCheck, CircleAlert, Clock, ExternalLink, LoaderCircle, Mail, MapPin, Phone, Smartphone } from "lucide-react";
+import { googleMapsRouteUrl, neshanRouteUrl, type LatLng } from "@/lib/location";
 import { saveContact } from "@/app/actions/admin/contact";
 import type { AdminFormState } from "@/app/actions/admin/misc";
 import {
@@ -9,12 +10,18 @@ import {
   SUPPORT_CHANNELS,
   formatPhone,
   parseChannels,
+  baleUrl,
   instagramUrl,
+  parseBale,
+  parseGoogleMapsLink,
   parseInstagram,
+  parseNeshanLink,
   parsePhone,
+  parseRubika,
   parseTelegram,
   parseWhatsapp,
   resolveContact,
+  rubikaUrl,
   telegramUrl,
   whatsappUrl,
   type ContactKey,
@@ -31,7 +38,20 @@ const CHANNEL_TITLE: Record<SupportChannel, string> = {
   chat: "گفتگوی آنلاین",
   whatsapp: "واتساپ",
   telegram: "تلگرام",
+  bale: "بله",
+  rubika: "روبیکا",
   instagram: "اینستاگرام",
+  route: "مسیریابی تا فروشگاه",
+};
+
+/** What a switched-on option still needs before it appears in the menu. */
+const NEEDS: Partial<Record<SupportChannel, string>> = {
+  whatsapp: "شماره واتساپ",
+  telegram: "آیدی تلگرام",
+  bale: "آیدی بله",
+  rubika: "آیدی روبیکا",
+  instagram: "آیدی اینستاگرام",
+  route: "لینک نشان یا گوگل مپ (یا محل فروشگاه روی نقشه‌ی تنظیمات)",
 };
 
 /** On/off switches for the options of the floating support menu, with what each one needs to appear. */
@@ -53,7 +73,7 @@ function SupportMenuSwitches({ value, onChange, available }: { value: string; on
           ? { cls: "text-muted", text: "خاموش؛ در منو نمایش داده نمی‌شود" }
           : available[c]
             ? { cls: "text-success", text: "در منو نمایش داده می‌شود" }
-            : { cls: "text-warning", text: `روشن است، ولی تا ${c === "whatsapp" ? "شماره" : "آیدی"} ${CHANNEL_TITLE[c]} را در بخش بالا وارد نکنید، نمایش داده نمی‌شود` };
+            : { cls: "text-warning", text: `روشن است، ولی تا ${NEEDS[c]} را در این صفحه وارد نکنید، نمایش داده نمی‌شود` };
         return (
           <li key={c} className="flex items-center gap-3 px-4 py-3">
             <span className={enabled ? "" : "opacity-40 grayscale transition"}>
@@ -96,15 +116,37 @@ function check(key: ContactKey, v: string): { ok: boolean; text: string; url?: s
       const n = parseWhatsapp(value);
       return n ? { ok: true, text: `wa.me/${n}`, url: whatsappUrl(n) } : { ok: false, text: "شماره موبایل واتساپ (مثلاً ۰۹۱۲۲۰۵۴۸۳۹) یا لینک wa.me را وارد کنید" };
     }
+    case "social_bale": {
+      const u = parseBale(value);
+      return u ? { ok: true, text: `ble.ir/${u}`, url: baleUrl(u) } : { ok: false, text: "آیدی (مثلاً arizonyadak@) یا لینک ble.ir را وارد کنید" };
+    }
+    case "social_rubika": {
+      const u = parseRubika(value);
+      return u ? { ok: true, text: `rubika.ir/${u}`, url: rubikaUrl(u) } : { ok: false, text: "آیدی (مثلاً arizonyadak@) یا لینک rubika.ir را وارد کنید" };
+    }
+    case "map_neshan": {
+      const u = parseNeshanLink(value);
+      return u ? { ok: true, text: "لینک نشان درست است", url: u } : { ok: false, text: "لینکی که از «اشتراک‌گذاری» برنامه نشان کپی می‌کنید (nshn.ir/… یا neshan.org/…)" };
+    }
+    case "map_google": {
+      const u = parseGoogleMapsLink(value);
+      return u ? { ok: true, text: "لینک گوگل مپ درست است", url: u } : { ok: false, text: "لینکی که از «Share» گوگل مپ کپی می‌کنید (maps.app.goo.gl/… یا google.com/maps/…)" };
+    }
     default:
       return null;
   }
 }
 
-export function ContactForm({ initial }: { initial: Values }) {
+export function ContactForm({ initial, pin }: { initial: Values; pin: LatLng | null }) {
   const [v, setV] = useState<Values>(initial);
   const [state, action, pending] = useActionState<AdminFormState, FormData>(saveContact, null);
-  const contact = resolveContact(v);
+  const resolved = resolveContact(v);
+  // Same rule as the site: pasted links first, else routing to the map pin from Settings.
+  const contact = {
+    ...resolved,
+    neshanUrl: resolved.neshanUrl ?? (pin ? neshanRouteUrl(pin) : null),
+    googleMapsUrl: resolved.googleMapsUrl ?? (pin ? googleMapsRouteUrl(pin) : null),
+  };
 
   const field = (key: ContactKey, label: string, opts: { icon?: React.ReactNode; placeholder?: string; ltr?: boolean; hint?: string; required?: boolean; textarea?: boolean } = {}) => {
     const c = check(key, v[key]);
@@ -169,6 +211,23 @@ export function ContactForm({ initial }: { initial: Values }) {
             {field("social_whatsapp", "واتساپ", { icon: brand("whatsapp"), placeholder: "09122054839", ltr: true, hint: "شماره موبایلی که واتساپ روی آن فعال است" })}
             {field("social_telegram", "تلگرام", { icon: brand("telegram"), placeholder: "@arizonyadak", ltr: true, hint: "در منوی پشتیبانی، فوتر و صفحه تماس با ما" })}
             {field("social_instagram", "اینستاگرام", { icon: brand("instagram"), placeholder: "@arizonyadak", ltr: true, hint: "در منوی پشتیبانی، فوتر و صفحه تماس با ما" })}
+            {field("social_bale", "بله", { icon: brand("bale"), placeholder: "@arizonyadak", ltr: true, hint: "آیدی بله یا لینک ble.ir/…" })}
+            {field("social_rubika", "روبیکا", { icon: brand("rubika"), placeholder: "@arizonyadak", ltr: true, hint: "آیدی روبیکا یا لینک rubika.ir/…" })}
+          </div>
+        </section>
+
+        <section className="card flex flex-col gap-4 p-5">
+          <div>
+            <h2 className="text-base font-black">مسیریابی تا فروشگاه</h2>
+            <p className="mt-1 text-xs leading-6 text-muted">
+              در برنامه نشان یا گوگل مپ، فروشگاه را پیدا کنید، «اشتراک‌گذاری» (Share) را بزنید و «کپی لینک» را انتخاب کنید؛ بعد لینک را اینجا بچسبانید.
+              مشتری با زدن دکمه «نشان» یا «گوگل مپ» در فوتر، صفحه «تماس با ما» و منوی پشتیبانی، همان برنامه را باز می‌کند و مسیریابی می‌کند.
+              {pin && " اگر خالی بماند، مسیریابی تا نقطه‌ای انجام می‌شود که در «تنظیمات» روی نقشه مشخص کرده‌اید."}
+            </p>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            {field("map_neshan", "لینک نشان", { icon: brand("route"), placeholder: "https://nshn.ir/…", ltr: true })}
+            {field("map_google", "لینک گوگل مپ", { icon: brand("route"), placeholder: "https://maps.app.goo.gl/…", ltr: true })}
           </div>
         </section>
 
@@ -183,7 +242,16 @@ export function ContactForm({ initial }: { initial: Values }) {
           <SupportMenuSwitches
             value={v.support_channels}
             onChange={(next) => setV((s) => ({ ...s, support_channels: next }))}
-            available={{ phone: true, chat: true, whatsapp: !!contact.whatsappUrl, telegram: !!contact.telegramUrl, instagram: !!contact.instagramUrl }}
+            available={{
+              phone: true,
+              chat: true,
+              whatsapp: !!contact.whatsappUrl,
+              telegram: !!contact.telegramUrl,
+              bale: !!contact.baleUrl,
+              rubika: !!contact.rubikaUrl,
+              instagram: !!contact.instagramUrl,
+              route: !!(contact.neshanUrl || contact.googleMapsUrl),
+            }}
           />
         </section>
 
@@ -227,7 +295,7 @@ export function ContactForm({ initial }: { initial: Values }) {
           </p>
         </div>
         <p className="text-[11px] leading-5 text-muted">
-          فقط گزینه‌هایی که در «گزینه‌های منوی پشتیبانی» روشن هستند نمایش داده می‌شوند؛ واتساپ، تلگرام و اینستاگرام علاوه بر روشن بودن، شماره یا آیدی هم لازم دارند. پیش‌فرض تلفن: {formatPhone(CONTACT_DEFAULTS.contact_phone)}
+          فقط گزینه‌هایی که در «گزینه‌های منوی پشتیبانی» روشن هستند نمایش داده می‌شوند؛ شبکه‌های اجتماعی علاوه بر روشن بودن شماره یا آیدی، و مسیریابی لینک نشان یا گوگل مپ هم لازم دارند. پیش‌فرض تلفن: {formatPhone(CONTACT_DEFAULTS.contact_phone)}
         </p>
       </aside>
     </form>

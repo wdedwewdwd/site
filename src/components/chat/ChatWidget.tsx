@@ -238,7 +238,7 @@ export function ChatWidget({ support }: { support: SupportContact }) {
               id="support-menu"
               role="dialog"
               aria-label="راه‌های ارتباط با پشتیبانی"
-              className="absolute bottom-[calc(100%+12px)] left-0 w-[min(20rem,calc(100vw-2rem))] origin-bottom-left animate-pop-in overflow-hidden rounded-2xl border border-line bg-white shadow-2xl"
+              className="support-menu-panel absolute bottom-[calc(100%+12px)] left-0 flex w-[min(20rem,calc(100vw-2rem))] origin-bottom-left animate-pop-in flex-col overflow-hidden rounded-2xl border border-line bg-white shadow-2xl"
             >
               <div className="flex items-start justify-between gap-3 bg-night px-4 py-3.5 text-white">
                 <div className="flex flex-col gap-0.5">
@@ -249,7 +249,10 @@ export function ChatWidget({ support }: { support: SupportContact }) {
                   <X className="size-4" />
                 </button>
               </div>
-              <SupportChannels contact={support} onChat={openChat} onPick={() => setMenuOpen(false)} unread={unread} online={state?.online ?? snapshot?.online ?? null} />
+              {/* Long menus scroll inside the panel, so its header never leaves a short phone screen. */}
+              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+                <SupportChannels contact={support} onChat={openChat} onPick={() => setMenuOpen(false)} unread={unread} online={state?.online ?? snapshot?.online ?? null} />
+              </div>
               <p className="flex items-center gap-1.5 border-t border-line px-4 py-2.5 text-[11px] text-muted">
                 <Clock className="size-3.5 shrink-0" aria-hidden /> ساعات پاسخگویی: {support.hours}
               </p>

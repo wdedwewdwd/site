@@ -32,3 +32,25 @@ export function WhatsApp({ className }: IconProps) {
     </svg>
   );
 }
+
+/** Bale (بله): a chat bubble with a tick, drawn in the same stroke style. */
+export function Bale({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <path d="M12 3a9 9 0 0 0 -7.8 13.5l-1.2 4.5l4.6 -1.2a9 9 0 1 0 4.4 -16.8z" />
+      <path d="M8.5 12.2l2.3 2.3l4.7 -4.7" />
+    </svg>
+  );
+}
+
+/** Rubika (روبیکا): its hexagon "cube" mark, drawn in the same stroke style. */
+export function Rubika({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <path d="M12 2.8l8 4.6v9.2l-8 4.6l-8 -4.6v-9.2z" />
+      <path d="M12 12l8 -4.6" />
+      <path d="M12 12v9.2" />
+      <path d="M12 12l-8 -4.6" />
+    </svg>
+  );
+}

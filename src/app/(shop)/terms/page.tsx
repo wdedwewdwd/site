@@ -41,7 +41,7 @@ export default async function TermsPage() {
       <p>
         شکایات از طریق <Link href="/support">سامانه پشتیبانی</Link>، تلفن <span dir="ltr">{contact.phoneDisplay}</span>
         {contact.mobile && <> و <span dir="ltr">{contact.mobileDisplay}</span></>}
-        {contact.email && <> یا ایمیل <span dir="ltr">{contact.email}</span></>} دریافت
+        {contact.email && <> یا ایمیل <a href={`mailto:${contact.email}`} dir="ltr">{contact.email}</a></>} دریافت
         و حداکثر ظرف ۴۸ ساعت کاری پاسخ داده می‌شود. در صورت عدم رضایت، کاربر می‌تواند به مراجع قانونی ذی‌صلاح مراجعه کند.
       </p>
     </ContentPage>

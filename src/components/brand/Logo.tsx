@@ -10,12 +10,13 @@ export function LogoMark({ className = "h-10 w-[68px]" }: { className?: string }
 export function Logo({ subtitle = true, tone = "light" }: { subtitle?: boolean; tone?: "light" | "dark" }) {
   const dark = tone === "dark";
   return (
+    // Mark first: in RTL it sits before (to the right of) the name, as on phones and in the footer.
     <Link href="/" className="flex shrink-0 items-center gap-3" aria-label={`${SITE.name} — صفحه اصلی`}>
+      <LogoMark />
       <span className="flex flex-col">
         <span className={`text-lg font-black leading-tight ${dark ? "text-white" : "text-ink"}`}>{SITE.name}</span>
         {subtitle && <span className={`text-[10px] font-medium ${dark ? "text-white/50" : "text-muted"}`} dir="ltr">{SITE.latinName}</span>}
       </span>
-      <LogoMark />
     </Link>
   );
 }

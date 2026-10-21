@@ -130,6 +130,13 @@ build (`APP_URL=https://example.com PAYMENT_PROVIDER=none ALLOW_CONSOLE_SMS=true
   `components/ui/CategoryIcon.tsx`. Auto-part icons (spark-plug, shock-absorber, engine, brake-disc, gearbox) are drawn
   on Lucide's grid in `components/ui/part-icons.ts` (`createLucideIcon`).
 - Inner pages use `PageBar` (mobile app bar with back button, desktop breadcrumbs + back).
+- About page (`(shop)/about/page.tsx`) is built by hand, not with `ContentPage`: dark hero with the logo emblem
+  (`public/brand/emblem.webp`, cut from `logo.svg`) as a watermark, figures, story, «چرا آریزون یدک؟» cards, contact card.
+  Copy follows the owner: 20+ years in the Tehran market (Amirkabir St.), direct importer of the «آریزون» brand, first-hand
+  parts, and «آریزون یدک ۷ روز ضمانت بازگشت کالا می‌دهد» (the legal wording stays on `/returns` and `/terms`).
+  Logos always sit before (to the right of) the name: header (phone and desktop), footer, about page.
+- The body font uses Vazirmatn `ss01`, which draws every digit in Persian; e-mail links and e-mail fields reset it in
+  globals.css so addresses show their real digits.
 - Older iPhones: `browserslist` in package.json (Safari/iOS 14+). Next 16 targets Safari 16.4 by default and emitted class
   static blocks, so on iOS 15 (iPhone 6s/7) no page hydrated and no button worked (2026-10-20). Check changes that touch
   the build with an iOS-15-era WebKit (playwright-core 1.20 `webkit`) against a production build; avoid APIs newer than

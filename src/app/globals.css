@@ -80,6 +80,11 @@
   :focus-visible {
     @apply outline-2 outline-offset-2 outline-brand;
   }
+  /* "ss01" draws every digit in Persian; e-mail addresses keep their real digits. */
+  a[href^="mailto:"],
+  input[type="email"] {
+    font-feature-settings: normal;
+  }
   /* Older iOS Safari draws its own white rounded box around search fields. */
   input[type="search"] {
     -webkit-appearance: none;

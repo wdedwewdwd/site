@@ -5,7 +5,6 @@ const isProd = process.env.NODE_ENV === "production";
 const securityHeaders = [
   ...(isProd ? [{ key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" }] : []),
   { key: "X-Content-Type-Options", value: "nosniff" },
-  { key: "X-Frame-Options", value: "DENY" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(self), payment=(), usb=(), interest-cohort=()" },
   { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
@@ -33,6 +32,9 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
+      // No page may be shown inside another site, except the home page on eNamad's seal page (see ENAMAD_FRAME
+      // in proxy.ts, which allows that one site through CSP; X-Frame-Options cannot name a site).
+      { source: "/:path+", headers: [{ key: "X-Frame-Options", value: "DENY" }] },
       // User uploads are never executable content.
       {
         source: "/media/:path*",

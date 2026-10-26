@@ -34,6 +34,9 @@ build (`APP_URL=https://example.com PAYMENT_PROVIDER=none ALLOW_CONSOLE_SMS=true
 - Security first: every server action/route validates with Zod, re-checks auth (`requireUser` /
   `requireStaff` in `src/lib/auth/session.ts`), scopes queries by `userId`, rate-limits (`src/lib/rate-limit.ts`)
   and writes admin changes to the audit log. Prices always come from the DB. CSP with nonces in proxy.
+  No page may be framed except the home page `/`, and only by `https://trustseal.enamad.ir`. eNamad's seal page shows the
+  site in an iframe; with `X-Frame-Options: DENY` everywhere it showed an empty grey box, and Blu Bank refused the
+  business account over «اینماد». See `ENAMAD_FRAME` in proxy.ts and the `/:path+` X-Frame-Options rule in next.config.ts.
 - Auth: everyone signs in with an SMS code at `/login`. Staff accounts have a fixed 4–6 digit code
   (`User.passwordHash`, scrypt + OTP_PEPPER) typed in the same form instead of an SMS code; no SMS is sent to
   them and the form looks identical. New/changed staff codes must be 6 digits and not trivial (`staffCodeSchema`);

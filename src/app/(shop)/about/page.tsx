@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Clock, Headset, Mail, MapPin, Navigation, Phone, RotateCcw, ScanSearch, ShieldCheck, Ship, Smartphone, Truck } from "lucide-react";
+import { ArrowLeft, Clock, Headset, Mail, MapPin, Phone, RotateCcw, ScanSearch, ShieldCheck, Ship, Smartphone, Truck } from "lucide-react";
 import { db } from "@/lib/db";
 import { getContact } from "@/lib/settings";
 import { categoryCovers } from "@/lib/category-covers";
@@ -10,6 +10,7 @@ import { SITE } from "@/lib/shop";
 import { PageBar } from "@/components/layout/PageBar";
 import { LogoMark } from "@/components/brand/Logo";
 import { CategoryCover } from "@/components/ui/CategoryCover";
+import { NeshanIcon } from "@/components/icons/MapApps";
 
 export const metadata: Metadata = {
   title: "درباره ما",
@@ -226,7 +227,7 @@ export default async function AboutPage() {
           <div className="flex flex-wrap gap-2">
             {contact.neshanUrl && (
               <a href={contact.neshanUrl} target="_blank" rel="noopener noreferrer" className="btn-ghost px-4 py-2.5 text-xs">
-                <Navigation className="size-4" aria-hidden /> مسیریابی با نشان
+                <NeshanIcon className="size-[18px]" /> مسیریابی با نشان
               </a>
             )}
             <Link href="/contact" className="btn-primary px-4 py-2.5 text-xs">

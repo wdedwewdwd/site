@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Boxes, ChartNoAxesCombined, Contact, FolderTree, GalleryHorizontalEnd, Headset, LayoutDashboard, LogOut, Menu, MessageSquareText, MessagesSquare, Percent, Settings, ShoppingBag, Smartphone, Store, Truck, Users, X } from "lucide-react";
 import { logoutAction } from "@/app/actions/auth";
-import { LogoMark } from "@/components/brand/Logo";
+import { LogoLockup, LogoMark } from "@/components/brand/Logo";
 import { faDigits } from "@/lib/format";
 import { useStaffChat } from "./chat/StaffChatProvider";
 
@@ -90,9 +90,8 @@ export function AdminNav({ name, role, badges: serverBadges }: { name: string; r
           <Menu className="size-6" />
         </button>
         {/* Logo and name lead to the shop's home page, like everywhere else on the site. */}
-        <Link href="/" className="flex items-center gap-2" title="رفتن به صفحه اصلی فروشگاه">
-          <span className="text-sm font-black">پنل مدیریت آریزون</span>
-          <LogoMark className="h-6 w-[40px]" />
+        <Link href="/" className="flex items-center" title="رفتن به صفحه اصلی فروشگاه">
+          <LogoLockup height={24} gap="gap-2" name="پنل مدیریت آریزون" nameClassName="text-sm font-black" markFirst={false} />
         </Link>
       </div>
       {open && (

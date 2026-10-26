@@ -3,6 +3,7 @@
 import { Navigation } from "lucide-react";
 import { LeafletMap } from "./LeafletMap";
 import type { LatLng } from "@/lib/location";
+import { GoogleMapsIcon, NeshanIcon } from "@/components/icons/MapApps";
 
 /**
  * Contact page map: a still map of the shop; tapping it (or the button) opens routing in Neshan.
@@ -22,11 +23,11 @@ export function ShopMap({ location, address, neshanUrl, googleMapsUrl }: { locat
         </a>
       </div>
       <div className="flex flex-wrap gap-2">
-        <a href={neshan} target="_blank" rel="noopener" className="btn-primary flex-[2] whitespace-nowrap px-4 sm:flex-none">
-          <Navigation className="size-4" aria-hidden /> مسیریابی با نشان
+        <a href={neshan} target="_blank" rel="noopener" className="btn-ghost flex-1 whitespace-nowrap px-4 sm:flex-none">
+          <NeshanIcon className="size-5" /> مسیریابی با نشان
         </a>
         <a href={googleMapsUrl} target="_blank" rel="noopener" className="btn-ghost flex-1 whitespace-nowrap px-4 sm:flex-none">
-          مسیریابی با گوگل مپ
+          <GoogleMapsIcon className="size-5" /> مسیریابی با گوگل مپ
         </a>
       </div>
     </div>

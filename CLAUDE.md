@@ -121,6 +121,13 @@ build (`APP_URL=https://example.com PAYMENT_PROVIDER=none ALLOW_CONSOLE_SMS=true
   sideways `ProductRail` per main category (`getCategoryRails`: one product per subcategory in turn), offers, `HelpCta`.
   Data in `src/lib/home-sections.ts`.
 - Footer: logo before the name, one line per contact detail with an icon, directions buttons, social icons centred.
+- Logo + shop name side by side always use `LogoLockup` (`components/brand/Logo.tsx`): header (desktop and phone),
+  phone menu, footer, admin bar. The name sits on the baseline of the «ARIZON» lettering, 96% down the logo. Centred on
+  the whole logo it floated between the emblem and the lettering. The lockup's box equals the logo's box, so it still
+  centres in a bar.
+- Routing buttons (footer, support menu, contact page, about page) show the apps' real marks: `NeshanIcon` and
+  `GoogleMapsIcon` in `components/icons/MapApps.tsx`. Their paths are copied unchanged from neshan.org's logo and the
+  2020 Google Maps icon.
 - Homepage banners: `/admin/banners` (`src/lib/banners*.ts`, `components/home/HeroBanners.tsx`). Layouts: single,
   split (big + small), grid4, slider; active banners fill the layout's places in list order. Built with container
   queries (`@container/hero`) so the admin preview renders the phone and desktop versions exactly.

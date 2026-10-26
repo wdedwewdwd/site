@@ -40,6 +40,9 @@ build (`APP_URL=https://example.com PAYMENT_PROVIDER=none ALLOW_CONSOLE_SMS=true
   older shorter codes still work but set `User.weakStaffCode`, which shows a «change your code» banner in the panel. The first admin on a new database is created with `npm run admin:set`; after that
   admins add/edit/remove staff (ADMIN or SUPPORT, phone + name + code) in Settings → «مدیران و پشتیبان‌ها»
   (`actions/admin/staff.ts`, re-enters the acting admin's own code). Removing access turns the person into a customer.
+  Staff sign in again after 12 h: `requireStaff` deletes the session row and redirects to `/login?reauth=1`. It must not
+  touch cookies, because pages may not change them; that threw and showed the error page on every panel visit (fixed 2026-10-26).
+- Error page (`app/error.tsx`): «تلاش مجدد» calls `retry()` (asks the server again); `reset()` only redrew the failed page.
 - Login SMS: the owner connects Faraz SMS / Iran Payamak at `/admin/sms` (menu «سامانه پیامک»): API key (stored sealed with
   AES-GCM, key derived from OTP_PEPPER in `src/lib/secret-box.ts`; never sent back to the page), pattern code, variable
   name (default `code`) and line number in Settings `sms_*` (`src/lib/sms-settings.ts`, kept out of `getSettings`). A test

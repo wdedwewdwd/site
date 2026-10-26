@@ -74,7 +74,9 @@ export async function requireStaff(roles: Role[] = ["ADMIN"]) {
   const hasPassword = await db.user.count({ where: { id: session.user.id, passwordHash: { not: null } } });
   if (!hasPassword) redirect("/");
   if (Date.now() - session.createdAt.getTime() > STAFF_MAX_SESSION_AGE_MS) {
-    await destroySession();
+    // Pages may not change cookies (that threw and showed the error page), so end the session in the database only:
+    // the browser's cookie then signs nobody in, and the next sign-in replaces it.
+    await db.session.deleteMany({ where: { id: session.id } });
     redirect("/login?next=/admin&reauth=1");
   }
   return session.user;

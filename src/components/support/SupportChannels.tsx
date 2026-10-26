@@ -1,6 +1,7 @@
 import { ChevronLeft } from "lucide-react";
 import { faDigits } from "@/lib/format";
 import type { ContactInfo, SupportChannel } from "@/lib/contact-shared";
+import { GoogleMapsIcon, NeshanIcon } from "@/components/icons/MapApps";
 import { ChannelIcon, type Channel } from "./ChannelIcon";
 
 /** The contact details the support menu needs (all public). */
@@ -34,7 +35,7 @@ type Row = {
   onClick?: () => void;
   badge?: number;
   /** Several direct actions on one row (directions: Neshan / Google Maps). */
-  links?: { label: string; href: string }[];
+  links?: { label: string; href: string; Icon: React.ComponentType<{ className?: string }> }[];
 };
 
 /**
@@ -91,8 +92,8 @@ export function SupportChannels({
             title: "مسیریابی",
             sub: contact.address,
             links: [
-              ...(contact.neshanUrl ? [{ label: "نشان", href: contact.neshanUrl }] : []),
-              ...(contact.googleMapsUrl ? [{ label: "گوگل مپ", href: contact.googleMapsUrl }] : []),
+              ...(contact.neshanUrl ? [{ label: "نشان", href: contact.neshanUrl, Icon: NeshanIcon }] : []),
+              ...(contact.googleMapsUrl ? [{ label: "گوگل مپ", href: contact.googleMapsUrl, Icon: GoogleMapsIcon }] : []),
             ],
           }
         : null,
@@ -130,8 +131,9 @@ export function SupportChannels({
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={onPick}
-                    className="rounded-lg bg-info-soft px-2.5 py-1.5 text-[11px] font-extrabold text-info transition-colors hover:bg-info hover:text-white"
+                    className="flex items-center gap-1 rounded-lg border border-line bg-white py-1.5 pe-2.5 ps-1.5 text-[11px] font-extrabold text-ink transition-colors hover:border-info hover:bg-info-soft"
                   >
+                    <l.Icon className="size-4" />
                     {l.label}
                   </a>
                 ))}

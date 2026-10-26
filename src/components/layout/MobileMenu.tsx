@@ -21,7 +21,7 @@ import {
   X,
   type LucideIcon,
 } from "lucide-react";
-import { LogoMark } from "@/components/brand/Logo";
+import { LogoLockup } from "@/components/brand/Logo";
 import { faDigits } from "@/lib/format";
 
 const LINKS: { href: string; label: string; Icon: LucideIcon; match?: (p: string) => boolean }[] = [
@@ -77,10 +77,7 @@ export function MobileMenu({ isStaff = false, account, support }: Props) {
           <button type="button" className="absolute inset-0 animate-fade-in bg-black/50" aria-label="بستن منو" onClick={close} />
           <div className="absolute inset-y-0 right-0 flex w-[300px] max-w-[85%] animate-slide-in-right flex-col bg-white shadow-2xl">
             <div className="flex items-center justify-between gap-3 bg-night px-4 pb-4 pt-[max(1rem,env(safe-area-inset-top))] text-white">
-              <span className="flex items-center gap-2">
-                <LogoMark className="h-8 w-[54px]" />
-                <span className="text-base font-black">آریزون یدک</span>
-              </span>
+              <LogoLockup height={32} gap="gap-2" nameClassName="text-base font-black" />
               <button type="button" onClick={close} aria-label="بستن" className="grid size-9 place-items-center rounded-full bg-white/10 hover:bg-white/20">
                 <X className="size-5" />
               </button>

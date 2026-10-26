@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { Mail, MapPin, Navigation, Phone, Smartphone, Mailbox } from "lucide-react";
 import { Bale, Instagram, Rubika, Telegram, WhatsApp } from "@/components/icons/Social";
-import { LogoMark } from "@/components/brand/Logo";
+import { LogoLockup } from "@/components/brand/Logo";
+import { GoogleMapsIcon, NeshanIcon } from "@/components/icons/MapApps";
 import { SITE } from "@/lib/shop";
 import { db } from "@/lib/db";
 import { getContact, getSettings } from "@/lib/settings";
@@ -55,9 +56,8 @@ export async function SiteFooter() {
       <div className="container-page flex flex-col gap-12">
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-[360px_1fr_1fr_auto] lg:justify-between">
           <div className="flex flex-col gap-4">
-            <Link href="/" className="flex w-fit items-center gap-3" aria-label={`${SITE.name} — صفحه اصلی`}>
-              <LogoMark className="h-9 w-[61px]" />
-              <span className="text-lg font-black text-white">{SITE.name}</span>
+            <Link href="/" className="flex w-fit items-center" aria-label={`${SITE.name} — صفحه اصلی`}>
+              <LogoLockup height={36} nameClassName="text-lg font-black text-white" />
             </Link>
             <p className="text-[13px] leading-[1.9]">{SITE.description}</p>
             {/* One line per contact detail, each with its icon. */}
@@ -103,13 +103,13 @@ export async function SiteFooter() {
                   <Navigation className="size-4 text-brand" aria-hidden /> مسیریابی تا فروشگاه:
                 </span>
                 {contact.neshanUrl && (
-                  <a href={contact.neshanUrl} target="_blank" rel="noopener noreferrer" className="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-white/20">
-                    نشان
+                  <a href={contact.neshanUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 rounded-lg bg-white/10 py-1.5 pe-3 ps-2 text-xs font-bold text-white transition-colors hover:bg-white/20">
+                    <NeshanIcon className="size-[18px]" /> نشان
                   </a>
                 )}
                 {contact.googleMapsUrl && (
-                  <a href={contact.googleMapsUrl} target="_blank" rel="noopener noreferrer" className="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-white/20">
-                    گوگل مپ
+                  <a href={contact.googleMapsUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 rounded-lg bg-white/10 py-1.5 pe-3 ps-2 text-xs font-bold text-white transition-colors hover:bg-white/20">
+                    <GoogleMapsIcon className="size-[18px]" /> گوگل مپ
                   </a>
                 )}
               </div>

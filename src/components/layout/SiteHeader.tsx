@@ -6,7 +6,7 @@ import { getCartCount } from "@/lib/cart";
 import { faDigits } from "@/lib/format";
 import { SITE } from "@/lib/shop";
 import { getContact } from "@/lib/settings";
-import { Logo, LogoMark } from "@/components/brand/Logo";
+import { Logo, LogoLockup } from "@/components/brand/Logo";
 import { SearchBox } from "./SearchBox";
 import { NavLinks } from "./NavLinks";
 import { MobileMenu } from "./MobileMenu";
@@ -81,9 +81,8 @@ export async function SiteHeader() {
             account={user ? { name: displayName && displayName !== "حساب کاربری" ? displayName : null } : null}
             support={{ phone: contact.phone, phoneDisplay: contact.phoneDisplay, hours: contact.hours }}
           />
-          <Link href="/" className="flex items-center gap-2" aria-label={`${SITE.name} — صفحه اصلی`}>
-            <LogoMark className="h-8 w-[54px]" />
-            <span className="text-lg font-black text-white">{SITE.name}</span>
+          <Link href="/" className="flex items-center" aria-label={`${SITE.name} — صفحه اصلی`}>
+            <LogoLockup height={32} gap="gap-2" nameClassName="text-lg font-black text-white" />
           </Link>
           <Link
             href={user ? "/profile" : "/login"}

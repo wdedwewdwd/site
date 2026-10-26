@@ -5,6 +5,7 @@ import { getContact, getShopLocation } from "@/lib/settings";
 import { PageBar } from "@/components/layout/PageBar";
 import { OpenChatButton } from "@/components/chat/OpenChatButton";
 import { ShopMap } from "@/components/map/ShopMap";
+import { GoogleMapsIcon, NeshanIcon } from "@/components/icons/MapApps";
 import { ChannelIcon, type Channel } from "@/components/support/ChannelIcon";
 
 export const metadata: Metadata = { title: "تماس با ما" };
@@ -101,13 +102,13 @@ export default async function ContactPage() {
               </span>
               <span className="flex flex-wrap gap-2">
                 {contact.neshanUrl && (
-                  <a href={contact.neshanUrl} target="_blank" rel="noopener noreferrer" className="btn-primary px-4">
-                    <Navigation className="size-4" aria-hidden /> مسیریابی با نشان
+                  <a href={contact.neshanUrl} target="_blank" rel="noopener noreferrer" className="btn-ghost px-4">
+                    <NeshanIcon className="size-5" /> مسیریابی با نشان
                   </a>
                 )}
                 {contact.googleMapsUrl && (
                   <a href={contact.googleMapsUrl} target="_blank" rel="noopener noreferrer" className="btn-ghost px-4">
-                    مسیریابی با گوگل مپ
+                    <GoogleMapsIcon className="size-5" /> مسیریابی با گوگل مپ
                   </a>
                 )}
               </span>

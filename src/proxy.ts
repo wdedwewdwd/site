@@ -6,8 +6,10 @@ const SESSION_COOKIE = isDev ? "ay_session" : "__Host-ay_session";
 const PROFILE_GATE_COOKIE = "ay_complete_profile";
 // Pages a customer can open before finishing sign-up.
 const OPEN_BEFORE_PROFILE = /^\/(welcome|login|terms|privacy)(\/|$)/;
+// eNamad's seal page shows the home page in a frame; without it the seal page has an empty grey box.
+const ENAMAD_FRAME = "https://trustseal.enamad.ir";
 
-function buildCsp(nonce: string) {
+function buildCsp(nonce: string, pathname: string) {
   return [
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ""}`,
@@ -23,7 +25,7 @@ function buildCsp(nonce: string) {
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self' https://payment.zarinpal.com https://sandbox.zarinpal.com",
-    "frame-ancestors 'none'",
+    `frame-ancestors ${pathname === "/" ? ENAMAD_FRAME : "'none'"}`,
     "manifest-src 'self'",
     ...(isDev ? [] : ["upgrade-insecure-requests"]),
   ].join("; ");
@@ -57,7 +59,7 @@ export function proxy(request: NextRequest) {
   }
 
   const nonce = btoa(crypto.randomUUID());
-  const csp = buildCsp(nonce);
+  const csp = buildCsp(nonce, pathname);
 
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-nonce", nonce);

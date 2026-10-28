@@ -131,35 +131,29 @@ export async function SiteFooter() {
             </div>
           ))}
 
-          <div className="flex flex-col gap-4">
-            <p className="text-[15px] font-extrabold text-white">نمادهای اعتماد</p>
-            <div className="flex gap-3">
+          {/* Only real seals: an empty box next to eNamad looks like a missing or fake badge. */}
+          {enamadId && enamadCode && (
+            <div className="flex flex-col gap-4">
+              <p className="text-[15px] font-extrabold text-white">نمادهای اعتماد</p>
               <div className="grid size-[100px] place-items-center rounded-xl bg-white p-2">
-                {enamadId && enamadCode ? (
-                  // Official eNamad trust seal. `referrerPolicy="origin"` is required: eNamad validates the referring domain.
-                  <a
-                    href={`https://trustseal.enamad.ir/?id=${encodeURIComponent(enamadId)}&Code=${encodeURIComponent(enamadCode)}`}
-                    target="_blank"
-                    rel="noopener"
+                {/* Official eNamad trust seal. `referrerPolicy="origin"` is required: eNamad validates the referring domain. */}
+                <a
+                  href={`https://trustseal.enamad.ir/?id=${encodeURIComponent(enamadId)}&Code=${encodeURIComponent(enamadCode)}`}
+                  target="_blank"
+                  rel="noopener"
+                  referrerPolicy="origin"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`https://trustseal.enamad.ir/logo.aspx?id=${encodeURIComponent(enamadId)}&Code=${encodeURIComponent(enamadCode)}`}
+                    alt="نماد اعتماد الکترونیکی"
                     referrerPolicy="origin"
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={`https://trustseal.enamad.ir/logo.aspx?id=${encodeURIComponent(enamadId)}&Code=${encodeURIComponent(enamadCode)}`}
-                      alt="نماد اعتماد الکترونیکی"
-                      referrerPolicy="origin"
-                      className="max-h-[84px] cursor-pointer"
-                    />
-                  </a>
-                ) : (
-                  <span className="text-[11px] font-black text-info">نماد Enamad</span>
-                )}
-              </div>
-              <div className="grid size-[100px] place-items-center rounded-xl bg-white p-2">
-                <span className="text-[11px] font-black text-brand">رسانه دیجیتال</span>
+                    className="max-h-[84px] cursor-pointer"
+                  />
+                </a>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         <hr className="border-white/10" />

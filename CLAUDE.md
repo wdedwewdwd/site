@@ -124,9 +124,11 @@ build (`APP_URL=https://example.com PAYMENT_PROVIDER=none ALLOW_CONSOLE_SMS=true
   «نمادهای اعتماد» shows only real seals (the eNamad badge, when its id/code are set in Settings); the Samandehi
   placeholder «رسانه دیجیتال» was removed (owner, 2026-10-28). Add Samandehi only once the shop actually has it.
 - Logo + shop name side by side always use `LogoLockup` (`components/brand/Logo.tsx`): header (desktop and phone),
-  phone menu, footer, admin bar. The name sits on the baseline of the «ARIZON» lettering, 96% down the logo. Centred on
-  the whole logo it floated between the emblem and the lettering. The lockup's box equals the logo's box, so it still
-  centres in a bar.
+  phone menu, footer, admin bar. The name's visual middle (centre of mass of its ink, measured for Vazirmatn Black)
+  sits exactly on the logo's middle (`NAME_OPTICAL_LIFT`). The owner chose this on 2026-10-28 after trying the name on
+  the «ARIZON» lettering's baseline. The lockup's box equals the logo's box, so it centres in a bar.
+- Sign-in and sign-up cards (`LoginFlow`, `WelcomeForm`) show `LogoTile`: the logo on a dark rounded tile with a soft
+  yellow glow, like the app icon, centred on the card's top edge. The yellow mark was hard to see on the white card.
 - Routing buttons (footer, support menu, contact page, about page) show the apps' real marks: `NeshanIcon` and
   `GoogleMapsIcon` in `components/icons/MapApps.tsx`. Their paths are copied unchanged from neshan.org's logo and the
   2020 Google Maps icon. The Rubika icon (`Rubika` in `components/icons/Social.tsx`) is the real coloured hexagon from

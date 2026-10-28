@@ -4,7 +4,7 @@ import { useActionState } from "react";
 import { Check, LoaderCircle } from "lucide-react";
 import { logoutAction } from "@/app/actions/auth";
 import { updateAccount, type FormState } from "@/app/actions/profile";
-import { LogoMark } from "@/components/brand/Logo";
+import { LogoTile } from "@/components/brand/Logo";
 import { Field } from "@/components/ui/Field";
 import { keepValuesOnSubmit } from "@/components/ui/keepValuesOnSubmit";
 import { faDigits } from "@/lib/format";
@@ -25,7 +25,8 @@ export function WelcomeForm({ phone, next, defaults }: Props) {
   return (
     <div className="w-full max-w-[420px] rounded-3xl border border-line bg-white p-5 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.12)] sm:p-6 md:p-8">
       <div className="mb-6 flex flex-col items-center gap-4">
-        <LogoMark className="h-11 w-[76px]" />
+        {/* Centred on the card's top edge, as on the sign-in card. */}
+        <LogoTile className="-mt-[64px] sm:-mt-[68px] md:-mt-[76px]" />
         <ol className="flex w-full items-start justify-center" aria-label="مراحل ثبت‌نام">
           {STEPS.map((label, i) => {
             const done = i < STEPS.length - 1;

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { startTransition, useActionState, useEffect, useRef, useState } from "react";
 import { LoaderCircle, Phone } from "lucide-react";
 import { requestOtpAction, verifyOtpAction, type AuthState } from "@/app/actions/auth";
-import { LogoMark } from "@/components/brand/Logo";
+import { LogoTile } from "@/components/brand/Logo";
 import { faDigits } from "@/lib/format";
 import { MIN_CODE_LENGTH, OTP_LENGTH } from "@/lib/validation";
 
@@ -21,8 +21,9 @@ export function LoginFlow({ next, reauth }: { next: string; reauth: boolean }) {
   return (
     <div className="w-full max-w-[400px] rounded-3xl border border-line bg-white p-5 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.12)] sm:p-6 md:p-8">
       <div className="mb-6 flex flex-col items-center gap-2 text-center">
-        <Link href="/" aria-label="آریزون یدک — صفحه اصلی" className="flex flex-col items-center gap-2">
-          <LogoMark className="h-12 w-[82px]" />
+        <Link href="/" aria-label="آریزون یدک — صفحه اصلی" className="group flex flex-col items-center gap-3">
+          {/* Centred on the card's top edge: pulled up by the card's top padding plus half the tile. */}
+          <LogoTile className="-mt-[64px] transition-transform duration-200 group-hover:-translate-y-0.5 sm:-mt-[68px] md:-mt-[76px]" />
           <span className="text-xl font-black">آریزون یدک</span>
         </Link>
         <p className="text-[11px] text-muted">بازار آنلاین قطعات خودرو • ARIZON YADAK</p>

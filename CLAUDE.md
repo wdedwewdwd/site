@@ -121,6 +121,8 @@ build (`APP_URL=https://example.com PAYMENT_PROVIDER=none ALLOW_CONSOLE_SMS=true
   sideways `ProductRail` per main category (`getCategoryRails`: one product per subcategory in turn), offers, `HelpCta`.
   Data in `src/lib/home-sections.ts`.
 - Footer: logo before the name, one line per contact detail with an icon, directions buttons, social icons centred.
+  «نمادهای اعتماد» shows only real seals (the eNamad badge, when its id/code are set in Settings); the Samandehi
+  placeholder «رسانه دیجیتال» was removed (owner, 2026-10-28). Add Samandehi only once the shop actually has it.
 - Logo + shop name side by side always use `LogoLockup` (`components/brand/Logo.tsx`): header (desktop and phone),
   phone menu, footer, admin bar. The name sits on the baseline of the «ARIZON» lettering, 96% down the logo. Centred on
   the whole logo it floated between the emblem and the lettering. The lockup's box equals the logo's box, so it still

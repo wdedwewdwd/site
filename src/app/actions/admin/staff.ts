@@ -6,7 +6,8 @@ import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { requireStaff } from "@/lib/auth/session";
 import { audit } from "@/lib/audit";
-import { hashPassword, verifyPassword } from "@/lib/password";
+import { hashPassword } from "@/lib/password";
+import { checkStaffCode } from "@/lib/staff-code";
 import { rateLimit } from "@/lib/rate-limit";
 import { idSchema, phoneSchema, staffCodeSchema, text, toEnDigits } from "@/lib/validation";
 
@@ -45,7 +46,7 @@ async function confirmOwnCode(adminId: string, code: string) {
   const rl = await rateLimit(`staff-confirm:${adminId}`, 5, 900);
   if (!rl.ok) return "تعداد تلاش‌ها زیاد است. ۱۵ دقیقه دیگر دوباره تلاش کنید.";
   const me = await db.user.findUnique({ where: { id: adminId }, select: { passwordHash: true } });
-  if (!me?.passwordHash || !(await verifyPassword(code, me.passwordHash, env.OTP_PEPPER))) {
+  if (!me?.passwordHash || !(await checkStaffCode(adminId, code, me.passwordHash))) {
     await audit(adminId, "staff.confirm.failed");
     return "کد ورود خودتان (برای تأیید) اشتباه است.";
   }

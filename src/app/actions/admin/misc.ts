@@ -7,6 +7,8 @@ import { requireStaff } from "@/lib/auth/session";
 import { audit } from "@/lib/audit";
 import { idSchema, text, toEnDigits } from "@/lib/validation";
 import { inIran, roundCoord } from "@/lib/location";
+import { faDigits } from "@/lib/format";
+import { addDays, compareJ, jKey, parseJKey, tehranDayStart, tehranJDate, tehranToday } from "@/lib/jalali";
 
 export type AdminFormState = { ok: boolean; error?: string; message?: string } | null;
 
@@ -32,36 +34,68 @@ export async function setUserActive(userId: string, active: boolean) {
 
 const discountSchema = z
   .object({
+    id: z.union([z.literal(""), idSchema]).optional(),
     code: z.string().trim().toUpperCase().regex(/^[A-Z0-9]{4,20}$/, "کد باید ۴ تا ۲۰ حرف انگلیسی یا عدد باشد"),
     type: z.enum(["PERCENT", "FIXED"]),
     value: int(100_000_000).pipe(z.number().min(1, "مقدار تخفیف را وارد کنید")),
     maxDiscount: z.union([z.literal(""), int(100_000_000)]),
     minOrder: z.union([z.literal(""), int(1_000_000_000)]),
     maxUses: z.union([z.literal(""), int(1_000_000)]),
-    validDays: z.union([z.literal(""), int(3650)]),
+    // Last valid Jalali day ("1405-09-10"), or empty for no end date.
+    validTo: z.union([z.literal(""), z.string().regex(/^\d{4}-\d{2}-\d{2}$/)]),
+    active: z.literal("on").optional(),
   })
   .refine((d) => d.type !== "PERCENT" || d.value <= 90, { message: "درصد تخفیف حداکثر ۹۰ است", path: ["value"] });
 
-export async function createDiscount(_: AdminFormState, formData: FormData): Promise<AdminFormState> {
+/** The last day a code is valid, as shown in the panel ("1405-09-10"); null = no end date. */
+const lastValidDay = (validTo: Date | null) => (validTo ? jKey(tehranJDate(new Date(validTo.getTime() - 1))) : null);
+
+/** Creates a code, or updates one when `id` is sent (the edit window). */
+export async function saveDiscount(_: AdminFormState, formData: FormData): Promise<AdminFormState> {
   const admin = await requireStaff(["ADMIN"]);
   const parsed = discountSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { ok: false, error: firstError(parsed.error) };
   const d = parsed.data;
-  if (await db.discountCode.findUnique({ where: { code: d.code } })) return { ok: false, error: "این کد قبلاً ساخته شده است." };
-  const row = await db.discountCode.create({
-    data: {
-      code: d.code,
-      type: d.type,
-      value: d.value,
-      maxDiscount: d.maxDiscount === "" ? null : d.maxDiscount,
-      minOrder: d.minOrder === "" ? 0 : d.minOrder,
-      maxUses: d.maxUses === "" ? null : d.maxUses,
-      validTo: d.validDays === "" ? null : new Date(Date.now() + d.validDays * 86_400_000),
-    },
-  });
-  await audit(admin.id, "discount.create", "DiscountCode", row.id, { code: row.code });
+  const existing = d.id ? await db.discountCode.findUnique({ where: { id: d.id } }) : null;
+  if (d.id && !existing) return { ok: false, error: "این کد پیدا نشد؛ شاید حذف شده است. صفحه را دوباره باز کنید." };
+
+  const clash = await db.discountCode.findFirst({ where: { code: d.code, ...(existing ? { NOT: { id: existing.id } } : {}) }, select: { id: true } });
+  if (clash) return { ok: false, error: "کد دیگری با همین نام وجود دارد." };
+  if (existing && d.maxUses !== "" && d.maxUses < existing.usedCount) {
+    return { ok: false, error: `این کد ${faDigits(existing.usedCount)} بار استفاده شده؛ حداکثر دفعات نمی‌تواند کمتر از آن باشد.` };
+  }
+
+  // Valid through the end of the chosen day (Tehran time). An unchanged date keeps its exact instant, so editing an
+  // old code (or one that has already expired) never moves its end by accident.
+  let validTo: Date | null = null;
+  if (d.validTo) {
+    if (existing && lastValidDay(existing.validTo) === d.validTo) validTo = existing.validTo;
+    else {
+      const day = parseJKey(d.validTo);
+      if (!day) return { ok: false, error: "تاریخ انقضا معتبر نیست." };
+      if (compareJ(day, tehranToday()) < 0) return { ok: false, error: "تاریخ انقضا نمی‌تواند گذشته باشد." };
+      validTo = tehranDayStart(addDays(day, 1));
+    }
+  }
+
+  const data = {
+    code: d.code,
+    type: d.type,
+    value: d.value,
+    maxDiscount: d.type === "PERCENT" && d.maxDiscount !== "" ? d.maxDiscount : null,
+    minOrder: d.minOrder === "" ? 0 : d.minOrder,
+    maxUses: d.maxUses === "" ? null : d.maxUses,
+    validTo,
+  };
+  if (existing) {
+    await db.discountCode.update({ where: { id: existing.id }, data: { ...data, isActive: d.active === "on" } });
+    await audit(admin.id, "discount.update", "DiscountCode", existing.id, { code: data.code, ...(existing.code !== data.code ? { renamedFrom: existing.code } : {}) });
+  } else {
+    const row = await db.discountCode.create({ data });
+    await audit(admin.id, "discount.create", "DiscountCode", row.id, { code: row.code });
+  }
   revalidatePath("/admin/discounts");
-  return { ok: true, message: "کد تخفیف ساخته شد." };
+  return { ok: true, message: existing ? `تغییرات کد ${data.code} ذخیره شد.` : `کد ${data.code} ساخته شد.` };
 }
 
 export async function toggleDiscount(id: string) {
@@ -72,6 +106,18 @@ export async function toggleDiscount(id: string) {
   await db.discountCode.update({ where: { id }, data: { isActive: !row.isActive } });
   await audit(admin.id, "discount.toggle", "DiscountCode", id, { active: !row.isActive });
   revalidatePath("/admin/discounts");
+}
+
+/** Orders keep the code's text, so deleting a code never changes an order. */
+export async function deleteDiscount(id: string): Promise<AdminFormState> {
+  const admin = await requireStaff(["ADMIN"]);
+  if (!idSchema.safeParse(id).success) return { ok: false, error: "درخواست نامعتبر است." };
+  const row = await db.discountCode.findUnique({ where: { id }, select: { code: true, usedCount: true } });
+  if (!row) return { ok: false, error: "این کد پیدا نشد؛ شاید قبلاً حذف شده است." };
+  await db.discountCode.delete({ where: { id } });
+  await audit(admin.id, "discount.delete", "DiscountCode", id, { code: row.code, usedCount: row.usedCount });
+  revalidatePath("/admin/discounts");
+  return { ok: true, message: `کد ${row.code} حذف شد.` };
 }
 
 // ─── Tickets ───────────────────────────────────────────────

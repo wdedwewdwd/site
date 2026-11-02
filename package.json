@@ -16,6 +16,7 @@
     "admin:set": "tsx scripts/set-admin.ts",
     "backup:create": "tsx scripts/backup.ts create",
     "backup:restore": "tsx scripts/backup.ts restore",
+    "secrets:reseal": "tsx scripts/rotate-pepper.ts",
     "db:local": "node scripts/local-db.mjs"
   },
   "dependencies": {
@@ -25,14 +26,14 @@
     "fflate": "^0.8.3",
     "leaflet": "^1.9.4",
     "lucide-react": "^1.48.0",
-    "next": "16.3.6",
+    "next": "16.4.3",
     "pg": "^8.23.0",
     "prisma": "^7.10.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "server-only": "^0.0.1",
     "sharp": "^0.35.4",
-    "zod": "^4.6.5"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -43,7 +44,7 @@
     "@types/react-dom": "^19",
     "embedded-postgres": "^18.4.0-beta.17",
     "eslint": "^9",
-    "eslint-config-next": "16.3.6",
+    "eslint-config-next": "16.4.3",
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
     "typescript": "^5"

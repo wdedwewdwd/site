@@ -9,6 +9,9 @@ const schema = z
     // Both secrets must be long random values (e.g. `openssl rand -base64 32`).
     SESSION_SECRET: z.string().min(32),
     OTP_PEPPER: z.string().min(32),
+    // Only while OTP_PEPPER is being changed: the old value, so staff codes and saved secrets made with it keep
+    // working until they are re-saved under the new one (src/lib/staff-code.ts, scripts/rotate-pepper.ts).
+    OTP_PEPPER_PREVIOUS: z.preprocess((v) => (v === "" ? undefined : v), z.string().min(32).optional()),
 
     // Login codes when Faraz SMS is not switched on at /admin/sms (that setting takes precedence).
     SMS_PROVIDER: z.enum(["console", "kavenegar"]).default("console"),

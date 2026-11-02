@@ -91,8 +91,12 @@ export async function getStaff(roles: Role[] = ["ADMIN"]) {
   return hasPassword ? session.user : null;
 }
 
-/** Only allow same-site relative redirects (prevents open-redirect attacks). */
+/**
+ * Only allow same-site relative redirects (prevents open-redirect attacks). Browsers drop tabs and newlines inside
+ * a URL, so "/\t/evil.com" would become "//evil.com" (another site): no whitespace, control character or backslash
+ * is allowed anywhere, not just a leading "//".
+ */
 export function safeNext(next: string | null | undefined) {
-  if (!next || !next.startsWith("/") || next.startsWith("//") || next.startsWith("/\\")) return "/";
+  if (!next || !next.startsWith("/") || next.startsWith("//") || /[\s\\\u0000-\u001f\u007f-\u009f\u2028\u2029\ufeff]/.test(next)) return "/";
   return next.slice(0, 512);
 }

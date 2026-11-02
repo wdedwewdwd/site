@@ -32,6 +32,23 @@ ssh arizon "cd /srv/arizon/current && sudo -u arizon npm run admin:set -- 09xxxx
 Deploy = build a new release folder → back up data → `prisma migrate deploy` → switch the symlink →
 restart → health check (`/api/health`), switching back if the new version does not start.
 
+## Security
+
+```bash
+ssh arizon bash /srv/arizon/current/deploy/server/arizon-harden.sh         # TLS 1.2+, tighter SSH, fail2ban (re-runnable)
+ssh arizon bash /srv/arizon/current/deploy/server/arizon-rotate-pepper.sh  # new OTP_PEPPER, old kept as _PREVIOUS
+ssh arizon bash /srv/arizon/current/deploy/server/arizon-rotate-pepper.sh --status   # who has signed in since
+ssh arizon bash /srv/arizon/current/deploy/server/arizon-rotate-pepper.sh --finish   # drop OTP_PEPPER_PREVIOUS
+```
+
+- SSH is key-only; the firewall (ufw) allows only 22, 80 and 443; PostgreSQL listens on 127.0.0.1 only; `.env` and
+  `data/` are readable by the `arizon` user only; unattended-upgrades installs security updates.
+- Changing OTP_PEPPER (e.g. after it was seen somewhere): staff codes keep working through OTP_PEPPER_PREVIOUS and are
+  re-hashed at each person's next sign-in; saved secrets (the SMS API key) are re-encrypted by the script. Run
+  `--finish` once `--status` says everyone is done. Backups taken before the change hold the old hashes.
+- `npm audit --omit=dev` must stay clean: update Next.js patch releases promptly (16.4.3 fixed an RCE in the image
+  optimizer and several cache-poisoning issues).
+
 ## Domain and TLS
 
 `arizonyadak.ir` and `arizonyadak.com` are registered at MihanWebHost. Their DNS zones live on the owner's

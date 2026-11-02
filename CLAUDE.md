@@ -46,6 +46,17 @@ build (`APP_URL=https://example.com PAYMENT_PROVIDER=none ALLOW_CONSOLE_SMS=true
   Staff sign in again after 12 h: `requireStaff` deletes the session row and redirects to `/login?reauth=1`. It must not
   touch cookies, because pages may not change them; that threw and showed the error page on every panel visit (fixed 2026-10-26).
 - Error page (`app/error.tsx`): «تلاش مجدد» calls `retry()` (asks the server again); `reset()` only redrew the failed page.
+- Security review 2026-11-01. The GitHub repo is PUBLIC, so never commit secrets; its full history was scanned against
+  the real laptop and server `.env` values and was clean.
+  - `safeNext` refuses whitespace, control characters and backslashes anywhere: "/\t/evil.com" became "//evil.com" in
+    browsers, an open redirect after sign-in.
+  - `rateLimit` measures the window's age in SQL: `RateLimit.windowStart` holds the database's local time, so «wait N
+    seconds» was 3.5 h too long on Tehran-time databases.
+  - OTP_PEPPER rotation is supported: `OTP_PEPPER_PREVIOUS`, `checkStaffCode` in `src/lib/staff-code.ts` (use it, not
+    `verifyPassword`, for staff codes), `npm run secrets:reseal`, and `deploy/server/arizon-rotate-pepper.sh`.
+  - Server hardening is in `deploy/server/arizon-harden.sh`.
+  - Pages under `(shop)` stream behind `loading.tsx`, so `notFound()` answers HTTP 200 with the not-found UI. Tests
+    must look for `NEXT_HTTP_ERROR_FALLBACK;404`, not the status code.
 - Login SMS: the owner connects Faraz SMS / Iran Payamak at `/admin/sms` (menu «سامانه پیامک»): API key (stored sealed with
   AES-GCM, key derived from OTP_PEPPER in `src/lib/secret-box.ts`; never sent back to the page), pattern code, variable
   name (default `code`) and line number in Settings `sms_*` (`src/lib/sms-settings.ts`, kept out of `getSettings`). A test

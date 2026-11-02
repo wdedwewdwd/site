@@ -4,7 +4,8 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { createSession, requireStaff } from "@/lib/auth/session";
-import { hashPassword, verifyPassword } from "@/lib/password";
+import { hashPassword } from "@/lib/password";
+import { checkStaffCode } from "@/lib/staff-code";
 import { rateLimit } from "@/lib/rate-limit";
 import { clientIp } from "@/lib/request";
 import { staffCodeSchema, toEnDigits } from "@/lib/validation";
@@ -26,7 +27,7 @@ export async function changeOwnPassword(_: ChangePasswordState, formData: FormDa
   if (!rl.ok) return { ok: false, message: "تعداد تلاش‌ها زیاد است. بعداً تلاش کنید." };
 
   const user = await db.user.findUniqueOrThrow({ where: { id: staff.id } });
-  if (!user.passwordHash || !(await verifyPassword(parsed.data.current, user.passwordHash, env.OTP_PEPPER))) {
+  if (!user.passwordHash || !(await checkStaffCode(user.id, parsed.data.current, user.passwordHash))) {
     return { ok: false, message: "کد فعلی اشتباه است." };
   }
 

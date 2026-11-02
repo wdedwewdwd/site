@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AlertTriangle, Phone, Printer, UserRound } from "lucide-react";
+import { AlertTriangle, Download, Phone, Printer, UserRound } from "lucide-react";
 import { db } from "@/lib/db";
 import { requireStaff } from "@/lib/auth/session";
 import { faDateTime, faDigits, toman } from "@/lib/format";
@@ -63,6 +63,9 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/order
         <Link href={`/admin/invoice/${order.number}`} target="_blank" className="btn-ghost py-2 text-xs">
           <Printer className="size-4" /> چاپ فاکتور و برچسب
         </Link>
+        <a href={`/api/admin/orders/${order.number}/invoice`} download className="btn-ghost py-2 text-xs">
+          <Download className="size-4" /> فاکتور مشتری (PDF)
+        </a>
       </PageHeader>
       <HelpBox
         items={[
@@ -71,6 +74,7 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/order
           "لغو یا مرجوعی، موجودی کالاها را به انبار برمی‌گرداند و بازگشایی سفارش، دوباره از موجودی کم می‌کند.",
           "دکمه «کپی نام، تلفن و نشانی» اطلاعات گیرنده را برای ثبت مرسوله در سایت پست یا تیپاکس کپی می‌کند.",
           "یادداشت داخلی فقط برای مدیران قابل مشاهده است.",
+          "«فاکتور مشتری (PDF)» همان فاکتوری است که مشتری در حساب کاربری خود می‌بیند و دانلود می‌کند (بدون برچسب پستی). سفارش پرداخت‌نشده «پیش‌فاکتور» دارد.",
         ]}
       />
 

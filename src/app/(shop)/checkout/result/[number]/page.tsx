@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CircleCheck, CircleX } from "lucide-react";
+import { CircleCheck, CircleX, Download, FileText } from "lucide-react";
 import { db } from "@/lib/db";
 import { getUser } from "@/lib/auth/session";
 import { faDigits, toman } from "@/lib/format";
+import { invoiceTitle } from "@/lib/invoice";
 import { getShippingConfig } from "@/lib/settings";
 import { PayAgainButton } from "@/components/checkout/PayAgainButton";
 import { PageBar } from "@/components/layout/PageBar";
@@ -42,7 +43,7 @@ export default async function OrderResultPage({ params, searchParams }: PageProp
         </h1>
         <p className="text-sm leading-7 text-muted">
           {success
-            ? "سفارش شما با موفقیت در سیستم ثبت گردید و هم‌اکنون در مرحله آماده‌سازی ارسال قرار دارد."
+            ? `سفارش شما با موفقیت ثبت شد و در مرحله آماده‌سازی ارسال قرار دارد.${order ? " فاکتور خرید شما صادر شد؛ می‌توانید آن را ببینید یا فایل PDF آن را دریافت کنید." : ""}`
             : "پرداخت انجام نشد. اگر مبلغی از حساب شما کسر شده باشد، حداکثر تا ۷۲ ساعت آینده توسط بانک بازگردانده می‌شود."}
         </p>
 
@@ -67,6 +68,27 @@ export default async function OrderResultPage({ params, searchParams }: PageProp
               <dd className="font-bold">{shipping.methods[order.shippingMethod].title}</dd>
             </div>
           </dl>
+        )}
+
+        {success && order && (
+          <div className="flex w-full flex-col gap-3 rounded-xl border border-line p-4 sm:flex-row sm:items-center sm:justify-between">
+            <span className="flex items-center gap-3 text-right">
+              <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand-soft text-brand">
+                <FileText className="size-5" aria-hidden />
+              </span>
+              <span className="flex flex-col gap-0.5">
+                <span className="text-sm font-black">{invoiceTitle(order)} شماره {faDigits(order.number)}</span>
+                <span className="text-xs text-muted">فایل PDF قابل چاپ و ذخیره</span>
+              </span>
+            </span>
+            <span className="grid grid-cols-2 gap-2">
+              <Link href={`/profile/orders/${order.number}/invoice`} className="btn-ghost px-4 py-2.5 text-xs">مشاهده فاکتور</Link>
+              <a href={`/api/orders/${order.number}/invoice`} download className="btn-ghost px-4 py-2.5 text-xs">
+                <Download className="size-4" aria-hidden />
+                دانلود PDF
+              </a>
+            </span>
+          </div>
         )}
 
         <div className="flex flex-wrap justify-center gap-3">

@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { Download } from "lucide-react";
 import { db } from "@/lib/db";
 import { requireStaff } from "@/lib/auth/session";
 import { getContact, getShippingConfig } from "@/lib/settings";
@@ -21,7 +22,12 @@ export default async function InvoicePage({ params }: PageProps<"/admin/invoice/
     <main className="min-h-dvh bg-canvas py-6 print:bg-white print:py-0">
       <div className="mx-auto mb-4 flex max-w-[210mm] items-center justify-between px-4 print:hidden">
         <BackButton fallback={`/admin/orders/${order.number}`} variant="pill" />
-        <PrintButton />
+        <div className="flex gap-2">
+          <a href={`/api/admin/orders/${order.number}/invoice`} download className="btn-ghost py-2.5">
+            <Download className="size-4" /> فاکتور مشتری (PDF)
+          </a>
+          <PrintButton />
+        </div>
       </div>
       <InvoiceSheet order={order} contact={contact} shipping={await getShippingConfig()} />
     </main>

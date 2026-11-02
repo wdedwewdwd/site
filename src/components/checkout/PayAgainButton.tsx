@@ -5,7 +5,7 @@ import { LoaderCircle } from "lucide-react";
 import { retryPayment } from "@/app/actions/checkout";
 import { toast } from "@/components/ui/Toaster";
 
-export function PayAgainButton({ orderId }: { orderId: string }) {
+export function PayAgainButton({ orderId, className = "btn-primary px-5 py-2.5" }: { orderId: string; className?: string }) {
   const [pending, start] = useTransition();
   return (
     <button
@@ -17,7 +17,7 @@ export function PayAgainButton({ orderId }: { orderId: string }) {
           if (res && !res.ok) toast(res.error, "error");
         })
       }
-      className="btn-primary px-5 py-2.5"
+      className={className}
     >
       {pending && <LoaderCircle className="size-4 animate-spin" />}
       پرداخت مجدد

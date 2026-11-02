@@ -72,7 +72,7 @@ export async function GET(req: NextRequest) {
       data: {
         userId: order.userId,
         title: `پرداخت سفارش #${order.number} موفق بود`,
-        body: `کد پیگیری پرداخت: ${verified.refId}. سفارش شما در حال آماده‌سازی است.`,
+        body: `کد پیگیری پرداخت: ${verified.refId}. فاکتور خرید شما صادر شد و سفارش در حال آماده‌سازی است.`,
         href: `/profile/orders/${order.number}`,
       },
     });

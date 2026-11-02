@@ -85,6 +85,15 @@ build (`APP_URL=https://example.com PAYMENT_PROVIDER=none ALLOW_CONSOLE_SMS=true
   `shipping_config` JSON; defaults, schema and `quoteShipping` in `src/lib/shipping-shared.ts`, `getShippingConfig()`).
   Pricing: fixed (+ optional free-over amount), collect «پس‌کرایه» (`Order.shippingCollect`, cost 0) or free. Prices are
   always recomputed on the server in `placeOrder`.
+- Discount codes (`/admin/discounts`, `components/admin/discounts/DiscountManager.tsx`). One form creates a code.
+  Clicking a code (a table row on desktop, a card on phones) opens an edit window with every field, an on/off switch and
+  delete-with-confirmation. `saveDiscount` (create, or update when `id` is sent) and `deleteDiscount` live in
+  `actions/admin/misc.ts`.
+  - Expiry is a Jalali date (`JalaliDateField`); the code is valid until that day ends in Tehran. An unchanged date keeps
+    its stored instant, so old or expired codes can still be edited.
+  - Max uses can't go below the times already used.
+  - Carts and orders store the code's text, so renaming or deleting a code never changes an order. A cart holding a
+    removed code just loses the discount.
 - Admin product list (`/admin/products`): filters, tabs (فعال، ناموجود، بدون عکس…) and sorts live in `src/lib/admin-products.ts`;
   50 per page, default order is creation date so edits never reorder rows. Price/stock edit inline (`quickUpdateProduct`),
   ticked products are activated/deactivated/moved/deleted together (`bulkProducts`, deletes unused uploaded photos).

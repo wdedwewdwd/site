@@ -2,10 +2,14 @@ import "server-only";
 import { db } from "./db";
 import { PAGE_VIEW_RETENTION_DAYS } from "./analytics";
 import { env } from "./env";
+import { AUTO_CANCEL_NOTE } from "./order-flow";
 import { startPayment } from "./payment";
 
 /** Unpaid online orders hold stock for this long before being cancelled. */
 export const PAYMENT_WINDOW_MIN = 30;
+
+/** Seconds left to pay an order placed at `createdAt` (zero or less once the window has passed). */
+export const paymentSecondsLeft = (createdAt: Date) => Math.round((createdAt.getTime() + PAYMENT_WINDOW_MIN * 60_000 - Date.now()) / 1000);
 
 /** Cancels abandoned online orders and returns their reserved stock. */
 export async function expireStaleOrders() {
@@ -22,7 +26,7 @@ export async function expireStaleOrders() {
       if (res.count === 0) return;
       const items = await tx.orderItem.findMany({ where: { orderId: id, productId: { not: null } } });
       for (const i of items) await tx.product.update({ where: { id: i.productId! }, data: { stock: { increment: i.quantity } } });
-      await tx.orderEvent.create({ data: { orderId: id, status: "CANCELLED", note: "لغو خودکار به دلیل عدم پرداخت" } });
+      await tx.orderEvent.create({ data: { orderId: id, status: "CANCELLED", note: AUTO_CANCEL_NOTE } });
     });
   }
 }

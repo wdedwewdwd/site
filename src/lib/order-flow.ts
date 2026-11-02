@@ -7,6 +7,19 @@ export const CARRIERS_WITHOUT_TRACKING: readonly string[] = ["پیک آریزو�
 
 export const CANCEL_REASONS = ["اتمام موجودی کالا", "درخواست مشتری", "عدم پرداخت", "عدم پاسخگویی مشتری", "اشتباه در قیمت یا مشخصات", "سایر"] as const;
 export const REFUND_REASONS = ["مرجوعی در مهلت ۷ روزه", "کالای معیوب یا مغایر", "گم شدن مرسوله", "لغو پس از پرداخت", "سایر"] as const;
+/** Event notes written when an unpaid order is cancelled without staff. */
+export const AUTO_CANCEL_NOTE = "لغو خودکار به دلیل عدم پرداخت";
+export const CUSTOMER_CANCEL_NOTE = "لغو توسط مشتری";
+
+/**
+ * The reason a customer may see for a cancel or refund. Staff event notes join the reason with references and
+ * internal notes («علت | مرجع | یادداشت»), so only the first part is used, and only when it is one of the fixed reasons.
+ */
+export function customerReason(note: string | null | undefined) {
+  const first = note?.split(" | ")[0]?.trim();
+  const known: string[] = [...CANCEL_REASONS, ...REFUND_REASONS, AUTO_CANCEL_NOTE, CUSTOMER_CANCEL_NOTE];
+  return first && first !== "سایر" && known.includes(first) ? first : null;
+}
 
 /** The courier pre-selected in «ثبت ارسال», from the shipping method the customer chose. */
 export const DEFAULT_CARRIER: Record<ShippingMethod, (typeof CARRIERS)[number]> = {

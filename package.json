@@ -22,8 +22,10 @@
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "^7.10.0",
+    "bidi-js": "1.0.3",
     "dotenv": "^18.0.4",
     "fflate": "^0.8.3",
+    "fontkit": "2.0.4",
     "leaflet": "^1.9.4",
     "lucide-react": "^1.48.0",
     "next": "16.4.3",
@@ -37,6 +39,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/fontkit": "2.0.8",
     "@types/leaflet": "^1.9.22",
     "@types/node": "^20",
     "@types/pg": "^8.23.1",

@@ -74,6 +74,26 @@ build (`APP_URL=https://example.com PAYMENT_PROVIDER=none ALLOW_CONSOLE_SMS=true
   `Product.soldCount` follows `countsAsSold` (COD counts at checkout, online on payment; cancel/refund takes it back).
   `OrderEvent.actorId` = staff member who made the change (shown in the order history). Invoices share
   `components/admin/orders/InvoiceSheet.tsx`; ticked orders print together at `/admin/invoice/batch?n=..&n=..`.
+- Customer invoices (2026-11-02). `buildInvoice` (`src/lib/invoice.ts`) works out the invoice once, and two places
+  show it, so they always match: the page `/profile/orders/[n]/invoice` (`components/orders/InvoiceView.tsx`) and a PDF
+  (`src/lib/invoice-pdf.ts`).
+  - A paid order gets a «فاکتور فروش» dated at payment; an unpaid one a «پیش‌فاکتور». Cancelled and refunded orders
+    carry a stamp. The invoice number is the order number.
+  - The PDF comes from `/api/orders/[n]/invoice` (the customer's own orders; `?view=1` opens it instead of saving) and
+    `/api/admin/orders/[n]/invoice` (staff, buttons on the admin order and print pages).
+  - `src/lib/pdf.ts` is a hand-written PDF writer, because no PDF library shapes Persian. fontkit joins the letters,
+    bidi-js orders mixed Persian/Latin/number text as the browser does, and fonts are embedded as subsets.
+  - The fonts are the Vazirmatn «FD» cut (Persian digits) in `assets/fonts`, read from `process.cwd()`.
+  - Check the output by reading the PDF itself (it renders to images), not by extracting its text: extracted text
+    comes out in visual order.
+  - Never use «·» as a separator next to numbers; it reads as a Persian zero.
+- Customer orders (`/profile/orders`): search by order number or item name/code, 10 per page, cards with photos, a
+  countdown and pay button for unpaid orders, and the tracking code.
+  - The detail page has a progress tracker (pickup orders skip «ارسال»), the history, the invoice card, «خرید مجدد»
+    (`reorder`) and «لغو سفارش» for unpaid orders only (`cancelMyOrder`, `actions/orders.ts`).
+  - Customers see a cancel/refund reason only through `customerReason`: the first part of the staff note, and only when
+    it is one of the fixed reasons. The rest of that note is internal.
+  - Both pages call `expireStaleOrders()` first, so an unpaid order past its 30 minutes shows as cancelled.
 - Payment is online only (owner's decision, 2026-10-13): cash on delivery was removed from checkout, the info pages and
   the FAQ (migration `20261013120000_online_payment_only`). While PAYMENT_PROVIDER=none the payment step explains that
   online payment is coming and disables «ثبت سفارش». `PaymentMethod.COD` and the admin COD tools stay only for old orders.

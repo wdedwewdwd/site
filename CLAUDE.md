@@ -171,9 +171,15 @@ build (`APP_URL=https://example.com PAYMENT_PROVIDER=none ALLOW_CONSOLE_SMS=true
   yellow glow, like the app icon, centred on the card's top edge. The yellow mark was hard to see on the white card.
 - Routing buttons (footer, support menu, contact page, about page) show the apps' real marks: `NeshanIcon` and
   `GoogleMapsIcon` in `components/icons/MapApps.tsx`. Their paths are copied unchanged from neshan.org's logo and the
-  2020 Google Maps icon. The Rubika icon (`Rubika` in `components/icons/Social.tsx`) is the real coloured hexagon from
-  rubika.ir/static/images/logo.svg. The other social icons are white line icons, but this one stays in colour everywhere,
-  on a white circle in `ChannelIcon`: drawn as a line icon it looked like a plain box.
+  2020 Google Maps icon.
+- Social icons are the brands' real marks, with paths copied unchanged into `components/icons/Social.tsx`. The owner
+  asked for this on 2026-11-09: «exactly like the real ones».
+  - Sources: WhatsApp and Instagram from their Wikimedia Commons logo files; Telegram's plane from Simple Icons on
+    Telegram's blue gradient; Bale from bale.ai/logo/bale_logo.svg; Rubika from rubika.ir/static/images/logo.svg.
+  - The footer shows the full-colour logos (`*Logo`) on its dark circles.
+  - `ChannelIcon` (support menu, contact page, admin) uses the round logos for Instagram, Telegram and Bale, WhatsApp's
+    white glyph on its green, and Rubika on white.
+  - Gradient ids come from `useId`, because a hidden copy of a logo with the same id would blank out the visible one.
 - Homepage banners: `/admin/banners` (`src/lib/banners*.ts`, `components/home/HeroBanners.tsx`). Layouts: single,
   split (big + small), grid4, slider; active banners fill the layout's places in list order. Built with container
   queries (`@container/hero`) so the admin preview renders the phone and desktop versions exactly.

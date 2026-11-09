@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Mail, MapPin, Navigation, Phone, Smartphone, Mailbox } from "lucide-react";
-import { Bale, Instagram, Rubika, Telegram, WhatsApp } from "@/components/icons/Social";
+import { BaleLogo, InstagramLogo, Rubika, TelegramLogo, WhatsAppLogo } from "@/components/icons/Social";
 import { LogoLockup } from "@/components/brand/Logo";
 import { GoogleMapsIcon, NeshanIcon } from "@/components/icons/MapApps";
 import { SITE } from "@/lib/shop";
@@ -42,10 +42,10 @@ export async function SiteFooter() {
     GUIDE,
   ];
   const socials = [
-    { url: contact.instagramUrl, label: "اینستاگرام", Icon: Instagram },
-    { url: contact.telegramUrl, label: "تلگرام", Icon: Telegram },
-    { url: contact.whatsappUrl, label: "واتساپ", Icon: WhatsApp },
-    { url: contact.baleUrl, label: "بله", Icon: Bale },
+    { url: contact.instagramUrl, label: "اینستاگرام", Icon: InstagramLogo },
+    { url: contact.telegramUrl, label: "تلگرام", Icon: TelegramLogo },
+    { url: contact.whatsappUrl, label: "واتساپ", Icon: WhatsAppLogo },
+    { url: contact.baleUrl, label: "بله", Icon: BaleLogo },
     { url: contact.rubikaUrl, label: "روبیکا", Icon: Rubika },
   ].filter((s): s is typeof s & { url: string } => !!s.url);
   const enamadId = settings.enamad_id;
@@ -164,8 +164,9 @@ export async function SiteFooter() {
           {socials.length > 0 && (
             <div className="order-1 flex flex-wrap justify-center gap-3 text-line md:order-none">
               {socials.map(({ url, label, Icon }) => (
-                <a key={label} href={url} target="_blank" rel="noopener noreferrer" aria-label={label} title={label} className="grid size-9 place-items-center rounded-full bg-white/5 transition-colors hover:bg-white/15 hover:text-white">
-                  <Icon className="size-5" />
+                // Each in its real colours (like the Rubika mark), on the same dark circle.
+                <a key={label} href={url} target="_blank" rel="noopener noreferrer" aria-label={label} title={label} className="grid size-10 place-items-center rounded-full bg-white/5 transition-colors hover:bg-white/15">
+                  <Icon className="size-6" />
                 </a>
               ))}
             </div>

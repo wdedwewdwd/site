@@ -19,6 +19,8 @@ type Props = {
   quantity: number;
   stock: number;
   maxQty: number;
+  /** False while the product page is hidden (out of stock, with out-of-stock products hidden from the shop). */
+  linked?: boolean;
 };
 
 export function CartItemRow(p: Props) {
@@ -29,17 +31,27 @@ export function CartItemRow(p: Props) {
       if (!res.ok) toast(res.error, "error");
     });
   const outOfStock = p.stock < p.quantity;
+  const href = p.linked === false ? null : `/product/${p.slug}`;
+  const photo = p.image && <Image src={p.image.url} alt={p.image.alt ?? p.name} fill sizes="80px" className="object-cover" />;
 
   return (
     <li className={`card flex flex-col gap-4 p-4 sm:flex-row sm:items-center ${pending ? "opacity-60" : ""}`}>
       <div className="flex flex-1 items-center gap-4">
-        <Link href={`/product/${p.slug}`} className="relative size-20 shrink-0 overflow-hidden rounded-xl bg-surface">
-          {p.image && <Image src={p.image.url} alt={p.image.alt ?? p.name} fill sizes="80px" className="object-cover" />}
-        </Link>
-        <div className="flex min-w-0 flex-col gap-1.5">
-          <Link href={`/product/${p.slug}`} className="line-clamp-2 text-sm font-extrabold hover:text-brand md:text-base">
-            {p.name}
+        {href ? (
+          <Link href={href} className="relative size-20 shrink-0 overflow-hidden rounded-xl bg-surface">
+            {photo}
           </Link>
+        ) : (
+          <span className="relative size-20 shrink-0 overflow-hidden rounded-xl bg-surface">{photo}</span>
+        )}
+        <div className="flex min-w-0 flex-col gap-1.5">
+          {href ? (
+            <Link href={href} className="line-clamp-2 text-sm font-extrabold hover:text-brand md:text-base">
+              {p.name}
+            </Link>
+          ) : (
+            <span className="line-clamp-2 text-sm font-extrabold md:text-base">{p.name}</span>
+          )}
           <p className="flex flex-wrap gap-3 text-xs text-muted">
             {p.brand && (
               <span>

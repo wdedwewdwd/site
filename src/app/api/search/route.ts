@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { rateLimit } from "@/lib/rate-limit";
 import { clientIp } from "@/lib/request";
 import { searchProducts } from "@/lib/search-index";
+import { shopProductWhere } from "@/lib/settings";
 import { buildIndex, search } from "@/lib/search";
 
 export const dynamic = "force-dynamic";
@@ -23,9 +24,10 @@ export async function GET(req: Request) {
     searchProducts(q),
     db.category.findMany({ where: { isActive: true }, select: { id: true, slug: true, name: true } }),
   ]);
-  const ids = hits.slice(0, LIMIT).map((h) => h.id);
+  // A few spare hits: the index is up to 30 s old, and the database decides what may still be shown.
+  const ids = hits.slice(0, LIMIT * 2).map((h) => h.id);
   const rows = await db.product.findMany({
-    where: { id: { in: ids } },
+    where: { id: { in: ids }, ...(await shopProductWhere()) },
     select: {
       id: true,
       slug: true,
@@ -39,7 +41,7 @@ export async function GET(req: Request) {
   const products = ids.flatMap((id) => {
     const p = byId.get(id);
     return p ? [{ slug: p.slug, name: p.name, price: p.price, inStock: p.stock > 0, image: p.images[0]?.url ?? null }] : [];
-  });
+  }).slice(0, LIMIT);
 
   const categoryIndex = buildIndex(categories.map((c) => ({ id: c.id, name: c.name, related: [], codes: [], inStock: true, soldCount: 0 })));
   const catHits = search(categoryIndex, q, 3);

@@ -21,6 +21,8 @@ import { HelpBox } from "@/components/admin/HelpBox";
 import { ProductsToolbar } from "@/components/admin/products/ProductsToolbar";
 import { ProductList, type ProductRow } from "@/components/admin/products/ProductList";
 import { ExportMenu } from "@/components/admin/products/ExportMenu";
+import { HideOutOfStockSwitch } from "@/components/admin/products/HideOutOfStockSwitch";
+import { hideOutOfStock } from "@/lib/settings";
 
 export const metadata = { title: "محصولات" };
 
@@ -32,7 +34,7 @@ export default async function AdminProductsPage({ searchParams }: PageProps<"/ad
   const others = productWhere(f, false);
   const views = Object.keys(PRODUCT_VIEWS) as ProductView[];
 
-  const [products, total, viewCounts, categories, brands] = await Promise.all([
+  const [products, total, viewCounts, categories, brands, hide, outOfStock, inStock] = await Promise.all([
     db.product.findMany({
       where,
       orderBy: productOrder(f),
@@ -48,6 +50,9 @@ export default async function AdminProductsPage({ searchParams }: PageProps<"/ad
     Promise.all(views.map((v) => db.product.count({ where: { AND: [others, PRODUCT_VIEWS[v].where] } }))),
     categoryOptions(),
     db.brand.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    hideOutOfStock(),
+    db.product.count({ where: { isActive: true, stock: { lte: 0 } } }),
+    db.product.count({ where: { isActive: true, stock: { gt: 0 } } }),
   ]);
   const pages = Math.max(1, Math.ceil(total / PRODUCTS_PAGE_SIZE));
   const back = productListQuery(sp);
@@ -79,6 +84,7 @@ export default async function AdminProductsPage({ searchParams }: PageProps<"/ad
     compareAtPrice: p.compareAtPrice,
     stock: p.stock,
     isActive: p.isActive,
+    hiddenInShop: hide && p.isActive && p.stock <= 0,
     soldCount: p.soldCount,
     image: p.images[0]?.url ?? null,
   }));
@@ -100,8 +106,11 @@ export default async function AdminProductsPage({ searchParams }: PageProps<"/ad
           "برای کار گروهی، محصولات را تیک بزنید؛ نواری پایین صفحه باز می‌شود برای فعال یا غیرفعال کردن، تغییر دسته یا حذف همه آن‌ها با هم.",
           "با «دریافت خروجی» فهرست همه محصولات را (همه صفحه‌ها، با همان فیلتر و ترتیبی که انتخاب کرده‌اید) به صورت فایل اکسل یا PDF بگیرید: عکس، نام، کد کالا، قیمت فعلی و یک ستون خالی «قیمت جدید» برای نوشتن قیمت‌های تازه. برای PDF، در پنجره‌ی چاپ «Save as PDF» را انتخاب کنید. بعد از نوشتن قیمت‌های جدید در فایل اکسل، از همان منو «بارگذاری قیمت‌های جدید» را بزنید تا همه یک‌جا (بعد از دیدن فهرست تغییرات و تأیید شما) اعمال شوند.",
           "«غیرفعال» محصول را بدون حذف از فروشگاه پنهان می‌کند. «حذف» برای همیشه است؛ سفارش‌های قبلی با نام و قیمت کالا سر جایشان می‌مانند.",
+          "«پنهان کردن کالاهای ناموجود از سایت» را که روشن کنید، همه کالاهایی که موجودی‌شان صفر است یک‌جا از فروشگاه برداشته می‌شوند (لیست‌ها، جستجو، صفحه اصلی و صفحه خود کالا). کالاها تغییری نمی‌کنند: هر کالا به محض اینکه موجودی‌اش بیشتر از صفر شود، خودش دوباره در سایت دیده می‌شود. در جدول، کنار این کالاها «پنهان در سایت» نوشته می‌شود.",
         ]}
       />
+
+      <HideOutOfStockSwitch on={hide} outOfStock={outOfStock} inStock={inStock} />
 
       <ProductsToolbar
         q={f.q ?? ""}

@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { getUser } from "@/lib/auth/session";
 import { productCardSelect } from "@/lib/catalog";
 import { faDigits, rating, toman } from "@/lib/format";
+import { shopProductWhere } from "@/lib/settings";
 import { SITE } from "@/lib/shop";
 import { Gallery } from "@/components/product/Gallery";
 import { AddToCartButton } from "@/components/product/AddToCartButton";
@@ -19,7 +20,8 @@ import { ReviewsSection } from "@/components/product/ReviewsSection";
 const getProduct = cache(async (slug: string) => {
   if (!/^[a-z0-9-]{1,120}$/.test(slug)) return null;
   return db.product.findFirst({
-    where: { slug, isActive: true },
+    // An out-of-stock product is not shown while those are hidden from the shop.
+    where: { slug, ...(await shopProductWhere()) },
     include: {
       brand: true,
       category: true,
@@ -48,7 +50,7 @@ export default async function ProductPage({ params }: PageProps<"/product/[slug]
   const [user, related] = await Promise.all([
     getUser(),
     db.product.findMany({
-      where: { isActive: true, categoryId: product.categoryId, id: { not: product.id } },
+      where: { ...(await shopProductWhere()), categoryId: product.categoryId, id: { not: product.id } },
       orderBy: { soldCount: "desc" },
       take: 4,
       select: productCardSelect,

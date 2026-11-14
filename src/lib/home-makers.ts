@@ -3,6 +3,7 @@ import { db } from "./db";
 import { makerWhere } from "./catalog";
 import { categoryCovers } from "./category-covers";
 import { carMaker, MAKER_KEYS, MAKERS, type MakerKey } from "./makers";
+import { shopProductWhere } from "./settings";
 
 export type MakerSection = {
   key: MakerKey;
@@ -27,13 +28,14 @@ export async function getMakerSections(): Promise<MakerSection[]> {
   const mains = categories.filter((c) => !c.parentId);
   const covers = await categoryCovers(mains);
 
+  const visible = await shopProductWhere();
   return Promise.all(
     MAKER_KEYS.map(async (key) => {
       const { name, latin, logo, color, soft, hint } = MAKERS[key];
       const own = cars.filter((c) => carMaker(c.make, c.name) === key);
       const groups = await db.product.groupBy({
         by: ["categoryId"],
-        where: { isActive: true, ...makerWhere(own.map((c) => c.id)) },
+        where: { ...visible, ...makerWhere(own.map((c) => c.id)) },
         _count: true,
       });
       const counts = new Map<string, number>();

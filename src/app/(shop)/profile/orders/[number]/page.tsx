@@ -8,7 +8,7 @@ import { faDigits, toman } from "@/lib/format";
 import { buildInvoice, invoiceDate, invoiceInclude } from "@/lib/invoice";
 import { customerReason } from "@/lib/order-flow";
 import { expireStaleOrders, PAYMENT_WINDOW_MIN, paymentSecondsLeft } from "@/lib/orders";
-import { getContact, getShippingConfig } from "@/lib/settings";
+import { getContact, getShippingConfig, hideOutOfStock } from "@/lib/settings";
 import { needsAddress } from "@/lib/shipping-shared";
 import { ORDER_STATUS } from "@/lib/shop";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -34,13 +34,13 @@ export default async function OrderDetailPage({ params, searchParams }: PageProp
     where: { number, userId: user.id },
     include: {
       ...invoiceInclude,
-      items: { orderBy: { id: "asc" }, include: { product: { select: { slug: true, isActive: true, images: { take: 1, orderBy: { sortOrder: "asc" } } } } } },
+      items: { orderBy: { id: "asc" }, include: { product: { select: { slug: true, isActive: true, stock: true, images: { take: 1, orderBy: { sortOrder: "asc" } } } } } },
       events: { orderBy: { createdAt: "asc" }, select: { id: true, status: true, note: true, createdAt: true } },
     },
   });
   if (!order) notFound();
 
-  const [contact, shipping] = await Promise.all([getContact(), getShippingConfig()]);
+  const [contact, shipping, hide] = await Promise.all([getContact(), getShippingConfig(), hideOutOfStock()]);
   const invoice = buildInvoice(order, contact, shipping);
   const pickup = !needsAddress(order.shippingMethod);
   const pending = order.status === "PENDING_PAYMENT";
@@ -199,7 +199,7 @@ export default async function OrderDetailPage({ params, searchParams }: PageProp
               </h2>
               <ul className="divide-y divide-line">
                 {order.items.map((i) => {
-                  const href = i.product?.isActive ? `/product/${i.product.slug}` : null;
+                  const href = i.product?.isActive && (!hide || i.product.stock > 0) ? `/product/${i.product.slug}` : null;
                   return (
                     <li key={i.id} className="flex items-center gap-4 py-3.5">
                       <span className="relative size-16 shrink-0 overflow-hidden rounded-xl border border-line bg-surface">

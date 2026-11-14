@@ -2,6 +2,7 @@ import "server-only";
 import { db } from "./db";
 import { productCardSelect, type ProductCardData } from "./catalog";
 import { categoryCovers } from "./category-covers";
+import { shopProductWhere } from "./settings";
 
 /**
  * Picks `limit` products from the given categories, one per subcategory in turn (price-list order inside each), so a
@@ -10,7 +11,7 @@ import { categoryCovers } from "./category-covers";
  */
 async function interleaved(categoryIds: string[], limit: number, skip = 0, seed?: number): Promise<ProductCardData[]> {
   const rows = await db.product.findMany({
-    where: { isActive: true, categoryId: { in: categoryIds }, images: { some: {} } },
+    where: { ...(await shopProductWhere()), categoryId: { in: categoryIds }, images: { some: {} } },
     orderBy: [{ position: "asc" }, { id: "asc" }],
     select: { id: true, categoryId: true },
   });
@@ -34,6 +35,7 @@ export type CategoryRail = { slug: string; name: string; total: number; products
 
 /** One row of products per main category (in the shop's category order), for the home page. */
 export async function getCategoryRails(limit = 12): Promise<CategoryRail[]> {
+  const visible = await shopProductWhere();
   const mains = await db.category.findMany({
     where: { isActive: true, parentId: null },
     orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
@@ -44,7 +46,7 @@ export async function getCategoryRails(limit = 12): Promise<CategoryRail[]> {
       const ids = [m.id, ...m.children.map((c) => c.id)];
       const [products, total] = await Promise.all([
         interleaved(ids, limit),
-        db.product.count({ where: { isActive: true, categoryId: { in: ids } } }),
+        db.product.count({ where: { ...visible, categoryId: { in: ids } } }),
       ]);
       return { slug: m.slug, name: m.name, total, products };
     }),
@@ -89,7 +91,7 @@ export type PopularSubcategory = { slug: string; name: string; icon: string | nu
 export async function getPopularSubcategories(limit = 12): Promise<PopularSubcategory[]> {
   const subs = await db.category.findMany({
     where: { isActive: true, parentId: { not: null }, parent: { isActive: true } },
-    select: { id: true, slug: true, name: true, icon: true, image: true, _count: { select: { products: { where: { isActive: true } } } } },
+    select: { id: true, slug: true, name: true, icon: true, image: true, _count: { select: { products: { where: await shopProductWhere() } } } },
   });
   const top = subs
     .filter((s) => s._count.products > 0)

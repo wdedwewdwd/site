@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { productCardSelect } from "@/lib/catalog";
-import { getContact } from "@/lib/settings";
+import { getContact, shopProductWhere } from "@/lib/settings";
 import { ProductCard } from "@/components/product/ProductCard";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { HeroBanners } from "@/components/home/HeroBanners";
@@ -15,13 +15,14 @@ import { HelpCta } from "@/components/home/HelpCta";
 import { faDigits } from "@/lib/format";
 
 export default async function HomePage() {
+  const visible = await shopProductWhere();
   const [hero, makers, contact, sold, rails, popular, offers] = await Promise.all([
     getHomeBanners(),
     getMakerSections(),
     getContact(),
     // Shop window: only products with a photo that have really sold.
     db.product.findMany({
-      where: { isActive: true, soldCount: { gt: 0 }, images: { some: {} } },
+      where: { ...visible, soldCount: { gt: 0 }, images: { some: {} } },
       orderBy: [{ soldCount: "desc" }, { position: "asc" }],
       take: 8,
       select: productCardSelect,
@@ -29,7 +30,7 @@ export default async function HomePage() {
     getCategoryRails(12),
     getPopularSubcategories(13),
     db.product.findMany({
-      where: { isActive: true, compareAtPrice: { not: null }, stock: { gt: 0 } },
+      where: { ...visible, compareAtPrice: { not: null }, stock: { gt: 0 } },
       orderBy: { updatedAt: "desc" },
       take: 12,
       select: productCardSelect,

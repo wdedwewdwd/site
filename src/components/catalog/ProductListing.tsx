@@ -9,6 +9,7 @@ import { ProductCard } from "@/components/product/ProductCard";
 import { FilterPanel } from "./FilterPanel";
 import { PageBar } from "@/components/layout/PageBar";
 import { Pagination } from "@/components/ui/Pagination";
+import { hideOutOfStock } from "@/lib/settings";
 import { OpenChatButton } from "@/components/chat/OpenChatButton";
 
 type Props = {
@@ -35,10 +36,11 @@ function hrefWith(basePath: string, sp: Props["searchParams"], patch: Record<str
 }
 
 export async function ProductListing({ title, basePath, filters, searchParams, crumbs = [], intro, backHref }: Props) {
-  const [{ items, total, page, pages, partial }, brands, cars] = await Promise.all([
+  const [{ items, total, page, pages, partial }, brands, cars, hide] = await Promise.all([
     listProducts(filters),
     db.brand.findMany({ orderBy: { name: "asc" }, select: { slug: true, name: true, latin: true } }),
     db.carModel.findMany({ orderBy: { sortOrder: "asc" }, select: { slug: true, name: true } }),
+    hideOutOfStock(),
   ]);
   const sort = activeSort(filters);
   const sorts = (Object.keys(SORTS) as SortKey[]).filter((k) => k !== "relevance" || filters.q);
@@ -126,6 +128,8 @@ export async function ProductListing({ title, basePath, filters, searchParams, c
           <FilterPanel
             brands={brands.map((b) => ({ slug: b.slug, label: b.latin ? `${b.name} (${b.latin})` : b.name }))}
             cars={cars.map((c) => ({ slug: c.slug, label: c.name }))}
+            // Every list is in-stock only while out-of-stock products are hidden, so the switch would do nothing.
+            stockFilter={!hide}
           />
         </div>
       </div>

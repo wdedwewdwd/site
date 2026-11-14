@@ -4,6 +4,7 @@ import { ShoppingCart } from "lucide-react";
 import { getCart } from "@/lib/cart";
 import { faDigits, toman } from "@/lib/format";
 import { MAX_QTY_PER_ITEM } from "@/lib/shop";
+import { hideOutOfStock } from "@/lib/settings";
 import { CartItemRow } from "@/components/cart/CartItemRow";
 import { DiscountForm } from "@/components/cart/DiscountForm";
 import { ClearCartButton } from "@/components/cart/ClearCartButton";
@@ -35,6 +36,7 @@ export default async function CartPage() {
   }
 
   const payable = cart.subtotal - cart.discount;
+  const hide = await hideOutOfStock();
 
   return (
     <div className="container-page flex flex-col gap-6 py-6 md:py-8">
@@ -59,6 +61,7 @@ export default async function CartPage() {
               quantity={i.quantity}
               stock={i.product.stock}
               maxQty={MAX_QTY_PER_ITEM}
+              linked={!hide || i.product.stock > 0}
             />
           ))}
         </ul>

@@ -117,7 +117,9 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/order
                           <span className="flex flex-col gap-0.5">
                             <b>{i.name}</b>
                             <span className="text-[11px] text-muted" dir="ltr">{i.sku}</span>
-                            {i.product && <span className="text-[11px] text-muted">موجودی فعلی انبار: {faDigits(i.product.stock)}</span>}
+                            {i.product && (
+                              <span className={`text-[11px] font-bold ${i.product.stock > 0 ? "text-success" : "text-brand"}`}>{i.product.stock > 0 ? "الان موجود است" : "الان ناموجود است"}</span>
+                            )}
                           </span>
                         </span>
                       </td>

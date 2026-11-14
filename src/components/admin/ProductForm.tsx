@@ -150,7 +150,27 @@ export function ProductForm({ product, categories, brands, cars, back = "" }: { 
         <section className="card flex flex-col gap-4 p-5">
           <h2 className="text-base font-black">۴. قیمت و موجودی</h2>
           <ProductPriceFields price={product?.price} compareAtPrice={product?.compareAtPrice} errors={e} />
-          <Field label="موجودی انبار *" name="stock" inputMode="numeric" dir="ltr" defaultValue={product?.stock ?? 0} error={e.stock} hint="با هر فروش خودکار کم می‌شود. صفر یعنی «ناموجود»." required />
+          <fieldset className="flex flex-col gap-2">
+            <legend className="label">وضعیت موجودی *</legend>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { value: "1", label: "موجود", on: "peer-checked:border-success peer-checked:bg-success-soft peer-checked:text-success" },
+                { value: "0", label: "ناموجود", on: "peer-checked:border-brand peer-checked:bg-brand-soft peer-checked:text-brand" },
+              ].map((o) => (
+                <label key={o.value} className="cursor-pointer">
+                  <input type="radio" name="available" value={o.value} defaultChecked={(product ? product.stock > 0 : true) === (o.value === "1")} className="peer sr-only" />
+                  <span className={`flex items-center justify-center rounded-xl border border-line py-2.5 text-sm font-extrabold text-muted transition-colors peer-focus-visible:outline-2 peer-focus-visible:outline-brand ${o.on}`}>
+                    {o.label}
+                  </span>
+                </label>
+              ))}
+            </div>
+            {e.available ? (
+              <p className="field-error">{e.available}</p>
+            ) : (
+              <p className="text-xs text-muted">«ناموجود» یعنی مشتری نمی‌تواند این کالا را بخرد.</p>
+            )}
+          </fieldset>
           <Field label="وزن بسته (گرم)" name="weightGrams" inputMode="numeric" dir="ltr" defaultValue={product?.weightGrams ?? ""} error={e.weightGrams} placeholder="1200" />
           <Field label="ضمانت" name="warranty" defaultValue={product?.warranty ?? ""} error={e.warranty} placeholder="مثلاً: ۱۲ ماهه آریزون یدک" />
         </section>

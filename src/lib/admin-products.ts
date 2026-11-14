@@ -9,8 +9,8 @@ export const PRODUCT_VIEWS = {
   all: { label: "همه", where: {} },
   active: { label: "فعال", where: { isActive: true } },
   inactive: { label: "غیرفعال", where: { isActive: false } },
-  out: { label: "ناموجود", where: { stock: 0 } },
-  low: { label: "رو به اتمام", where: { stock: { gt: 0, lte: 5 } } },
+  instock: { label: "موجود", where: { stock: { gt: 0 } } },
+  out: { label: "ناموجود", where: { stock: { lte: 0 } } },
   sale: { label: "تخفیف‌دار", where: { compareAtPrice: { not: null } } },
   noimage: { label: "بدون عکس", where: { images: { none: {} } } },
 } satisfies Record<string, { label: string; where: Prisma.ProductWhereInput }>;
@@ -24,7 +24,7 @@ export const PRODUCT_SORTS = {
   sku: { label: "کد کالا", orderBy: { sku: "asc" } },
   cheap: { label: "ارزان‌ترین", orderBy: { price: "asc" } },
   expensive: { label: "گران‌ترین", orderBy: { price: "desc" } },
-  stock: { label: "کمترین موجودی", orderBy: { stock: "asc" } },
+  stock: { label: "ناموجودها اول", orderBy: { stock: "asc" } },
   sold: { label: "پرفروش‌ترین", orderBy: { soldCount: "desc" } },
 } satisfies Record<string, { label: string; orderBy: Prisma.ProductOrderByWithRelationInput }>;
 export type ProductSort = keyof typeof PRODUCT_SORTS;

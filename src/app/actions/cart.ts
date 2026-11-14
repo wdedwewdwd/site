@@ -57,6 +57,7 @@ export async function setCartQuantity(input: { productId: string; quantity: numb
   } else {
     const product = await db.product.findUnique({ where: { id: productId }, select: { stock: true } });
     if (!product) return { ok: false, error: "محصول یافت نشد." };
+    if (product.stock < 1) return { ok: false, error: "این کالا ناموجود شده است." };
     if (quantity > product.stock) return { ok: false, error: `فقط ${product.stock} عدد موجود است.` };
     await db.cartItem.updateMany({ where: { cartId: cart.id, productId }, data: { quantity } });
   }

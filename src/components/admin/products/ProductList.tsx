@@ -3,12 +3,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState, useTransition } from "react";
-import { Eye, EyeOff, ExternalLink, FolderInput, ImageOff, LoaderCircle, Pencil, Trash2, X } from "lucide-react";
-import { bulkProducts } from "@/app/actions/admin/products";
+import { Eye, EyeOff, ExternalLink, FolderInput, ImageOff, LoaderCircle, PackageCheck, PackageX, Pencil, Tags, Trash2, X } from "lucide-react";
+import { bulkProducts, type BulkAction } from "@/app/actions/admin/products";
 import { discountPercent, faDigits, toman } from "@/lib/format";
 import { Modal } from "@/components/ui/Modal";
 import { toast } from "@/components/ui/Toaster";
 import { ToggleActiveButton } from "@/components/admin/ToggleActiveButton";
+import { AvailabilityButton } from "./AvailabilityButton";
+import { BulkPriceDialog } from "./BulkPriceDialog";
 import { QuickEdit } from "./QuickEdit";
 
 export type ProductRow = {
@@ -30,11 +32,11 @@ export type ProductRow = {
 };
 
 type Opt = { id: string; name: string };
-type Dialog = { kind: "delete" | "move"; ids: string[] } | null;
+type Dialog = { kind: "delete" | "move" | "price"; ids: string[] } | null;
 
 /**
- * The product table (desktop) and cards (phone) with selection, inline price/stock editing,
- * per-row actions and a bar for acting on all ticked products at once.
+ * The product table (desktop) and cards (phone) with selection, inline price editing, a «موجود / ناموجود» switch,
+ * per-row actions and a bar for acting on all ticked products at once (including «ویرایش گروهی قیمت»).
  * `back` is the list's query string, so the edit page can return to the same filters and page.
  */
 export function ProductList({ rows, categories, back, savedId }: { rows: ProductRow[]; categories: Opt[]; back: string; savedId?: string }) {
@@ -70,7 +72,7 @@ export function ProductList({ rows, categories, back, savedId }: { rows: Product
     });
   const toggleAll = (on: boolean) => setSelected(on ? new Set(rows.map((r) => r.id)) : new Set());
 
-  const run = (action: "activate" | "deactivate" | "move" | "delete", targetIds: string[], categoryId?: string) =>
+  const run = (action: BulkAction, targetIds: string[], categoryId?: string) =>
     start(async () => {
       const res = await bulkProducts({ ids: targetIds, action, categoryId });
       toast(res.message, res.ok ? "success" : "error");
@@ -106,7 +108,8 @@ export function ProductList({ rows, categories, back, savedId }: { rows: Product
                 <Link href={editHref(p.id)} className="line-clamp-2 text-[13px] font-bold leading-6 hover:text-brand">{p.name}</Link>
                 <p className="flex flex-wrap items-center gap-x-2 text-[11px] text-muted">
                   <span dir="ltr">{p.sku}</span>
-                  <span aria-hidden>·</span>
+                  {/* A line, not «·»: next to a number a dot reads as a Persian zero. */}
+                  <span aria-hidden className="h-3 w-px bg-line" />
                   <span>{p.category}</span>
                 </p>
               </div>
@@ -201,6 +204,9 @@ export function ProductList({ rows, categories, back, savedId }: { rows: Product
         <div className="sticky bottom-3 z-20 mt-4 flex flex-wrap items-center gap-2 rounded-2xl bg-ink p-2.5 pr-4 text-[13px] text-white shadow-2xl animate-fade-up">
           <span className="font-bold">{faDigits(selected.size)} محصول انتخاب شده</span>
           <span className="mr-auto flex flex-wrap items-center gap-1.5">
+            <BarButton onClick={() => setDialog({ kind: "price", ids: sel })} disabled={pending} icon={<Tags className="size-4" />}>ویرایش گروهی قیمت</BarButton>
+            <BarButton onClick={() => run("instock", sel)} disabled={pending} icon={<PackageCheck className="size-4" />}>موجود کردن</BarButton>
+            <BarButton onClick={() => run("outofstock", sel)} disabled={pending} icon={<PackageX className="size-4" />}>ناموجود کردن</BarButton>
             <BarButton onClick={() => run("activate", sel)} disabled={pending} icon={<Eye className="size-4" />}>فعال کردن</BarButton>
             <BarButton onClick={() => run("deactivate", sel)} disabled={pending} icon={<EyeOff className="size-4" />}>غیرفعال کردن</BarButton>
             <BarButton onClick={() => setDialog({ kind: "move", ids: sel })} disabled={pending} icon={<FolderInput className="size-4" />}>تغییر دسته</BarButton>
@@ -220,6 +226,16 @@ export function ProductList({ rows, categories, back, savedId }: { rows: Product
           onClose={() => setDialog(null)}
           onDeactivate={() => run("deactivate", dialog.ids)}
           onDelete={() => run("delete", dialog.ids)}
+        />
+      )}
+      {dialog?.kind === "price" && (
+        <BulkPriceDialog
+          rows={rows.filter((r) => dialog.ids.includes(r.id))}
+          onClose={() => setDialog(null)}
+          onSaved={() => {
+            setDialog(null);
+            setSelected(new Set());
+          }}
         />
       )}
       {dialog?.kind === "move" && (
@@ -253,13 +269,10 @@ function PriceCell({ p }: { p: ProductRow }) {
 }
 
 function StockCell({ p }: { p: ProductRow }) {
-  const tone = p.stock === 0 ? "text-brand" : p.stock <= 5 ? "text-warning" : "";
   return (
-    <span className="flex flex-col items-start">
-      <QuickEdit id={p.id} field="stock" value={p.stock} label="موجودی" className={`font-black ${tone}`} />
-      {p.stock === 0 && <span className="text-[10px] font-bold text-brand">ناموجود</span>}
+    <span className="flex flex-col items-start gap-1">
+      <AvailabilityButton id={p.id} inStock={p.stock > 0} name={p.name} />
       {p.hiddenInShop && <span className="text-[10px] font-bold text-muted">پنهان در سایت</span>}
-      {p.stock > 0 && p.stock <= 5 && <span className="text-[10px] font-bold text-warning">رو به اتمام</span>}
     </span>
   );
 }

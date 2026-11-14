@@ -3,18 +3,18 @@
 import { useState, useTransition } from "react";
 import { Check, LoaderCircle, Pencil, X } from "lucide-react";
 import { quickUpdateProduct } from "@/app/actions/admin/products";
-import { faDigits, toman } from "@/lib/format";
+import { toman } from "@/lib/format";
 import { toast } from "@/components/ui/Toaster";
 
 /**
- * A price or stock number that turns into a small input on click: Enter (or ✓) saves, Esc cancels.
+ * A price that turns into a small input on click: Enter (or ✓) saves, Esc cancels.
  * Saves straight to the product; the list refreshes with the new value.
  */
-export function QuickEdit({ id, field, value, label, className = "" }: { id: string; field: "price" | "stock"; value: number; label: string; className?: string }) {
+export function QuickEdit({ id, field, value, label, className = "" }: { id: string; field: "price"; value: number; label: string; className?: string }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
   const [pending, start] = useTransition();
-  const shown = field === "price" ? toman(value) : faDigits(value);
+  const shown = toman(value);
 
   const open = () => {
     setDraft(String(value));

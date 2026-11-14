@@ -11,6 +11,12 @@ export const SITE = {
 
 export const MAX_QTY_PER_ITEM = 20;
 
+/**
+ * Stock is only «موجود» / «ناموجود» for the owner (2026-11-14: no quantities). «موجود» stores this many units, so the
+ * units orders still reserve never run it out; «ناموجود» stores 0.
+ */
+export const IN_STOCK = 100_000;
+
 export const ORDER_STATUS: Record<OrderStatus, { label: string; tone: "green" | "amber" | "red" | "blue" | "gray" }> = {
   PENDING_PAYMENT: { label: "در انتظار پرداخت", tone: "red" },
   PAID: { label: "پرداخت شده", tone: "blue" },

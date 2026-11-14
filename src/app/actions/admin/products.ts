@@ -12,6 +12,7 @@ import { productListQuery } from "@/lib/admin-products";
 import { faDigits } from "@/lib/format";
 import { saveProductImage, UPLOAD_DIR } from "@/lib/uploads";
 import { uniqueSlug } from "@/lib/slug";
+import { IN_STOCK } from "@/lib/shop";
 import { idSchema, text, toEnDigits } from "@/lib/validation";
 
 export type ProductFormState = { ok: boolean; error?: string; errors?: Record<string, string> } | null;
@@ -47,7 +48,8 @@ const productSchema = z
     basePrice: money("قیمت اصلی").pipe(z.number().min(1000, "قیمت باید حداقل ۱۰۰۰ تومان باشد")),
     hasDiscount: z.string().optional(),
     salePrice: optionalMoney("قیمت بعد از تخفیف"),
-    stock: z.string().transform((v) => toEnDigits(v)).pipe(z.string().regex(/^\d{1,6}$/, "موجودی معتبر نیست")).transform(Number),
+    // «موجود» / «ناموجود» only; see IN_STOCK.
+    available: z.enum(["1", "0"], { error: "موجود یا ناموجود بودن را انتخاب کنید" }),
     warranty: z.union([z.literal(""), text(80)]),
     madeIn: z.union([z.literal(""), text(40)]),
     weightGrams: optionalMoney("وزن"),
@@ -102,7 +104,7 @@ export async function saveProduct(_: ProductFormState, formData: FormData): Prom
     uploaded.push(res.url);
   }
 
-  const existing = id ? await db.product.findUnique({ where: { id }, select: { slug: true, sku: true } }) : null;
+  const existing = id ? await db.product.findUnique({ where: { id }, select: { slug: true, sku: true, stock: true } }) : null;
   if (id && !existing) return { ok: false, error: "محصول یافت نشد." };
 
   // Slug (URL) is created once from the name and kept stable; SKU is generated if not provided.
@@ -121,7 +123,8 @@ export async function saveProduct(_: ProductFormState, formData: FormData): Prom
     brandId: d.brandId || null,
     price,
     compareAtPrice,
-    stock: d.stock,
+    // A product already in stock keeps its number; one made available again gets the full «موجود» amount.
+    stock: d.available === "1" ? (existing && existing.stock > 0 ? existing.stock : IN_STOCK) : 0,
     warranty: d.warranty || null,
     madeIn: d.madeIn || null,
     weightGrams: d.weightGrams,
@@ -176,35 +179,99 @@ export async function setHideOutOfStock(on: boolean): Promise<ProductActionResul
 
 export type ProductActionResult = { ok: boolean; message: string };
 
-const quickSchema = z.discriminatedUnion("field", [
-  z.object({ id: idSchema, field: z.literal("price"), value: money("قیمت").pipe(z.number().min(1000, "قیمت باید حداقل ۱۰۰۰ تومان باشد")) }),
-  z.object({
-    id: idSchema,
-    field: z.literal("stock"),
-    value: z.string().transform((v) => toEnDigits(v).trim()).pipe(z.string().regex(/^\d{1,6}$/, "موجودی معتبر نیست")).transform(Number),
-  }),
-]);
+const quickSchema = z.object({ id: idSchema, field: z.literal("price"), value: money("قیمت").pipe(z.number().min(1000, "قیمت باید حداقل ۱۰۰۰ تومان باشد")) });
 
-/** Inline edit of the selling price or stock from the product list. */
-export async function quickUpdateProduct(input: { id: string; field: "price" | "stock"; value: string }): Promise<ProductActionResult> {
+/** Inline edit of the selling price from the product list. */
+export async function quickUpdateProduct(input: { id: string; field: "price"; value: string }): Promise<ProductActionResult> {
   const admin = await requireStaff(["ADMIN"]);
   const parsed = quickSchema.safeParse(input);
   if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "مقدار معتبر نیست." };
   const d = parsed.data;
-  const p = await db.product.findUnique({ where: { id: d.id }, select: { sku: true, price: true, stock: true, compareAtPrice: true } });
+  const p = await db.product.findUnique({ where: { id: d.id }, select: { sku: true, price: true, compareAtPrice: true } });
   if (!p) return { ok: false, message: "محصول یافت نشد." };
-  if (d.field === "price" && p.compareAtPrice !== null && d.value >= p.compareAtPrice) {
+  if (p.compareAtPrice !== null && d.value >= p.compareAtPrice) {
     return { ok: false, message: "قیمت فروش باید کمتر از قیمت اصلی (خط‌خورده) باشد؛ برای تغییر تخفیف، محصول را باز کنید." };
   }
-  await db.product.update({ where: { id: d.id }, data: { [d.field]: d.value } });
-  await audit(admin.id, `product.${d.field}`, "Product", d.id, { sku: p.sku, from: p[d.field], to: d.value });
+  await db.product.update({ where: { id: d.id }, data: { price: d.value } });
+  await audit(admin.id, "product.price", "Product", d.id, { sku: p.sku, from: p.price, to: d.value });
   revalidatePath("/", "layout");
-  return { ok: true, message: d.field === "price" ? "قیمت ذخیره شد." : "موجودی ذخیره شد." };
+  return { ok: true, message: "قیمت ذخیره شد." };
 }
+
+/** «موجود» / «ناموجود» from the product list. */
+export async function setProductAvailability(id: string, available: boolean): Promise<ProductActionResult> {
+  const admin = await requireStaff(["ADMIN"]);
+  if (!idSchema.safeParse(id).success || typeof available !== "boolean") return { ok: false, message: "درخواست نامعتبر است." };
+  const p = await db.product.findUnique({ where: { id }, select: { name: true, sku: true, stock: true } });
+  if (!p) return { ok: false, message: "محصول یافت نشد." };
+  if (p.stock > 0 !== available) {
+    await db.product.update({ where: { id }, data: { stock: available ? IN_STOCK : 0 } });
+    await audit(admin.id, available ? "product.in_stock" : "product.out_of_stock", "Product", id, { sku: p.sku });
+    revalidatePath("/", "layout");
+  }
+  return { ok: true, message: available ? `«${p.name}» موجود شد.` : `«${p.name}» ناموجود شد.` };
+}
+
+const priceValue = z.number().int().min(1000, "قیمت باید حداقل ۱۰۰۰ تومان باشد").max(9_999_999_999, "قیمت خیلی بزرگ است");
+const bulkPriceSchema = z
+  .array(
+    z
+      .object({
+        id: idSchema,
+        price: priceValue,
+        compareAtPrice: priceValue.nullable(),
+        // The prices the window showed: a product changed meanwhile somewhere else is not overwritten.
+        fromPrice: z.number().int(),
+        fromCompareAt: z.number().int().nullable(),
+      })
+      .refine((i) => i.compareAtPrice === null || i.compareAtPrice > i.price, { message: "قیمت فروش باید کمتر از قیمت قبل از تخفیف باشد" }),
+  )
+  .min(1, "تغییری برای ذخیره نیست.")
+  .max(200, "در هر بار حداکثر ۲۰۰ محصول را می‌شود ویرایش کرد.");
+export type BulkPriceItem = z.infer<typeof bulkPriceSchema>[number];
+
+class PriceConflict extends Error {}
+
+/** «ویرایش گروهی قیمت»: new prices (and struck-through prices) for the ticked products, all saved together or none. */
+export async function bulkUpdatePrices(input: BulkPriceItem[]): Promise<ProductActionResult> {
+  const admin = await requireStaff(["ADMIN"]);
+  const parsed = bulkPriceSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "درخواست معتبر نیست." };
+  const items = parsed.data;
+  if (new Set(items.map((i) => i.id)).size !== items.length) return { ok: false, message: "درخواست معتبر نیست." };
+
+  const products = await db.product.findMany({ where: { id: { in: items.map((i) => i.id) } }, select: { id: true, sku: true, name: true } });
+  const byId = new Map(products.map((p) => [p.id, p]));
+  try {
+    await db.$transaction(async (tx) => {
+      for (const i of items) {
+        const res = await tx.product.updateMany({
+          where: { id: i.id, price: i.fromPrice, compareAtPrice: i.fromCompareAt },
+          data: { price: i.price, compareAtPrice: i.compareAtPrice },
+        });
+        if (res.count === 0) throw new PriceConflict(byId.get(i.id)?.name ?? "یکی از محصولات");
+      }
+    });
+  } catch (e) {
+    if (e instanceof PriceConflict) {
+      return { ok: false, message: `قیمت «${e.message}» همین الان جای دیگری تغییر کرد یا محصول حذف شد؛ هیچ قیمتی ذخیره نشد. صفحه را تازه کنید و دوباره امتحان کنید.` };
+    }
+    throw e;
+  }
+
+  await audit(admin.id, "product.bulk_price", "Product", items.length === 1 ? items[0].id : undefined, {
+    count: items.length,
+    changes: items.map((i) => ({ sku: byId.get(i.id)?.sku ?? i.id, from: i.fromPrice, to: i.price, fromCompareAt: i.fromCompareAt, toCompareAt: i.compareAtPrice })),
+  });
+  revalidatePath("/", "layout");
+  return { ok: true, message: `قیمت ${faDigits(items.length)} محصول ذخیره شد.` };
+}
+
+export type BulkAction = "activate" | "deactivate" | "instock" | "outofstock" | "move" | "delete";
 
 const bulkSchema = z.object({
   ids: z.array(idSchema).min(1, "محصولی انتخاب نشده است.").max(200),
-  action: z.enum(["activate", "deactivate", "move", "delete"]),
+  action: z.enum(["activate", "deactivate", "instock", "outofstock", "move", "delete"]),
   categoryId: idSchema.optional(),
 });
 
@@ -217,7 +284,7 @@ async function removeOrphanImages(urls: string[]) {
 }
 
 /** Actions on the products ticked in the list (or one product's delete button). */
-export async function bulkProducts(input: { ids: string[]; action: "activate" | "deactivate" | "move" | "delete"; categoryId?: string }): Promise<ProductActionResult> {
+export async function bulkProducts(input: { ids: string[]; action: BulkAction; categoryId?: string }): Promise<ProductActionResult> {
   const admin = await requireStaff(["ADMIN"]);
   const parsed = bulkSchema.safeParse(input);
   if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "درخواست معتبر نیست." };
@@ -233,6 +300,13 @@ export async function bulkProducts(input: { ids: string[]; action: "activate" | 
   if (action === "activate" || action === "deactivate") {
     await db.product.updateMany({ where: { id: { in: found } }, data: { isActive: action === "activate" } });
     message = action === "activate" ? `${n} محصول فعال شد.` : `${n} محصول غیرفعال شد و در فروشگاه نمایش داده نمی‌شود.`;
+  } else if (action === "instock") {
+    // Products already in stock keep their number.
+    await db.product.updateMany({ where: { id: { in: found }, stock: { lte: 0 } }, data: { stock: IN_STOCK } });
+    message = `${n} محصول موجود شد.`;
+  } else if (action === "outofstock") {
+    await db.product.updateMany({ where: { id: { in: found } }, data: { stock: 0 } });
+    message = `${n} محصول ناموجود شد.`;
   } else if (action === "move") {
     const category = categoryId ? await db.category.findUnique({ where: { id: categoryId }, select: { id: true, name: true } }) : null;
     if (!category) return { ok: false, message: "دسته‌بندی مقصد را انتخاب کنید." };

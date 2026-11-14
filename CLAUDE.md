@@ -115,8 +115,14 @@ build (`APP_URL=https://example.com PAYMENT_PROVIDER=none ALLOW_CONSOLE_SMS=true
   - Carts and orders store the code's text, so renaming or deleting a code never changes an order. A cart holding a
     removed code just loses the discount.
 - Admin product list (`/admin/products`): filters, tabs (فعال، ناموجود، بدون عکس…) and sorts live in `src/lib/admin-products.ts`;
-  50 per page, default order is creation date so edits never reorder rows. Price/stock edit inline (`quickUpdateProduct`),
-  ticked products are activated/deactivated/moved/deleted together (`bulkProducts`, deletes unused uploaded photos).
+  50 per page, default order is creation date so edits never reorder rows. Price edits inline (`quickUpdateProduct`); the
+  «موجودی» column is a «موجود / ناموجود» button (`AvailabilityButton`, `setProductAvailability`). Ticked products are
+  activated/deactivated, made «موجود»/«ناموجود», moved or deleted together (`bulkProducts`, deletes unused uploaded photos).
+  - «ویرایش گروهی قیمت» (`BulkPriceDialog`, `bulkUpdatePrices`, 2026-11-14) edits the ticked products' prices: one per
+    product, or «تغییر یکسان همه محصولات» (percent or amount up/down, or one price for all; percent rounds to 1,000).
+    Discounted products keep their discount: the struck-through price moves by the same percent or amount.
+  - Saving is all or nothing. Each row is updated only if its price is still what the window showed (else nothing is
+    saved and the owner is told to reload). It logs `product.bulk_price` with every from/to.
   Links to the edit page carry `?back=<list query>` so saving returns to the same filters and page (`?saved=` highlights it).
   «دریافت خروجی» (`ExportMenu`) exports the filtered list, all pages, in list order (photo, name, SKU, current price,
   empty «قیمت جدید»): Excel from `/api/admin/products/export` (hand-written XLSX in `src/lib/xlsx.ts` with fflate, no
@@ -129,6 +135,11 @@ build (`APP_URL=https://example.com PAYMENT_PROVIDER=none ALLOW_CONSOLE_SMS=true
   rows (not a number, < 1000, decimals, unknown or conflicting SKU, discounted product priced ≥ its struck price). Preview
   first; «اعمال» re-reads the same file and writes only if the change list's digest still matches and each price is
   unchanged (one transaction), then logs `product.price_import` with every from/to.
+- Stock is only «موجود» / «ناموجود» (owner, 2026-11-14: no quantities anywhere in the panel). «موجود» stores `IN_STOCK`
+  (100,000, `src/lib/shop.ts`) so the units orders still reserve never run it out; «ناموجود» stores 0. Migration
+  `20261114120000_stock_on_off` set every product with stock to `IN_STOCK`. The product form has two buttons
+  (`available` = "1"/"0"), the list tabs are «موجود»/«ناموجود» (no «رو به اتمام»), and the dashboard card lists
+  out-of-stock products. Code that checks stock keeps using `stock > 0`.
 - «پنهان کردن کالاهای ناموجود از سایت» (2026-11-14): a switch at the top of `/admin/products` (`HideOutOfStockSwitch`,
   `setHideOutOfStock`, Setting `hide_out_of_stock`).
   - While on, products with no stock are left out of the whole shop: lists, search and its suggestions, home page

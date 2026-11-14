@@ -21,14 +21,16 @@ import { compactNumber } from "@/components/admin/reports/format";
 const GRANULARITY_LABEL = { day: "روزانه", week: "هفتگی", month: "ماهانه" } as const;
 
 async function loadOperations() {
-  const [activeProducts, openTickets, awaiting, lowStock, recent] = await Promise.all([
+  const [activeProducts, openTickets, awaiting, outOfStock, outCount, recent] = await Promise.all([
     db.product.count({ where: { isActive: true } }),
     db.ticket.count({ where: { status: "OPEN" } }),
     db.order.count({ where: { status: { in: NEEDS_ACTION } } }),
-    db.product.findMany({ where: { isActive: true, stock: { lte: 5 } }, orderBy: { stock: "asc" }, take: 6, select: { id: true, name: true, stock: true } }),
+    // Stock is only «موجود» / «ناموجود» now (see IN_STOCK), so the card lists what is out of stock.
+    db.product.findMany({ where: { isActive: true, stock: { lte: 0 } }, orderBy: { updatedAt: "desc" }, take: 6, select: { id: true, name: true } }),
+    db.product.count({ where: { isActive: true, stock: { lte: 0 } } }),
     db.order.findMany({ orderBy: { createdAt: "desc" }, take: 8, include: { user: { select: { firstName: true, lastName: true, phone: true } } } }),
   ]);
-  return { activeProducts, openTickets, awaiting, lowStock, recent };
+  return { activeProducts, openTickets, awaiting, outOfStock, outCount, recent };
 }
 
 export default async function AdminDashboard({ searchParams }: PageProps<"/admin">) {
@@ -209,16 +211,23 @@ export default async function AdminDashboard({ searchParams }: PageProps<"/admin
           </div>
         </section>
         <section className="card flex flex-col gap-3 p-5" aria-labelledby="low">
-          <h2 id="low" className="text-base font-black">هشدار موجودی کم</h2>
-          {ops.lowStock.length === 0 ? (
-            <p className="text-sm text-muted">همه محصولات موجودی کافی دارند.</p>
+          <div className="flex items-center justify-between gap-3">
+            <h2 id="low" className="text-base font-black">کالاهای ناموجود</h2>
+            {ops.outCount > 0 && (
+              <Link href="/admin/products?view=out" className="shrink-0 text-xs font-bold text-brand hover:underline">
+                همه ({faDigits(ops.outCount)})
+              </Link>
+            )}
+          </div>
+          {ops.outOfStock.length === 0 ? (
+            <p className="text-sm text-muted">همه محصولات فعال موجودند.</p>
           ) : (
             <ul className="flex flex-col gap-2">
-              {ops.lowStock.map((p) => (
+              {ops.outOfStock.map((p) => (
                 <li key={p.id}>
                   <Link href={`/admin/products/${p.id}`} className="flex items-center justify-between gap-3 rounded-lg bg-canvas px-3 py-2.5 text-[13px] hover:bg-surface">
                     <span className="line-clamp-1">{p.name}</span>
-                    <span className={`shrink-0 font-black ${p.stock === 0 ? "text-brand" : "text-warning"}`}>{p.stock === 0 ? "تمام شد" : `${faDigits(p.stock)} عدد`}</span>
+                    <span className="shrink-0 font-black text-brand">ناموجود</span>
                   </Link>
                 </li>
               ))}

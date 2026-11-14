@@ -59,7 +59,7 @@ export function HideOutOfStockSwitch({ on, outOfStock, inStock }: { on: boolean;
           </p>
           {inStock === 0 && (
             <p className="rounded-xl bg-brand-soft p-3 text-[13px] font-bold text-brand">
-              هیچ کالای موجودی ندارید؛ با روشن کردن، فروشگاه خالی دیده می‌شود. اول موجودی کالاها را وارد کنید.
+              هیچ کالای موجودی ندارید؛ با روشن کردن، فروشگاه خالی دیده می‌شود. اول کالاهایی را که دارید «موجود» کنید.
             </p>
           )}
           <p className="text-[13px] text-muted">کالاها حذف یا غیرفعال نمی‌شوند؛ هر وقت این گزینه را خاموش کنید یا کالایی موجود شود، دوباره نمایش داده می‌شود.</p>

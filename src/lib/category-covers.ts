@@ -1,5 +1,6 @@
 import "server-only";
 import { db } from "./db";
+import { shopProductWhere } from "./settings";
 
 type CoverInput = { id: string; image: string | null };
 
@@ -16,7 +17,7 @@ export async function categoryCovers(categories: CoverInput[]): Promise<Map<stri
   const subs = await db.category.findMany({ where: { parentId: { in: [...need] }, isActive: true }, select: { id: true, parentId: true } });
   const parentOf = new Map(subs.map((s) => [s.id, s.parentId as string]));
   const rows = await db.product.findMany({
-    where: { isActive: true, categoryId: { in: [...need, ...parentOf.keys()] }, images: { some: {} } },
+    where: { ...(await shopProductWhere()), categoryId: { in: [...need, ...parentOf.keys()] }, images: { some: {} } },
     orderBy: [{ position: "asc" }, { id: "asc" }],
     select: { categoryId: true, images: { select: { url: true }, orderBy: { sortOrder: "asc" }, take: 1 } },
   });

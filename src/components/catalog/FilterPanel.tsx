@@ -6,7 +6,7 @@ import { LoaderCircle, SlidersHorizontal, X } from "lucide-react";
 
 type Option = { slug: string; label: string };
 
-export function FilterPanel({ brands, cars }: { brands: Option[]; cars: Option[] }) {
+export function FilterPanel({ brands, cars, stockFilter = true }: { brands: Option[]; cars: Option[]; stockFilter?: boolean }) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -31,7 +31,7 @@ export function FilterPanel({ brands, cars }: { brands: Option[]; cars: Option[]
       else p.delete(key);
     });
 
-  const inStock = params.get("stock") === "1";
+  const inStock = stockFilter && params.get("stock") === "1";
   const active = selected("brand").size + selected("car").size + (inStock ? 1 : 0);
 
   // The phone sheet covers the page: keep the page behind it from scrolling, close it with Escape.
@@ -73,18 +73,22 @@ export function FilterPanel({ brands, cars }: { brands: Option[]; cars: Option[]
           ))}
         </fieldset>
       )}
-      <hr className="border-line" />
-      <label className="flex cursor-pointer items-center justify-between">
-        <span className="text-sm font-extrabold">فقط کالاهای موجود</span>
-        <input
-          type="checkbox"
-          role="switch"
-          className="peer sr-only"
-          checked={inStock}
-          onChange={() => update((p) => (inStock ? p.delete("stock") : p.set("stock", "1")))}
-        />
-        <span className="relative h-6 w-11 rounded-full bg-line transition-colors after:absolute after:top-0.5 after:right-0.5 after:size-5 after:rounded-full after:bg-white after:shadow after:transition-transform peer-checked:bg-brand peer-checked:after:-translate-x-5 peer-focus-visible:outline-2 peer-focus-visible:outline-brand" />
-      </label>
+      {stockFilter && (
+        <>
+          <hr className="border-line" />
+          <label className="flex cursor-pointer items-center justify-between">
+            <span className="text-sm font-extrabold">فقط کالاهای موجود</span>
+            <input
+              type="checkbox"
+              role="switch"
+              className="peer sr-only"
+              checked={inStock}
+              onChange={() => update((p) => (inStock ? p.delete("stock") : p.set("stock", "1")))}
+            />
+            <span className="relative h-6 w-11 rounded-full bg-line transition-colors after:absolute after:top-0.5 after:right-0.5 after:size-5 after:rounded-full after:bg-white after:shadow after:transition-transform peer-checked:bg-brand peer-checked:after:-translate-x-5 peer-focus-visible:outline-2 peer-focus-visible:outline-brand" />
+          </label>
+        </>
+      )}
     </div>
   );
 

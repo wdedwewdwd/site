@@ -1,6 +1,7 @@
 import "server-only";
 import { db } from "./db";
 import { buildIndex, search, type IndexedDoc, type SearchResult } from "./search";
+import { hideOutOfStock } from "./settings";
 
 /** Rebuilt at most this often, so product edits show up in search within a few seconds. */
 const TTL_MS = 30_000;
@@ -50,7 +51,9 @@ function index() {
   return cache.index;
 }
 
-/** Active products matching the query, best first. */
+/** Products customers may see that match the query, best first. */
 export async function searchProducts(query: string): Promise<SearchResult> {
-  return search(await index(), query.slice(0, 100));
+  const [docs, hide] = await Promise.all([index(), hideOutOfStock()]);
+  // Stock in the index can be up to TTL_MS old; the pages showing results check it again in the database.
+  return search(hide ? docs.filter((d) => d.inStock) : docs, query.slice(0, 100));
 }

@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Clock, Headset, Mail, MapPin, Phone, RotateCcw, ScanSearch, ShieldCheck, Ship, Smartphone, Truck } from "lucide-react";
 import { db } from "@/lib/db";
-import { getContact } from "@/lib/settings";
+import { getContact, shopProductWhere } from "@/lib/settings";
 import { categoryCovers } from "@/lib/category-covers";
 import { faDigits } from "@/lib/format";
 import { SITE } from "@/lib/shop";
@@ -66,7 +66,7 @@ function SectionTitle({ eyebrow, title, id }: { eyebrow: string; title: string; 
 export default async function AboutPage() {
   const [contact, productCount, mains] = await Promise.all([
     getContact(),
-    db.product.count({ where: { isActive: true } }),
+    db.product.count({ where: await shopProductWhere() }),
     db.category.findMany({
       where: { isActive: true, parentId: null },
       orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],

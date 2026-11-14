@@ -3,13 +3,14 @@ import { Heart } from "lucide-react";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/auth/session";
 import { productCardSelect } from "@/lib/catalog";
+import { shopProductWhere } from "@/lib/settings";
 import { ProductCard } from "@/components/product/ProductCard";
 import { PageBar } from "@/components/layout/PageBar";
 
 export default async function WishlistPage() {
   const user = await requireUser("/profile/wishlist");
   const items = await db.wishlistItem.findMany({
-    where: { userId: user.id, product: { isActive: true } },
+    where: { userId: user.id, product: await shopProductWhere() },
     orderBy: { createdAt: "desc" },
     select: { product: { select: productCardSelect } },
   });

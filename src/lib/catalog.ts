@@ -2,6 +2,7 @@ import "server-only";
 import { db } from "./db";
 import { searchProducts } from "./search-index";
 import { carMaker, isMakerKey, type MakerKey } from "./makers";
+import { hideOutOfStock } from "./settings";
 import type { Prisma } from "@/generated/prisma/client";
 
 export const productCardSelect = {
@@ -72,7 +73,9 @@ export function buildProductWhere(f: ProductFilters, makerCars?: string[]): Pris
   return { AND: and };
 }
 
-export async function listProducts(f: ProductFilters) {
+export async function listProducts(filters: ProductFilters) {
+  // While out-of-stock products are hidden from the shop, every list holds in-stock products only.
+  const f = (await hideOutOfStock()) ? { ...filters, inStock: true } : filters;
   const page = Math.max(1, Math.min(f.page ?? 1, 500));
   const sort = activeSort(f);
   let where = buildProductWhere(f, f.maker ? await makerCarIds(f.maker) : undefined);

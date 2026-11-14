@@ -23,6 +23,8 @@ export type ProductRow = {
   compareAtPrice: number | null;
   stock: number;
   isActive: boolean;
+  /** Out of stock while «پنهان کردن کالاهای ناموجود» is on, so customers don't see it. */
+  hiddenInShop: boolean;
   soldCount: number;
   image: string | null;
 };
@@ -256,6 +258,7 @@ function StockCell({ p }: { p: ProductRow }) {
     <span className="flex flex-col items-start">
       <QuickEdit id={p.id} field="stock" value={p.stock} label="موجودی" className={`font-black ${tone}`} />
       {p.stock === 0 && <span className="text-[10px] font-bold text-brand">ناموجود</span>}
+      {p.hiddenInShop && <span className="text-[10px] font-bold text-muted">پنهان در سایت</span>}
       {p.stock > 0 && p.stock <= 5 && <span className="text-[10px] font-bold text-warning">رو به اتمام</span>}
     </span>
   );

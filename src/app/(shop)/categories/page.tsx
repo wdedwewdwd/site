@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { db } from "@/lib/db";
+import { shopProductWhere } from "@/lib/settings";
 import { faDigits } from "@/lib/format";
 import { categoryCovers } from "@/lib/category-covers";
 import { CategoryCover } from "@/components/ui/CategoryCover";
@@ -18,7 +19,7 @@ export default async function CategoriesPage() {
       orderBy: { sortOrder: "asc" },
       include: { children: { orderBy: { sortOrder: "asc" }, select: { id: true, name: true, slug: true, isActive: true } } },
     }),
-    db.product.groupBy({ by: ["categoryId"], where: { isActive: true }, _count: { _all: true } }),
+    db.product.groupBy({ by: ["categoryId"], where: await shopProductWhere(), _count: { _all: true } }),
   ]);
   // Same rule as the category page listing: its own products plus those of its subcategories.
   const counts = new Map(perCategory.map((g) => [g.categoryId, g._count._all]));

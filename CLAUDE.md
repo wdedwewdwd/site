@@ -129,6 +129,17 @@ build (`APP_URL=https://example.com PAYMENT_PROVIDER=none ALLOW_CONSOLE_SMS=true
   rows (not a number, < 1000, decimals, unknown or conflicting SKU, discounted product priced ≥ its struck price). Preview
   first; «اعمال» re-reads the same file and writes only if the change list's digest still matches and each price is
   unchanged (one transaction), then logs `product.price_import` with every from/to.
+- «پنهان کردن کالاهای ناموجود از سایت» (2026-11-14): a switch at the top of `/admin/products` (`HideOutOfStockSwitch`,
+  `setHideOutOfStock`, Setting `hide_out_of_stock`).
+  - While on, products with no stock are left out of the whole shop: lists, search and its suggestions, home page
+    sections and counts, the product page (404), related products, wishlist, `/categories` and `/about` counts and the
+    sitemap. The admin list marks them «پنهان در سایت».
+  - Products are not changed, so a product comes back by itself once it has stock again. Search suggestions catch up
+    within 30 s (the search index's refresh); lists and product pages show it at once.
+  - Every shop query takes its product filter from `shopProductWhere()` / `hideOutOfStock()` in `src/lib/settings.ts`.
+    Use them for any new place that shows products.
+  - A production build with the local database stopped logs `prisma:error` lines while generating static pages. That
+    was already so before this change, and the build still passes.
 - Product prices: the form shows "قیمت اصلی" + a discount switch (percent or sale price, `ProductPriceFields`); the DB
   stores `price` (paid) and `compareAtPrice` (struck-through). Car models are one shared list edited from the product
   form ("مدیریت خودروها", `actions/admin/cars.ts`); renaming keeps the slug, deleting removes it from all products.

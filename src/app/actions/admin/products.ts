@@ -164,6 +164,16 @@ export async function toggleProductActive(id: string) {
   revalidatePath("/", "layout");
 }
 
+/** «پنهان کردن کالاهای ناموجود» on or off for the whole shop (products themselves are not changed). */
+export async function setHideOutOfStock(on: boolean): Promise<ProductActionResult> {
+  const admin = await requireStaff(["ADMIN"]);
+  if (typeof on !== "boolean") return { ok: false, message: "درخواست نامعتبر است." };
+  await db.setting.upsert({ where: { key: "hide_out_of_stock" }, create: { key: "hide_out_of_stock", value: on ? "1" : "0" }, update: { value: on ? "1" : "0" } });
+  await audit(admin.id, on ? "shop.hide_out_of_stock" : "shop.show_out_of_stock", "Setting", "hide_out_of_stock");
+  revalidatePath("/", "layout");
+  return { ok: true, message: on ? "کالاهای ناموجود از سایت پنهان شدند." : "کالاهای ناموجود دوباره در سایت نمایش داده می‌شوند." };
+}
+
 export type ProductActionResult = { ok: boolean; message: string };
 
 const quickSchema = z.discriminatedUnion("field", [
